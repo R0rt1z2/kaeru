@@ -52,20 +52,15 @@ static void parse_gpt() {
 
 void enable_uart() {
     // Configure both UART strings to always force enable UART.
-    char* printk_disable_uart1 = (char *)0x41e367a4;
-    char* printk_disable_uart2 = (char *)0x41e370cc;
+    char* printk_disable_uart1 = (char *)0x41e3b354;
+    char* printk_disable_uart2 = (char *)0x41e3bcd0;
     strcpy(printk_disable_uart1, " printk.disable_uart=0");
     strcpy(printk_disable_uart2, "printk.disable_uart=0");
 }
 
-void disable_state_warnings() {
-    // Orange state warning
-    uint16_t *patch = (void *)0x41e03a48;
-    *patch++ = 0x2000; // movs r0, #0
-    *patch = 0x4770; // bx lr
-
-    // Red state warning
-    patch = (void *)0x41e039ec;
+void patch_functions() {
+    // sec_usbdl_enabled()
+    uint16_t *patch = (void *)0x41e260a8;
     *patch++ = 0x2000; // movs r0, #0
     *patch = 0x4770; // bx lr
 }
@@ -99,14 +94,20 @@ int main(void) {
 
     // Function / memory patching.
     enable_uart();
-    disable_state_warnings();
+    patch_functions();
 
-    // Give priority to the boot mode stored in the bootloader message.
+    // Give priority to the boot mode stored in the bootloader
+    // message.
     uint32_t m_boot_mode = read_boot_mode(dev);
     if (m_boot_mode != BOOTMODE_NORMAL) {
-        video_printf("=> %s mode...\n",
-                     m_boot_mode == BOOTMODE_RECOVERY ? "RECOVERY" : "FASTBOOT");
         *g_boot_mode = m_boot_mode;
+    }
+
+    // Use META mode to force fastboot mode. This is done because
+    // volume down key triggers META mode so there's no way to get
+    // into fastboot mode otherwise.
+    if (*g_boot_mode == BOOTMODE_META) {
+        *g_boot_mode = BOOTMODE_FASTBOOT;
     }
 
     // Once we're done, jump back to the real LK.

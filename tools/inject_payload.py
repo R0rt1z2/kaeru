@@ -39,7 +39,7 @@ def inject_payload(lk: str, payload: str,
     # Craft a custom LK header so preloader loads the whole image
     # (with our payload) into RAM. We use (LK size - 0x200).
     header = struct.pack('<I', 0x58881688) # LK magic.
-    header += struct.pack('<I', (0x60000 - 0x200))
+    header += struct.pack('<I', (0x80000 - 0x200))
 
     with open(lk, 'rb') as lk_fh:
         # Start by copying our custom header.
