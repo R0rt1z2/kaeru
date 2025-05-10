@@ -118,6 +118,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Nokia 2.3
+
+    config MOTOROLA_LAMU
+        bool "Support Motorola G15 / G05"
+        default n
+        help
+          Say Y if you want to include support for Motorola G15 / G05
 endmenu
 
 menu "SoC Support"

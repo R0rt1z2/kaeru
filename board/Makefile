@@ -20,3 +20,4 @@ lib-$(CONFIG_HUAWEI_AMMAN) += huawei/board-amman.o
 lib-$(CONFIG_SONY_CANOPY) += sony/board-canopy.o
 lib-$(CONFIG_ZTE_P662F02) += zte/board-p662f02.o
 lib-$(CONFIG_NOKIA_IRONMAN) += nokia/board-ironman.o
+lib-$(CONFIG_MOTOROLA_LAMU) += motorola/board-lamu.o
