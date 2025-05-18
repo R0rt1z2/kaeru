@@ -130,6 +130,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Energy Phone Colors
+
+    config HUAWEI_KOBE2
+        bool "Support Huawei MatePad T8"
+        default n
+        help
+          Say Y if you want to include support for Huawei MatePad T8
 endmenu
 
 menu "SoC Support"
