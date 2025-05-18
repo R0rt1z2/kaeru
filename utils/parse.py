@@ -189,8 +189,8 @@ def main():
     if find_string(lk, 'LK_LOG_STORE') == -1:
         if 'lk_log_store' in offsets:
             del offsets['lk_log_store']
-        print('CONFIG_LK_LOG_STORE=false')
-        cfg['CONFIG_LK_LOG_STORE'] = 'false'
+        print('CONFIG_LK_LOG_STORE=n')
+        cfg['CONFIG_LK_LOG_STORE'] = 'n'
 
     for name, data in offsets.items():
         addr = data['offset']
