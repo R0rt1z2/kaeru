@@ -124,6 +124,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Motorola G15 / G05
+
+    config ENERGY_PHONE_COLORS
+        bool "Support Energy Phone Colors"
+        default n
+        help
+          Say Y if you want to include support for Energy Phone Colors
 endmenu
 
 menu "SoC Support"
@@ -144,6 +150,9 @@ menu "SoC Support"
     
     config MEDIATEK_MT6762
         bool "MediaTek MT6762 SoC"
+
+    config MEDIATEK_MT6572
+        bool "MediaTek MT6572 SoC"
 
     config MEDIATEK_MT6765
         bool "MediaTek MT6765 SoC"
@@ -241,6 +250,7 @@ endmenu
 menu "UART Configuration"
     config UART_REG0
         hex "UART0 register"
+        default 0x11005014 if MEDIATEK_MT6572
         default 0x11002014 if MEDIATEK_MT6750
         default 0x11002014 if MEDIATEK_MT6757
         default 0x11002014 if MEDIATEK_MT6761
@@ -258,6 +268,7 @@ menu "UART Configuration"
 
     config UART_REG1
         hex "UART1 register"
+        default 0x11005000 if MEDIATEK_MT6572
         default 0x11002000 if MEDIATEK_MT6750
         default 0x11002000 if MEDIATEK_MT6757
         default 0x11002000 if MEDIATEK_MT6761
