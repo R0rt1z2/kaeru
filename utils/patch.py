@@ -30,7 +30,15 @@ def get_cfg(path, key):
 def find_bss_start(data, size, base, hdr_sz):
     pos = 0x12C + 4
 
-    offset = data[pos:].find(bytes.fromhex('704700BF'))
+    patterns = [
+        '0346A8B1', # for legacy bootloaders
+        '704700BF',
+    ]
+    
+    offsets = [data[pos:].find(bytes.fromhex(pattern)) 
+               for pattern in patterns]
+    offset = min([x for x in offsets if x != -1] or [-1])
+
     if offset == -1:
         return None, None
 
