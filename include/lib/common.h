@@ -60,9 +60,6 @@
 #define ROUNDUP(a, b) (((a) + ((b)-1)) & ~((b)-1))
 #define ROUND_TO_PAGE(x, y) (((x) + (y)) & (~(y)))
 
-#define ROUNDUP(a, b) (((a) + ((b)-1)) & ~((b)-1))
-#define ROUND_TO_PAGE(x, y) (((x) + (y)) & (~(y)))
-
 void common_early_init(void);
 void common_late_init(void);
 
