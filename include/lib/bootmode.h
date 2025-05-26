@@ -18,7 +18,7 @@ typedef enum {
     BOOTMODE_ERECOVERY = 101
 } bootmode_t;
 
-extern const char* bootmode2str(bootmode_t mode);
-extern void show_bootmode(bootmode_t mode);
-extern bootmode_t get_bootmode(void);
-extern void set_bootmode(bootmode_t mode);
+const char* bootmode2str(bootmode_t mode);
+void show_bootmode(bootmode_t mode);
+bootmode_t get_bootmode(void);
+void set_bootmode(bootmode_t mode);

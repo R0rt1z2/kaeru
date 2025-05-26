@@ -35,15 +35,15 @@
 #define ISALPHA(c) (ISUPPER(c) || ISLOWER(c))
 #define ISALNUM(c) (ISALPHA(c) || ISDIGIT(c))
 
-extern int memcmp(const void* s1, const void* s2, size_t n);
-extern void* memmove(void* dest, const void* src, size_t count);
-extern void* memchr(const void* s, int c, size_t n);
-extern void* memset(void* dst, int c, size_t n);
-extern int strcmp(const char* s1, const char* s2);
-extern char* strchr(const char* s, int c);
-extern size_t strlen(const char* str);
-extern int strncmp(const char* s1, const char* s2, size_t n);
-extern char* strstr(const char* h, const char* n);
-extern unsigned long strtoul(const char* nptr, char** endptr, register int base);
-extern long strtol(const char* str, char** endptr, int base);
-extern unsigned short strtou16(const char* str);
+int memcmp(const void* s1, const void* s2, size_t n);
+void* memmove(void* dest, const void* src, size_t count);
+void* memchr(const void* s, int c, size_t n);
+void* memset(void* dst, int c, size_t n);
+int strcmp(const char* s1, const char* s2);
+char* strchr(const char* s, int c);
+size_t strlen(const char* str);
+int strncmp(const char* s1, const char* s2, size_t n);
+char* strstr(const char* h, const char* n);
+unsigned long strtoul(const char* nptr, char** endptr, register int base);
+long strtol(const char* str, char** endptr, int base);
+unsigned short strtou16(const char* str);

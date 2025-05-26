@@ -63,9 +63,9 @@
 #define ROUNDUP(a, b) (((a) + ((b)-1)) & ~((b)-1))
 #define ROUND_TO_PAGE(x, y) (((x) + (y)) & (~(y)))
 
-extern void common_early_init(void);
-extern void common_late_init(void);
+void common_early_init(void);
+void common_late_init(void);
 
-extern bool mtk_detect_key(unsigned short key);
-extern const char* get_mode_string(unsigned int mode);
-extern void print_kaeru_info(output_type_t output_type);
+bool mtk_detect_key(unsigned short key);
+const char* get_mode_string(unsigned int mode);
+void print_kaeru_info(output_type_t output_type);

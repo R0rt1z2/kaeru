@@ -12,7 +12,7 @@
 
 typedef enum { OUTPUT_CONSOLE, OUTPUT_VIDEO } output_type_t;
 
-extern int printf(const char* fmt, ...);
-extern int video_printf(const char* fmt, ...);
-extern void uart_hexdump(const void* data, size_t size);
-extern void video_hexdump(const void* data, size_t size);
+int printf(const char* fmt, ...);
+int video_printf(const char* fmt, ...);
+void uart_hexdump(const void* data, size_t size);
+void video_hexdump(const void* data, size_t size);
