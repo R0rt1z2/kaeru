@@ -41,6 +41,7 @@ int printf(const char* fmt, ...) {
 
 #ifdef CONFIG_LK_LOG_STORE
 #ifdef CONFIG_LK_LOG_STORE_ADDRESS
+    va_start(args, fmt);
     npf_vpprintf(&lk_log_store, NULL, fmt, args);
 #else
 #warning "LK Log Store enabled but no address specified"
