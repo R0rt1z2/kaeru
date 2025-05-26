@@ -13,13 +13,11 @@ MAGIC = 0x58881688
 EXT_MAGIC = 0x58891689
 
 
-def dump_header(buffer, offset, debug=False):
+def dump_header(buffer, offset):
     has_ext = False
 
     magic = unpack('<I', buffer[0:4])[0]
     if magic != MAGIC:
-        if debug:
-            print(' '.join('{:02x}'.format(x) for x in buffer[:0x20]))
         raise RuntimeError(
             'invalid magic value, expected {:#x} got {:#x}'.format(MAGIC, magic)
         )
@@ -82,7 +80,6 @@ def dump_header(buffer, offset, debug=False):
 def main():
     parser = ArgumentParser()
     parser.add_argument('file')
-    parser.add_argument('-d', '--debug', action='store_true')
     args = parser.parse_args()
 
     file = open(args.file, 'rb')
@@ -91,9 +88,7 @@ def main():
 
     offset = 0
     while True:
-        if args.debug:
-            print('Offset: %#08x' % (offset + 0x48000000), flush=True)
-        n = dump_header(buffer[offset:], offset, args.debug)
+        n = dump_header(buffer[offset:], offset)
         if n == None:
             break
         print('', flush=True)
