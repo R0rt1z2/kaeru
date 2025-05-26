@@ -66,9 +66,6 @@
 extern void common_early_init(void);
 extern void common_late_init(void);
 
-extern void mdelay(unsigned long msec);
-extern void udelay(unsigned long msec);
-
 extern bool mtk_detect_key(unsigned short key);
 extern const char* get_mode_string(unsigned int mode);
 extern void print_kaeru_info(output_type_t output_type);

@@ -38,19 +38,6 @@ bool mtk_detect_key(unsigned short key) {
     return ((bool (*)(unsigned short))(CONFIG_MTK_DETECT_KEY_ADDRESS | 1))(key);
 }
 
-void udelay(unsigned long usec) {
-    const unsigned long scale = 2000 / 10;
-    for (volatile unsigned long i = 0; i < usec * scale; i++) {
-        asm volatile("nop");
-    }
-}
-
-void mdelay(unsigned long msec) {
-    for (unsigned long i = 0; i < msec; i++) {
-        udelay(1000);
-    }
-}
-
 void print_kaeru_info(output_type_t output_type) {
     unsigned int sp, lr, pe, vbar;
 
