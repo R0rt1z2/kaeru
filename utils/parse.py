@@ -12,6 +12,21 @@ from argparse import ArgumentParser
 
 from capstone import *
 
+"""
+Pattern signatures for LK (Little Kernel) bootloader function identification.
+
+This dictionary contains byte patterns that uniquely identify key functions
+within MediaTek LK bootloader binaries. Each pattern is a sequence of hex bytes
+where 'XX' acts as a wildcard for variable bytes.
+
+Export behavior:
+- export=True: Function addresses are written to defconfig as CONFIG_* entries
+  These are primary targets needed for kaeru to function properly.
+- export=False: Used internally during analysis but not exported to config
+  These serve as stepping stones to find other functions or provide manual hints
+  (e.g., bootstrap2 helps locate platform_init_caller, fastboot_continue provides
+  bootmode hints)
+"""
 patterns = {
     'app': {
         'patterns': [
