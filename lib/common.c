@@ -91,7 +91,7 @@ void print_kaeru_info(output_type_t output_type) {
 }
 
 void cmd_version(const char* arg, void* data, unsigned sz) {
-    char buffer[256];
+    char buffer[64];
     npf_snprintf(buffer, sizeof(buffer), "kaeru v%s", KAERU_VERSION);
     fastboot_info(buffer);
     print_kaeru_info(OUTPUT_VIDEO);
