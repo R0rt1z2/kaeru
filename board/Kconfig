@@ -59,6 +59,12 @@ menu "Device Support"
         help
           Say Y if you want to include support for Oukitel C21 Pro
 
+    config OUKITEL_RT6
+        bool "Support Oukitel RT6"
+        default n
+        help
+          Say Y if you want to include support for Oukitel RT6
+
     config REALME_NEMO
         bool "Support Realme 6"
         default n

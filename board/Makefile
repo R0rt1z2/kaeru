@@ -7,6 +7,7 @@ lib-$(CONFIG_MOTOROLA_PENANGF) += motorola/board-penangf.o
 lib-$(CONFIG_MOTOROLA_FOGOROW) += motorola/board-fogorow.o
 lib-$(CONFIG_NOKIA_WASP) += nokia/board-wasp.o
 lib-$(CONFIG_OUKITEL_LYRA) += oukitel/board-lyra.o
+lib-$(CONFIG_OUKITEL_RT6) += oukitel/board-rt6.o
 lib-$(CONFIG_OPPO_OP4BFB) += oppo/board-op4bfb.o
 lib-$(CONFIG_REALME_NEMO) += realme/board-nemo.o
 lib-$(CONFIG_REALME_NASHC) += realme/board-nashc.o
