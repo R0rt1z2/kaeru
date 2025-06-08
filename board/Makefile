@@ -24,3 +24,4 @@ lib-$(CONFIG_NOKIA_IRONMAN) += nokia/board-ironman.o
 lib-$(CONFIG_MOTOROLA_LAMU) += motorola/board-lamu.o
 lib-$(CONFIG_ENERGY_PHONE_COLORS) += energy/board-phone_colors.o
 lib-$(CONFIG_HUAWEI_KOBE2) += huawei/board-kobe2.o
+lib-$(CONFIG_BQ_AQUARIS_M8) += bq/board-aquaris_m8.o

@@ -142,6 +142,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Huawei MatePad T8
+
+    config BQ_AQUARIS_M8
+        bool "Support BQ Aquaris M8"
+        default n
+        help
+          Say Y if you want to include support for BQ Aquaris M8
 endmenu
 
 menu "SoC Support"
