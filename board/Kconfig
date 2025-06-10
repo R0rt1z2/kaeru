@@ -137,11 +137,17 @@ menu "Device Support"
         help
           Say Y if you want to include support for Energy Phone Colors
 
-    config HUAWEI_KOBE2
-        bool "Support Huawei MatePad T8"
+    config HUAWEI_KOBE2LTE
+        bool "Support Huawei MatePad T8 (LTE)"
         default n
         help
-          Say Y if you want to include support for Huawei MatePad T8
+          Say Y if you want to include support for Huawei MatePad T8 LTE
+
+    config HUAWEI_KOBE2WIFI
+        bool "Support Huawei MatePad T8 (Wi-Fi)"
+        default n
+        help
+          Say Y if you want to include support for Huawei MatePad T8 Wi-Fi
 
     config BQ_AQUARIS_M8
         bool "Support BQ Aquaris M8"

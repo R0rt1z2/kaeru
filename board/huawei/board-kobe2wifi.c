@@ -9,7 +9,7 @@
 #define VOLUME_DOWN 1
 
 void board_early_init(void) {
-    printf("Entering early init for Huawei MatePad T8\n");
+    printf("Entering early init for Huawei MatePad T8 (Wi-Fi)\n");
 
     // Cosmetic patch to suppress the default Android logo with lock state info
     // shown during boot. This has no functional impact, purely visual.
@@ -19,7 +19,7 @@ void board_early_init(void) {
 }
 
 void board_late_init(void) {
-    printf("Entering late init for Huawei MatePad T8\n");
+    printf("Entering late init for Huawei MatePad T8 (Wi-Fi)\n");
 
     // Huawei registers a wrapper around all OEM commands, effectively blocking
     // their execution, even those explicitly registered by LK.
