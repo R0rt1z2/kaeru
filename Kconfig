@@ -1,4 +1,3 @@
 mainmenu "Kaeru Configuration"
 
-source "lib/Kconfig"
 source "board/Kconfig"

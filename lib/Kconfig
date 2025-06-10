@@ -1,9 +1,0 @@
-menu "Libraries"
-
-config SIMPLE_FB
-	bool "Support for Simple Framebuffer"
-	default n
-	help
-	  Say Y if you want to have Framebuffer output.
-
-endmenu
