@@ -1,4 +1,5 @@
 # かえる
+**Language:** [日本語](./README_ja-JP.md)
 
 This repository contains an ARMv7 payload that provides arbitrary code execution on MediaTek bootloaders (LK).
 
