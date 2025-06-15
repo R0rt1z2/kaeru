@@ -154,6 +154,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for BQ Aquaris M8
+
+    config INFINIX_X666
+        bool "Support Infinix HOT 20 5G"
+        default n
+        help
+          Say Y if you want to include support for Infinix HOT 20 5G
 endmenu
 
 menu "SoC Support"
@@ -201,6 +207,9 @@ menu "SoC Support"
 
     config MEDIATEK_MT8516
         bool "MediaTek MT8516 SoC"
+
+    config MEDIATEK_MT6833
+        bool "MediaTek MT6833 SoC"
 endmenu
 
 
@@ -289,6 +298,7 @@ menu "UART Configuration"
         default 0x11002014 if MEDIATEK_MT8127
         default 0x11002014 if MEDIATEK_MT8163
         default 0x11005014 if MEDIATEK_MT8516
+        default 0x11002014 if MEDIATEK_MT6833
 
     config UART_REG1
         hex "UART1 register"
@@ -307,4 +317,5 @@ menu "UART Configuration"
         default 0x11002000 if MEDIATEK_MT8127
         default 0x11002000 if MEDIATEK_MT8163
         default 0x11005000 if MEDIATEK_MT8516
+        default 0x11002000 if MEDIATEK_MT6833
 endmenu
