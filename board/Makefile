@@ -26,3 +26,4 @@ lib-$(CONFIG_ENERGY_PHONE_COLORS) += energy/board-phone_colors.o
 lib-$(CONFIG_HUAWEI_KOBE2LTE) += huawei/board-kobe2lte.o
 lib-$(CONFIG_HUAWEI_KOBE2WIFI) += huawei/board-kobe2wifi.o
 lib-$(CONFIG_BQ_AQUARIS_M8) += bq/board-aquaris_m8.o
+lib-$(CONFIG_INFINIX_X666) += infinix/board-X666.o
