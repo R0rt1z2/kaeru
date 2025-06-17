@@ -6,6 +6,7 @@
 #include <arch/arm.h>
 #include <arch/ops.h>
 #include <board_ops.h>
+#include <lib/app.h>
 #include <lib/common.h>
 #include <lib/debug.h>
 #include <lib/fastboot.h>
@@ -14,12 +15,10 @@ void kaeru(void) {
     common_late_init();
     board_late_init();
 
-    int ret = ((int (*)(void))(CONFIG_APP_ADDRESS | 1))();
+    ((void (*)(const struct app_descriptor *))(CONFIG_APP_ADDRESS | 1))(NULL);
 
-    if (ret != 0) {
-        video_printf("Something went wrong, app() returned %d\n", ret);
-        arch_idle();
-    }
+    video_printf("Shouldn't have reached here :(\n");
+    arch_idle();
 }
 
 __attribute__((section(".text.start"))) void main(void) {
