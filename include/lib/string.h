@@ -47,3 +47,4 @@ char* strstr(const char* h, const char* n);
 unsigned long strtoul(const char* nptr, char** endptr, register int base);
 long strtol(const char* str, char** endptr, int base);
 unsigned short strtou16(const char* str);
+char* strcpy(char* dest, const char* src);

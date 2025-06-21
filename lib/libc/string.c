@@ -282,3 +282,9 @@ unsigned short strtou16(const char* str) {
 
     return result;
 }
+
+char* strcpy(char* dest, const char* src) {
+    char* original_dest = dest;
+    while ((*dest++ = *src++));
+    return original_dest;
+}
