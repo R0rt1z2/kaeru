@@ -160,6 +160,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Infinix HOT 20 5G
+
+    config RABBIT_R1
+        bool "Support Rabbit R1"
+        default n
+        help
+          Say Y if you want to include support for Rabbit R1
 endmenu
 
 menu "SoC Support"
