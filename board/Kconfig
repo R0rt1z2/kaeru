@@ -166,6 +166,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Rabbit R1
+
+    config OPPO_A5S
+        bool "Support Oppo A5s"
+        default n
+        help
+          Say Y if you want to include support for Oppo A5s
 endmenu
 
 menu "SoC Support"
