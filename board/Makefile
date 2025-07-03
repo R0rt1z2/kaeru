@@ -29,3 +29,4 @@ lib-$(CONFIG_BQ_AQUARIS_M8) += bq/board-aquaris_m8.o
 lib-$(CONFIG_INFINIX_X666) += infinix/board-X666.o
 lib-$(CONFIG_RABBIT_R1) += rabbit/board-r1.o
 lib-$(CONFIG_OPPO_A5S) += oppo/board-a5s.o
+lib-$(CONFIG_VOLLA_MIMAMEID) += volla/board-mimameid.o

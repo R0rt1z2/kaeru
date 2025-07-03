@@ -172,6 +172,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Oppo A5s
+
+    config VOLLA_MIMAMEID
+        bool "Support Volla Phone 22/22 Pro"
+        default n
+        help
+          Say Y if you want to include support for Volla Phone 22/22 Pro
 endmenu
 
 menu "SoC Support"
