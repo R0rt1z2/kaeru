@@ -8,6 +8,31 @@
 #define VOLUME_UP 17
 #define VOLUME_DOWN 1
 
+void mtk_arch_reset(char mode) {
+    ((void (*)(char))(0x48013874 | 1))(mode);
+}
+
+void reboot_emergency(void) {
+    // USB download register value for bootrom mode with no timeout
+    // 0x444C0000 = magic number for brom check
+    // 0x0000FFFC = no timeout (max timeout value shifted)
+    // 0x00000001 = download bit enabled
+    uint32_t usbdl_value = 0x444C0000 | 0x0000FFFC | 0x00000001;
+    
+    *(volatile uint32_t*)0x1001A100 = 0xAD98;      // MISC_LOCK_KEY magic
+    *(volatile uint32_t*)0x1001A108 |= 1;          // Set RST_CON bit
+    *(volatile uint32_t*)0x1001A100 = 0;           // Clear MISC_LOCK_KEY
+    *(volatile uint32_t*)0x1001A080 = usbdl_value; // Set BOOT_MISC0/USBDL_FLAG
+    
+    mtk_arch_reset(0);
+}
+
+void cmd_reboot_emergency(const char* arg, void* data, unsigned sz) {
+    fastboot_info("The device will reboot into bootrom mode...");
+    fastboot_okay("");
+    reboot_emergency();
+}
+
 void board_early_init(void) {
     printf("Entering early init for Huawei MatePad T8 (LTE)\n");
 
@@ -20,6 +45,18 @@ void board_early_init(void) {
 
 void board_late_init(void) {
     printf("Entering late init for Huawei MatePad T8 (LTE)\n");
+
+    // We repurpose the ATEFACT mode to enter bootrom mode. This is useful because
+    // we can control the bootmode from the Preloader VCOM interface, so we can
+    // enter bootrom mode without disassembling the device even when fastboot
+    // mode is unavailable.
+    //
+    // You can trigger this by using the handshake2.py script from amonet to send
+    // b'FACTORYM' to the device.
+    if (get_bootmode() == BOOTMODE_ATEFACT) {
+        video_printf(" => BOOTROM mode...\n");
+        reboot_emergency();
+    }
 
     // Huawei registers a wrapper around all OEM commands, effectively blocking
     // their execution, even those explicitly registered by LK.
@@ -41,10 +78,10 @@ void board_late_init(void) {
     //
     // From my analysis, these offsets appear to control FBLOCK, USRLOCK, and WIDEVINE lock
     // states. Forcing these fields to 1 (unlocked) bypasses the lock state checks.
-    WRITE32(0x48232008 + 0x104, 1);
-    WRITE32(0x48232008 + 0x108, 1);
-    WRITE32(0x48232008 + 0x10c, 1);
-    WRITE32(0x48232008 + 0x114, 1);
+    WRITE32(0x48238008 + 0x104, 1);
+    WRITE32(0x48238008 + 0x108, 1);
+    WRITE32(0x48238008 + 0x10c, 1);
+    WRITE32(0x48238008 + 0x114, 1);
     FORCE_RETURN(0x4802BCFC, 1);
 
     // Huawei defines two separate bootloader lock states: USRLOCK and FBLOCK.
@@ -89,12 +126,22 @@ void board_late_init(void) {
     // not executing the code that shows the warning.
     FORCE_RETURN(0x48086BE8, 0);
 
+    // Since the only way to enter USBDL mode on this device is by opening it up
+    // and shorting the test point, we add a fastboot command to make it easier
+    // to enter that mode without needing to disassemble the device.
+    //
+    // Once you execute the command, the device will reboot into bootrom mode,
+    // and you'll be able to use tools like mtkclient to flash the device.
+    if (get_bootmode() == BOOTMODE_FASTBOOT) {
+        fastboot_register("oem reboot-emergency", cmd_reboot_emergency, 1);
+    }
+
     // Show the current boot mode on screen when not performing a normal boot.
     // This is standard behavior in many LK images, but not in this one by default.
     //
     // Displaying the boot mode can be helpful for developers, as it provides
     // immediate feedback and can prevent debugging headaches.
-    if (get_bootmode() != BOOTMODE_NORMAL) {
+    if (get_bootmode() != BOOTMODE_NORMAL && get_bootmode() != BOOTMODE_ATEFACT) {
         show_bootmode(get_bootmode());
     }
 }
