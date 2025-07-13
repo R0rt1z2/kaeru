@@ -178,6 +178,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Volla Phone 22/22 Pro
+
+    config JOYAR_100071483
+        bool "Support Onn Surf 3 8-inch"
+        default n
+        help
+          Say Y if you want to include support for Onn Surf 3 8-inch
 endmenu
 
 menu "SoC Support"
@@ -228,6 +234,9 @@ menu "SoC Support"
 
     config MEDIATEK_MT6833
         bool "MediaTek MT6833 SoC"
+
+    config MEDIATEK_MT8168
+        bool "MediaTek MT8168 SoC"
 endmenu
 
 
@@ -317,6 +326,7 @@ menu "UART Configuration"
         default 0x11002014 if MEDIATEK_MT8163
         default 0x11005014 if MEDIATEK_MT8516
         default 0x11002014 if MEDIATEK_MT6833
+        default 0x11002014 if MEDIATEK_MT8168
 
     config UART_REG1
         hex "UART1 register"
@@ -336,4 +346,5 @@ menu "UART Configuration"
         default 0x11002000 if MEDIATEK_MT8163
         default 0x11005000 if MEDIATEK_MT8516
         default 0x11002000 if MEDIATEK_MT6833
+        default 0x11002000 if MEDIATEK_MT8168
 endmenu
