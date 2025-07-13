@@ -12,6 +12,14 @@ void mtk_arch_reset(char mode) {
     ((void (*)(char))(0x480104FC | 1))(mode);
 }
 
+char *get_env(const char *name) {
+    return ((char *(*)(const char *))(0x48077F14 | 1))(name);
+}
+
+int set_env(const char *name, const char *value) {
+    return ((int (*)(const char *, const char *))(0x480781D0 | 1))(name, value);
+}
+
 void reboot_emergency(void) {
     // USB download register value for bootrom mode with no timeout
     // 0x444C0000 = magic number for brom check
@@ -25,6 +33,72 @@ void reboot_emergency(void) {
     *(volatile uint32_t*)0x1001A080 = usbdl_value; // Set BOOT_MISC0/USBDL_FLAG
     
     mtk_arch_reset(0);
+}
+
+int is_recovery_remapped(void) {
+    char* current_value = get_env("remap_recovery");
+    
+    if (!current_value) {
+        set_env("remap_recovery", "1");
+        return 1;
+    }
+    
+    if (strcmp(current_value, "0") == 0) {
+        return 0;
+    }
+
+    return 1;
+}
+
+void cmd_remap_recovery(const char* arg, void* data, unsigned sz) {
+    char info_buffer[256];
+    
+    if (!arg || strlen(arg) == 0) {
+        char* current_value = get_env("remap_recovery");
+        if (current_value && strcmp(current_value, "1") == 0) {
+            fastboot_info("Recovery remapping: ENABLED");
+            fastboot_info("Recovery mode will boot into eRecovery instead");
+        } else {
+            fastboot_info("Recovery remapping: DISABLED");
+            fastboot_info("Recovery mode will boot normally");
+        }
+        fastboot_okay("");
+        return;
+    }
+    
+    while (*arg && (*arg == ' ' || *arg == '\t' || *arg == '\n' || *arg == '\r')) {
+        arg++;
+    }
+    
+    const char* env_value = NULL;
+    int is_enable = 0;
+    
+    if (strcmp(arg, "1") == 0 || strcmp(arg, "on") == 0) {
+        env_value = "1";
+        is_enable = 1;
+    } else if (strcmp(arg, "0") == 0 || strcmp(arg, "off") == 0) {
+        env_value = "0";
+        is_enable = 0;
+    } else {
+        fastboot_fail("Invalid value. Use '1'/'on' to enable or '0'/'off' to disable");
+        return;
+    }
+    
+    int result = set_env("remap_recovery", env_value);
+    if (result == 0) {
+        if (is_enable) {
+            fastboot_info("Recovery remapping ENABLED");
+            fastboot_info("Recovery mode will now boot into eRecovery");
+        } else {
+            fastboot_info("Recovery remapping DISABLED"); 
+            fastboot_info("Recovery mode will boot normally");
+        }
+        fastboot_okay("");
+    } else {
+        npf_snprintf(info_buffer, sizeof(info_buffer), 
+                    "Failed to set recovery remapping (error: %d)", result);
+        fastboot_fail(info_buffer);
+    }
 }
 
 void cmd_reboot_emergency(const char* arg, void* data, unsigned sz) {
@@ -134,6 +208,14 @@ void board_late_init(void) {
     // and you'll be able to use tools like mtkclient to flash the device.
     if (get_bootmode() == BOOTMODE_FASTBOOT) {
         fastboot_register("oem reboot-emergency", cmd_reboot_emergency, 1);
+        fastboot_register("oem remap-recovery", cmd_remap_recovery, 1);
+    }
+
+    if (get_bootmode() == BOOTMODE_RECOVERY && is_recovery_remapped()) {
+        // If recovery remapping is enabled, we force the device to boot into eRecovery
+        // instead of the stock recovery. This is useful for developers that want to have
+        // a separate kernel for the OS and recovery.
+        set_bootmode(BOOTMODE_ERECOVERY);
     }
 
     // Show the current boot mode on screen when not performing a normal boot.
