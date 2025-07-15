@@ -12,6 +12,18 @@ void mtk_arch_reset(char mode) {
     ((void (*)(char))(0x48013874 | 1))(mode);
 }
 
+long partition_write(const char* part_name, long long offset, const uint8_t* data, size_t size) {
+    return ((long (*)(const char*, long long, const uint8_t*, size_t))(0x4807CC00 | 1))(part_name, offset, data, size);
+}
+
+void cmd_reboot(const char* arg, void* data, unsigned sz) {
+    ((void (*)(const char*, void*, unsigned))(0x480359E8 | 1))(arg, data, sz);
+}
+
+void mt_power_off(void) {
+    ((void (*)(void))(0x48013370 | 1))();
+}
+
 void reboot_emergency(void) {
     // USB download register value for bootrom mode with no timeout
     // 0x444C0000 = magic number for brom check
@@ -31,6 +43,40 @@ void cmd_reboot_emergency(const char* arg, void* data, unsigned sz) {
     fastboot_info("The device will reboot into bootrom mode...");
     fastboot_okay("");
     reboot_emergency();
+}
+
+void cmd_reboot_recovery(const char* arg, void* data, unsigned sz) {
+    struct misc_message misc_msg = {0};
+    strncpy(misc_msg.command, "boot-recovery", 31);
+    
+    if (partition_write("misc", 0, (uint8_t*)&misc_msg, sizeof(misc_msg)) < 0) {
+        fastboot_fail("Failed to write bootloader message!");
+        return;
+    }
+    
+    fastboot_info("The device will reboot into recovery mode...");
+    fastboot_okay("");
+    mtk_arch_reset(1);
+}
+
+void cmd_reboot_wrapper(const char* arg, void* data, unsigned sz) {
+    // MediaTek devs couldn't figure out basic string matching, so we have to
+    // do their job for them with this lovely hack. If "recovery" appears
+    // anywhere in the argument, redirect to our working implementation.
+    if (arg && strstr(arg, "recovery")) {
+        cmd_reboot_recovery(arg, data, sz);
+        return;
+    }
+
+    cmd_reboot(arg, data, sz);
+    fastboot_okay("");
+}
+
+void cmd_shutdown(const char* arg, void* data, unsigned sz) {
+    fastboot_info("The device will power off...");
+    fastboot_info("Make sure to unplug the USB cable!");
+    fastboot_okay("");
+    mt_power_off();
 }
 
 void board_early_init(void) {
@@ -126,14 +172,47 @@ void board_late_init(void) {
     // not executing the code that shows the warning.
     FORCE_RETURN(0x48086BE8, 0);
 
-    // Since the only way to enter USBDL mode on this device is by opening it up
-    // and shorting the test point, we add a fastboot command to make it easier
-    // to enter that mode without needing to disassemble the device.
-    //
-    // Once you execute the command, the device will reboot into bootrom mode,
-    // and you'll be able to use tools like mtkclient to flash the device.
     if (get_bootmode() == BOOTMODE_FASTBOOT) {
+        // Since the only way to enter USBDL mode on this device is by opening it up
+        // and shorting the test point, we add a fastboot command to make it easier
+        // to enter that mode without needing to disassemble the device.
+        //
+        // Once you execute the command, the device will reboot into bootrom mode,
+        // and you'll be able to use tools like mtkclient to flash the device.
         fastboot_register("oem reboot-emergency", cmd_reboot_emergency, 1);
+
+        // There is no easy way to power off the device from fastboot mode.
+        // Holding the power button simply reboots the device, forcing you to
+        // boot into the OS to shut it down properly. This is not ideal, so
+        // we add a fastboot command that allows powering off directly.
+        //
+        // This was shamelessly borrowed from Motorola’s (or Huaqin’s) LK image.
+        // It simply calls mt_power_off().
+        fastboot_register("oem shutdown", cmd_shutdown, 1);
+        fastboot_register("oem poweroff", cmd_shutdown, 1);
+
+        // Huawei managed to screw up reboot commands in two different ways:
+        //
+        // 1. The command parser has a bug where "reboot-recovery" gets matched
+        //    as just "reboot" (probably some dumb string comparison issue),
+        //    so the device just does a normal reboot instead of going to recovery.
+        //
+        // 2. Even when recovery mode is triggered properly, their implementation
+        //    doesn't write the bootloader message correctly to the misc partition,
+        //    so recovery boot fails anyway.
+        //
+        // We work around both issues by disabling their broken command handlers
+        // and registering our own. The reboot wrapper does a nasty string check
+        // to intercept "recovery" and redirect it to our working implementation.
+        NOP(0x48034412, 2); // register fastboot reboot recovery.
+        NOP(0x480343EA, 2); // register fastboot reboot.
+
+        // Register our non-broken reboot command handlers. For the recovery one,
+        // we want to have multiple aliases: "reboot-recovery" matches the standard
+        // behavior expected by fastboot, while "oem reboot-recovery" is something
+        // MTK tends to add on other devices for compatibility.
+        fastboot_register("reboot", cmd_reboot_wrapper, 1);
+        fastboot_register("oem reboot-recovery", cmd_reboot_recovery, 1);
     }
 
     // Show the current boot mode on screen when not performing a normal boot.
