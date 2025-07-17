@@ -184,6 +184,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Onn Surf 3 8-inch
+
+    config ALCATEL_5028Y
+        bool "Support Alcatel 1S 2020"
+        default n
+        help
+          Say Y if you want to include support for Alcatel 1S 2020
 endmenu
 
 menu "SoC Support"

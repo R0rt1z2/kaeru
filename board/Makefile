@@ -31,3 +31,4 @@ lib-$(CONFIG_RABBIT_R1) += rabbit/board-r1.o
 lib-$(CONFIG_OPPO_A5S) += oppo/board-a5s.o
 lib-$(CONFIG_VOLLA_MIMAMEID) += volla/board-mimameid.o
 lib-$(CONFIG_JOYAR_100071483) += joyar/board-100071483.o
+lib-$(CONFIG_ALCATEL_5028Y) += alcatel/board-5028y.o
