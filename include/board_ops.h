@@ -11,8 +11,9 @@
 #include <lib/common.h>
 #include <lib/debug.h>
 #include <lib/fastboot.h>
-#include <lib/string.h>
 #include <lib/recovery.h>
+#include <lib/string.h>
+#include <lib/thread.h>
 
 void board_early_init(void);
 void board_late_init(void);
