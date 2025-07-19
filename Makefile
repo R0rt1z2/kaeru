@@ -368,7 +368,7 @@ kaeru-all	:= $(kaeru-objs) $(kaeru-libs)
 # Do modpost on a prelinked vmlinux. The finally linked vmlinux has
 # relevant sections renamed as per the linker script.
 quiet_cmd_kaeru = LD      $@.o
-cmd_kaeru = $(LD) $(kaeru-objs) --whole-archive board/lib.a --no-whole-archive lib/lib.a arch/lib.a -o $@.o --script=arch/$(ARCH)/linker.lds
+cmd_kaeru = $(LD) $(kaeru-objs) --whole-archive board/lib.a --no-whole-archive lib/built-in.o arch/lib.a -o $@.o --script=arch/$(ARCH)/linker.lds
 
 arch/$(ARCH)/linker.lds: arch/$(ARCH)/linker.lds.S
 	$(CPP) $< -P -o $@

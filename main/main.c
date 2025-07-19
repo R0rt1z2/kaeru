@@ -6,13 +6,17 @@
 #include <arch/arm.h>
 #include <arch/ops.h>
 #include <board_ops.h>
-#include <lib/app.h>
-#include <lib/common.h>
-#include <lib/debug.h>
-#include <lib/fastboot.h>
 
 void kaeru(void) {
     common_late_init();
+
+#ifdef CONFIG_FRAMEBUFFER_SUPPORT
+    fb_init((uint32_t*)CONFIG_FRAMEBUFFER_ADDRESS, 
+            CONFIG_FRAMEBUFFER_WIDTH, 
+            CONFIG_FRAMEBUFFER_HEIGHT, 
+            CONFIG_FRAMEBUFFER_BYTES_PER_PIXEL);
+#endif
+
     board_late_init();
 
     ((void (*)(const struct app_descriptor *))(CONFIG_APP_ADDRESS | 1))(NULL);

@@ -85,7 +85,12 @@ void print_kaeru_info(output_type_t output_type) {
         case OUTPUT_VIDEO:
             PRINT_INFO(video_printf);
             break;
-    }
+    #ifdef CONFIG_FRAMEBUFFER_SUPPORT
+        case OUTPUT_FRAMEBUFFER:
+            PRINT_INFO(fb_printf);
+            break;
+    #endif
+}
 
 #undef PRINT_INFO
 }
