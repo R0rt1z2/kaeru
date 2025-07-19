@@ -6,6 +6,7 @@
 #pragma once
 
 #include <arch/arm.h>
+#include <lib/app.h>
 #include <lib/bootimg.h>
 #include <lib/bootmode.h>
 #include <lib/common.h>
@@ -14,6 +15,10 @@
 #include <lib/recovery.h>
 #include <lib/string.h>
 #include <lib/thread.h>
+
+#ifdef CONFIG_FRAMEBUFFER_SUPPORT
+#include <lib/framebuffer.h>
+#endif
 
 void board_early_init(void);
 void board_late_init(void);

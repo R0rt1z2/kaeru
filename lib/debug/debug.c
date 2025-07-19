@@ -6,10 +6,12 @@
 #include <stdarg.h>
 
 #define NANOPRINTF_IMPLEMENTATION
-#include <lib/nanoprintf.h>
 
 #include <lib/debug.h>
 #include <lib/string.h>
+#ifdef CONFIG_FRAMEBUFFER_SUPPORT
+#include <lib/framebuffer.h>
+#endif
 
 void low_uart_put(int ch) {
     // The SoC sets 0x20 when UART isn't busy
@@ -43,8 +45,6 @@ int printf(const char* fmt, ...) {
 #ifdef CONFIG_LK_LOG_STORE_ADDRESS
     va_start(args, fmt);
     npf_vpprintf(&lk_log_store, NULL, fmt, args);
-#else
-#warning "LK Log Store enabled but no address specified"
 #endif
 #endif
 
@@ -61,6 +61,33 @@ int video_printf(const char* fmt, ...) {
     return 0;
 #endif
 }
+
+#ifdef CONFIG_FRAMEBUFFER_SUPPORT
+void fb_putc_callback(int c, void *ctx) {
+    (void)ctx;
+    fb_putc(c);
+}
+
+int fb_vprintf(const char *fmt, va_list args) {
+    return npf_vpprintf(&fb_putc_callback, NULL, fmt, args);
+}
+
+void fb_update_display(void) {
+    fb_config_t *config = fb_get_config();
+    if (!config->buffer) return;
+    uint32_t fb_size = config->width * config->height * config->bppx;
+    arch_clean_invalidate_cache_range((uintptr_t)config->buffer, fb_size);
+}
+
+int fb_printf(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    int ret = fb_vprintf(fmt, args);
+    va_end(args);
+    fb_update_display();
+    return ret;
+}
+#endif
 
 void hexdump(const void* data, size_t size, output_type_t output_type) {
     size_t i, j;
@@ -101,6 +128,11 @@ void hexdump(const void* data, size_t size, output_type_t output_type) {
         case OUTPUT_VIDEO:
             HEXDUMP(video_printf);
             break;
+#ifdef CONFIG_FRAMEBUFFER_SUPPORT
+        case OUTPUT_FRAMEBUFFER:
+            HEXDUMP(fb_printf);
+            break;
+#endif
     }
 
 #undef HEXDUMP
@@ -113,3 +145,9 @@ void uart_hexdump(const void* data, size_t size) {
 void video_hexdump(const void* data, size_t size) {
     hexdump(data, size, OUTPUT_VIDEO);
 }
+
+#ifdef CONFIG_FRAMEBUFFER_SUPPORT
+void fb_hexdump(const void* data, size_t size) {
+    hexdump(data, size, OUTPUT_FRAMEBUFFER);
+}
+#endif

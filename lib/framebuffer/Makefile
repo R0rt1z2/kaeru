@@ -1,0 +1,2 @@
+obj-$(CONFIG_FRAMEBUFFER_SUPPORT) += framebuffer.o
+obj-$(CONFIG_FRAMEBUFFER_SUPPORT) += fonts/
