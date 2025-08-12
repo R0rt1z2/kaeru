@@ -196,6 +196,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Xiaomi Redmi 9C NFC
+
+    config HUAWEI_MODENA1
+        bool "Support Huawei Enjoy 10e"
+        default n
+        help
+          Say Y if you want to include support for Huawei Enjoy 10e
 endmenu
 
 menu "SoC Support"
