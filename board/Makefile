@@ -34,3 +34,4 @@ lib-$(CONFIG_JOYAR_100071483) += joyar/board-100071483.o
 lib-$(CONFIG_ALCATEL_5028Y) += alcatel/board-5028y.o
 lib-$(CONFIG_XIAOMI_ANGELICAN) += xiaomi/board-angelican.o
 lib-$(CONFIG_HUAWEI_MODENA1) += huawei/board-modena1.o
+lib-$(CONFIG_BLACKVIEW_BV9200) += blackview/board-bv9200.o

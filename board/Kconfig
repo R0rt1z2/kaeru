@@ -202,14 +202,20 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Huawei Enjoy 10e
+
+    config BLACKVIEW_BV9200
+        bool "Support Blackview BV9200"
+        default n
+        help
+          Say Y if you want to include support for Blackview BV9200
 endmenu
 
 menu "SoC Support"
     config MEDIATEK_MT6737
         bool "MediaTek MT6737 SoC"
 
-	config MEDIATEK_MT6739
-		bool "MediaTek MT6739 SoC"
+    config MEDIATEK_MT6739
+        bool "MediaTek MT6739 SoC"
 
     config MEDIATEK_MT6750
         bool "MediaTek MT6750 SoC"
@@ -234,6 +240,9 @@ menu "SoC Support"
 
     config MEDIATEK_MT6771
         bool "MediaTek MT6771 SoC"
+
+    config MEDIATEK_MT6781
+        bool "MediaTek MT6781 SoC"
 
     config MEDIATEK_MT6785
         bool "MediaTek MT6785 SoC"
@@ -336,7 +345,8 @@ menu "UART Configuration"
         default 0x11002014 if MEDIATEK_MT6765
         default 0x11002014 if MEDIATEK_MT6768
         default 0x11002014 if MEDIATEK_MT6737
-		default 0x11002014 if MEDIATEK_MT6739
+        default 0x11002014 if MEDIATEK_MT6739
+        default 0x11002014 if MEDIATEK_MT6781
         default 0x11002014 if MEDIATEK_MT6785
         default 0x11002014 if MEDIATEK_MT6771
         default 0x11002014 if MEDIATEK_MT6797
@@ -356,7 +366,8 @@ menu "UART Configuration"
         default 0x11002000 if MEDIATEK_MT6765
         default 0x11002000 if MEDIATEK_MT6768
         default 0x11002000 if MEDIATEK_MT6737
-		default 0x11002000 if MEDIATEK_MT6739
+        default 0x11002000 if MEDIATEK_MT6739
+        default 0x11002000 if MEDIATEK_MT6781
         default 0x11002000 if MEDIATEK_MT6785
         default 0x11002000 if MEDIATEK_MT6771
         default 0x11002000 if MEDIATEK_MT6797
