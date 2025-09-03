@@ -208,6 +208,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Blackview BV9200
+
+    config XIAOMI_ROSEMARY
+        bool "Support Redmi 10S / POCO M5s"
+        default n
+        help
+          Say Y if you want to include support for Redmi 10S / POCO M5s
 endmenu
 
 menu "SoC Support"
