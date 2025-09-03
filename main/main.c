@@ -21,7 +21,6 @@ void kaeru(void) {
 
     ((void (*)(const struct app_descriptor *))(CONFIG_APP_ADDRESS | 1))(NULL);
 
-    video_printf("Shouldn't have reached here :(\n");
     arch_idle();
 }
 
