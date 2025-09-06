@@ -214,6 +214,18 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Redmi 10S / POCO M5s
+
+    config LENOVO_AMAR_ROW_LTE
+        bool "Support Lenovo Tab M10HD (2nd Gen) LTE"
+        default n
+        help
+          Say Y if you want to include support for Lenovo Tab M10HD (2nd Gen) LTE
+
+    config LENOVO_AMAR_ROW_WIFI
+        bool "Support Lenovo Tab M10HD (2nd Gen) WiFI"
+        default n
+        help
+          Say Y if you want to include support for Lenovo Tab M10HD (2nd Gen) WiFI
 endmenu
 
 menu "SoC Support"
