@@ -36,3 +36,5 @@ lib-$(CONFIG_XIAOMI_ANGELICAN) += xiaomi/board-angelican.o
 lib-$(CONFIG_HUAWEI_MODENA1) += huawei/board-modena1.o
 lib-$(CONFIG_BLACKVIEW_BV9200) += blackview/board-bv9200.o
 lib-$(CONFIG_XIAOMI_ROSEMARY) += xiaomi/board-rosemary.o
+lib-$(CONFIG_LENOVO_AMAR_ROW_LTE) += lenovo/board-amar_row_lte.o
+lib-$(CONFIG_LENOVO_AMAR_ROW_WIFI) += lenovo/board-amar_row_wifi.o
