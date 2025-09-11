@@ -89,6 +89,29 @@ def main():
     except:
         exit('unable to read base or pivot address from defconfig')
 
+    force_inject_cfg = get_cfg(args.defconfig, 'FORCE_INJECT_ADDR')
+    if force_inject_cfg:
+        force_inject_ram_addr = int(force_inject_cfg, 16)
+        inject_addr = (force_inject_ram_addr - base + hdr_sz) & ~1
+        print('forcing injection at RAM address: 0x%08x (file offset: 0x%08x)' % (force_inject_ram_addr, inject_addr))
+        
+        if inject_addr >= len(data):
+            exit('forced injection address is beyond file size')
+        
+        data[inject_addr:inject_addr + payload_len] = payload
+        
+        shellcode = encode_bl(pivot, force_inject_ram_addr | 1)
+        offset = (pivot - base) + hdr_sz
+        data[offset:offset + len(shellcode)] = shellcode
+        
+        print('payload injected at forced address: 0x%08x' % force_inject_ram_addr)
+        
+        with open(args.output, 'wb') as f:
+            f.write(data)
+        
+        print('patched bootloader written to %s!' % args.output)
+        return
+
     magic, code_sz = struct.unpack('<II', data[:8])
     original_code_sz = code_sz
     name = data[8:40].decode('utf-8').rstrip('\0')
