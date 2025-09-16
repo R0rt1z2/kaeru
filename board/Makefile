@@ -38,3 +38,4 @@ lib-$(CONFIG_BLACKVIEW_BV9200) += blackview/board-bv9200.o
 lib-$(CONFIG_XIAOMI_ROSEMARY) += xiaomi/board-rosemary.o
 lib-$(CONFIG_LENOVO_AMAR_ROW_LTE) += lenovo/board-amar_row_lte.o
 lib-$(CONFIG_LENOVO_AMAR_ROW_WIFI) += lenovo/board-amar_row_wifi.o
+lib-$(CONFIG_HUAWEI_KANSAS) += huawei/board-kansas.o

@@ -226,6 +226,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Lenovo Tab M10HD (2nd Gen) WiFI
+
+    config HUAWEI_KANSAS
+        bool "Support Huawei Y5 2019"
+        default n
+        help
+          Say Y if you want to include support for Huawei Y5 2019
 endmenu
 
 menu "SoC Support"

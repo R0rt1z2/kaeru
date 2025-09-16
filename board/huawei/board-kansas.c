@@ -1,23 +1,35 @@
 //
 // SPDX-FileCopyrightText: 2025 Roger Ortiz <me@r0rt1z2.com>
+//                         2025 DiabloSat <dev@diablosat.cc>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
 #include <board_ops.h>
+#include <lib/fastboot.h>
+#include <lib/string.h>
+#include <lib/debug.h>
 
 #define VOLUME_UP 17
 #define VOLUME_DOWN 1
 
+// A function that adds the specified number of new lines.
+// This is useful if the bottom of the screen is broken and you need to display logs.
+void print_spacer(int count) {
+    for (int i = 0; i < count; i++) {
+        video_printf("\n");
+    }
+}
+
 void board_early_init(void) {
-    printf("Entering early init for Huawei Y6 2019\n");
+    printf("Entering early init for Huawei Y5 2019\n");
 
     // Likely unnecessary, but done as a precaution.
     //
     // These writes set all known lock states—USRLOCK, FBLOCK, and Widevine—to
     // 'unlocked'. While the bootloader may overwrite these later, we patch the
     // corresponding getters in `board_late_init` to enforce the unlocked state.
-    WRITE32(0x481773A8, 1);  // USERLOCK state: UNLOCKED
-    WRITE32(0x481773A4, 1);  // FBLOCK   state: UNLOCKED
+    WRITE32(0x480f5ec4, 1);  // USERLOCK state: UNLOCKED
+    WRITE32(0x480f5edc, 1);  // FBLOCK   state: UNLOCKED
     WRITE32(0x4817739C, 1);  // WIDEVINE state: UNLOCKED
 
     // Huawei uses OEMINFO to verify whether the device was officially unlocked.
@@ -27,16 +39,10 @@ void board_early_init(void) {
     // These patches disable that behavior, preventing an automatic relock
     // when unofficial unlock methods are used.
     NOP(0x4802DFF4, 2);
-
-    // Cosmetic patch to suppress the default Android logo with lock state info
-    // shown during boot. This has no functional impact, purely visual.
-    //
-    // To restore the original behavior, simply remove this patch.
-    FORCE_RETURN(0x480200C4, 0);
 }
 
 void board_late_init(void) {
-    printf("Entering late init for Huawei Y6 2019\n");
+    printf("Entering late init for Huawei Y5 2019\n");
 
     // show_boot_warning
     PATCH_MEM(0x480566A8, 0x4770, 0xBF00);
@@ -87,4 +93,13 @@ void board_late_init(void) {
     // Displaying the boot mode can be helpful for developers, as it provides
     // immediate feedback and can prevent debugging headaches.
     show_bootmode(get_bootmode());
+
+    // Remove the useless commands for unlocking/locking/relocking the bootloader.
+    //
+    // The bootloader unlock process is done by editing seccfg, and locking is simply achieved by flashing the stock lk.
+    // Even though these commands shouldn’t harm the device, it’s better to play it safe.
+    NOP(0x4802a2e8, 2); // oem relock
+    NOP(0x4802a2da, 2); // oem unlock
+    NOP(0x4802a27a, 2); // flashing lock
+    NOP(0x4802a264, 2); // flashing unlock
 }
