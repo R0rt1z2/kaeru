@@ -96,8 +96,8 @@ void board_late_init(void) {
 
     // Remove the useless commands for unlocking/locking/relocking the bootloader.
     //
-    // The bootloader unlock process is done by editing seccfg, and locking is simply achieved by flashing the stock lk.
-    // Even though these commands shouldn’t harm the device, it’s better to play it safe.
+    // Unlock is done by editing seccfg, locking by flashing stock LK.
+    // These commands shouldn’t harm the device, but it’s safer to avoid them.
     NOP(0x4802a2e8, 2); // oem relock
     NOP(0x4802a2da, 2); // oem unlock
     NOP(0x4802a27a, 2); // flashing lock
