@@ -184,3 +184,4 @@ sphinx_*/
 # Kaeru
 kaeru
 *-kaeru
+*.lds
