@@ -14,6 +14,27 @@
 
 #define KAERU_ENV_BLDR_SPOOF "kaeru_bootloader_spoof_status"
 
+void cmd_help(const char *arg, void *data, unsigned sz) {
+    // TODO: Find a better way to get the command list
+    struct fastboot_cmd *cmd = (struct fastboot_cmd *)0x4C5B2144;
+
+    if (!cmd) {
+        fastboot_fail("No commands found!");
+        return;
+    }
+
+    fastboot_info("Available oem commands:");
+    while (cmd) {
+        if (cmd->prefix) {
+            if (strncmp(cmd->prefix, "oem", 3) == 0) {
+                fastboot_info(cmd->prefix);
+            }
+        }
+        cmd = cmd->next;
+    }
+    fastboot_okay("");
+}
+
 int is_partition_protected(const char* partition) {
     if (!partition || *partition == '\0') return 1;
 
@@ -285,6 +306,7 @@ void board_early_init(void) {
     fastboot_register("flash:", cmd_flash, 1);
     fastboot_register("erase:", cmd_erase, 1);
     fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
+    fastboot_register("oem help", cmd_help, 1);
 }
 
 void board_late_init(void) {
