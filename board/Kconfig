@@ -232,6 +232,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Huawei Y5 2019
+
+    config INFINIX_X6812
+        bool "Support Infinix X6812"
+        default n
+        help
+          Say Y if you want to include support for Infinix X6812
 endmenu
 
 menu "SoC Support"
