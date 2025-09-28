@@ -5,6 +5,8 @@
 
 #include <board_ops.h>
 
+#define VOLUME_UP 17
+
 void board_early_init(void) {
     printf("Entering early init for Nokia 2.2\n");
 }
@@ -26,4 +28,12 @@ void board_late_init(void) {
         printf("Found orange_state_warning at 0x%08X\n", addr);
         FORCE_RETURN(addr, 0);
     }
+
+    // Huaqin removed the option to enter recovery mode on wasp by
+    // volume up, the only ways to enter recovery mode is via adb
+    // and fastboot, making our lives harder.
+    //
+    // The 2 lines of code below will re-enable that functionality.
+    if (mtk_detect_key(VOLUME_UP))
+        set_bootmode(BOOTMODE_RECOVERY);
 }
