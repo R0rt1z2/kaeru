@@ -40,3 +40,4 @@ lib-$(CONFIG_LENOVO_AMAR_ROW_LTE) += lenovo/board-amar_row_lte.o
 lib-$(CONFIG_LENOVO_AMAR_ROW_WIFI) += lenovo/board-amar_row_wifi.o
 lib-$(CONFIG_HUAWEI_KANSAS) += huawei/board-kansas.o
 lib-$(CONFIG_INFINIX_X6812) += infinix/board-X6812.o
+lib-$(CONFIG_HONOR_KINGKONG) += honor/board-kingkong.o
