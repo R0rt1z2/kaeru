@@ -58,6 +58,13 @@ def find_bss_start(data, size, base, hdr_sz):
     return None, None
 
 
+def find_actual_end(data):
+    for i in range(len(data) - 1, 0, -1):
+        if data[i] != 0:
+            return i + 1
+    return len(data)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Patch a bootloader image with kaeru.'
@@ -113,6 +120,16 @@ def main():
         return
 
     magic, code_sz = struct.unpack('<II', data[:8])
+
+    actual_end = find_actual_end(data)
+    if actual_end < len(data) - 0x1000:
+        padding_amount = len(data) - actual_end
+        suggested_size = ((actual_end + 0x1FF) & ~0x1FF)
+        print('trimming excessive padding: %d bytes (%.1f%% of file)' % (padding_amount, (padding_amount / len(data)) * 100))
+        print('actual data ends at: 0x%X, trimming to: 0x%X' % (actual_end, suggested_size))
+        data = data[:suggested_size]
+        size = len(data)
+
     original_code_sz = code_sz
     name = data[8:40].decode('utf-8').rstrip('\0')
 
