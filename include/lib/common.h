@@ -63,6 +63,7 @@
 void common_early_init(void);
 void common_late_init(void);
 
+void mtk_wdt_reset(void);
 bool mtk_detect_key(unsigned short key);
 const char* get_mode_string(unsigned int mode);
 void print_kaeru_info(output_type_t output_type);
