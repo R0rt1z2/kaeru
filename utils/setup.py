@@ -24,6 +24,7 @@ class DeviceSetup:
     UTILS_DIR = ROOT_DIR / 'utils'
     CONFIGS_DIR = ROOT_DIR / 'configs'
     BOARDS_DIR = ROOT_DIR / 'board'
+    SOCS_DIR = ROOT_DIR / 'soc'
 
     def __init__(self, debug=False):
         self.debug = debug
@@ -191,7 +192,7 @@ class DeviceSetup:
         return True
 
     def check_soc_exists(self, soc):
-        kconfig_path = self.BOARDS_DIR / 'Kconfig'
+        kconfig_path = self.SOCS_DIR / 'Kconfig'
 
         if not soc.startswith('MT'):
             soc = f'MT{soc}'
@@ -419,10 +420,10 @@ void board_late_init(void) {{
             return 1
 
         if not self.check_soc_exists(soc):
-            self.log('ERROR', f'SoC {soc_internal} not found in Kconfig')
+            self.log('ERROR', f'SoC {soc_internal} not found in soc/Kconfig')
             self.log(
                 'ERROR',
-                f'Please add {soc_internal} to the board/Kconfig file manually first',
+                f'Please add {soc_internal} to the soc/Kconfig file manually first',
             )
             return 1
 
