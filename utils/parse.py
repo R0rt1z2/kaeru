@@ -219,6 +219,12 @@ def main():
 
     write_cfg(args.defconfig, cfg)
 
+    print('#')
+    print('# WARNING: These addresses are automatically detected and may not be 100% accurate.')
+    print('# Some functions might be missing or incorrectly identified.')
+    print('# Please manually review this defconfig and follow the wiki for verification.')
+    print('#')
+
 
 if __name__ == '__main__':
     main()
