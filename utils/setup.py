@@ -160,11 +160,19 @@ class DeviceSetup:
         else:
             return input(f'{prompt}: ')
 
+    def find_existing_defconfig(self, codename):
+        config_filename = f'{codename}_defconfig'
+        
+        for config_path in self.CONFIGS_DIR.rglob(config_filename):
+            if config_path.is_file():
+                return config_path
+        
+        return None
+
     def check_existing_device(self, codename, vendor):
         kconfig_path = self.BOARDS_DIR / 'Kconfig'
         makefile_path = self.BOARDS_DIR / 'Makefile'
-        defconfig_path = self.CONFIGS_DIR / f'{codename}_defconfig'
-
+        
         if kconfig_path.exists():
             kconfig_content = kconfig_path.read_text()
             if f'CONFIG_{vendor}_{codename}' in kconfig_content:
@@ -183,9 +191,11 @@ class DeviceSetup:
                 )
                 return False
 
-        if defconfig_path.exists():
+        existing_defconfig = self.find_existing_defconfig(codename)
+        if existing_defconfig:
             self.log(
-                'ERROR', f'Config file {codename}_defconfig already exists'
+                'ERROR', 
+                f'Config file {codename}_defconfig already exists at {existing_defconfig}'
             )
             return False
 
@@ -309,10 +319,16 @@ void board_late_init(void) {{
         self.log('SUCCESS', f'Board file created: {board_file}')
         return True
 
-    def create_defconfig(self, codename, vendor, lk_path, soc):
+    def create_defconfig(self, codename, vendor, lk_path, soc, vendor_subdir=False):
         self.log('STEP', f'Creating defconfig file for {codename}')
 
-        defconfig_path = self.CONFIGS_DIR / f'{codename}_defconfig'
+        if vendor_subdir:
+            vendor_path = self.sanitize_vendor_path(vendor)
+            vendor_config_dir = self.CONFIGS_DIR / vendor_path
+            vendor_config_dir.mkdir(parents=True, exist_ok=True)
+            defconfig_path = vendor_config_dir / f'{codename}_defconfig'
+        else:
+            defconfig_path = self.CONFIGS_DIR / f'{codename}_defconfig'
 
         self.log(
             'DEBUG',
@@ -439,7 +455,7 @@ void board_late_init(void) {{
             self.log('ERROR', 'Failed to create board file, exiting')
             return 1
 
-        if not self.create_defconfig(codename, vendor, lk_path, soc_internal):
+        if not self.create_defconfig(codename, vendor, lk_path, soc_internal, vendor_subdir=True):
             self.log('ERROR', 'Failed to create defconfig, exiting')
             return 1
 

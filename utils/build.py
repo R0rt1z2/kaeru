@@ -64,18 +64,35 @@ class KaeruPatcher:
         else:
             print(output)
 
+    def find_defconfig(self):
+        config_filename = f'{self.device}_defconfig'
+        
+        config_path = self.CONFIGS_DIR / config_filename
+        if config_path.is_file():
+            self.log('DEBUG', f'Found config at: {config_path}')
+            return config_path
+        
+        for config_path in self.CONFIGS_DIR.rglob(config_filename):
+            if config_path.is_file():
+                self.log('DEBUG', f'Found config at: {config_path}')
+                return config_path
+        
+        return None
+
     def validate_inputs(self):
         self.log('DEBUG', f'Device: {self.device}')
         self.log('DEBUG', f'Config: {self.config}')
         self.log('DEBUG', f'Bootloader: {self.lk_path}')
 
-        config_path = self.CONFIGS_DIR / self.config
-        if not config_path.is_file():
+        config_path = self.find_defconfig()
+        if not config_path:
             self.log(
                 'ERROR',
-                f'Configuration file for {self.device} not found at {config_path}',
+                f'Configuration file for {self.device} not found in {self.CONFIGS_DIR} or its subdirectories',
             )
             return False
+        
+        self.config_path = config_path
 
         if not self.lk_path.exists():
             self.log('ERROR', f'LK path {self.lk_path} does not exist')
@@ -143,7 +160,7 @@ class KaeruPatcher:
         self.log('STEP', f'Applying patches and generating {output_file}')
         cmd_args = [
             str(self.UTILS_DIR / 'patch.py'),
-            str(self.CONFIGS_DIR / self.config),
+            str(self.config_path),
             str(self.lk_path),
             'kaeru',
             '-o',

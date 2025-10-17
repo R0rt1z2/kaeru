@@ -120,9 +120,17 @@ else
 endif
 
 %_defconfig: $(obj)/conf
-#	$(Q)$< --defconfig=arch/$(SRCARCH)/configs/$@ $(Kconfig)
-# location of configs changed by Masahiro Yamada
-	$(Q)$< --defconfig=configs/$@ $(Kconfig)
+	$(Q)if [ -f configs/$@ ]; then \
+		$< --defconfig=configs/$@ $(Kconfig); \
+	else \
+		DEFCONFIG_PATH=$$(find configs -name "$@" -type f | head -1); \
+		if [ -n "$$DEFCONFIG_PATH" ]; then \
+			$< --defconfig=$$DEFCONFIG_PATH $(Kconfig); \
+		else \
+			echo "*** Can't find default configuration \"$@\"!"; \
+			exit 1; \
+		fi; \
+	fi
 
 # Help text used by make help
 help:
