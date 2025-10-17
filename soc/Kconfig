@@ -64,30 +64,8 @@ config MEDIATEK_MT6877
 
 endchoice
 
-config UART_REG0
-    hex "UART0 register"
-    default 0x11005014 if MEDIATEK_MT6572
-    default 0x11002014 if MEDIATEK_MT6750
-    default 0x11002014 if MEDIATEK_MT6757
-    default 0x11002014 if MEDIATEK_MT6761
-    default 0x11002014 if MEDIATEK_MT6762
-    default 0x11002014 if MEDIATEK_MT6765
-    default 0x11002014 if MEDIATEK_MT6768
-    default 0x11002014 if MEDIATEK_MT6737
-    default 0x11002014 if MEDIATEK_MT6739
-    default 0x11002014 if MEDIATEK_MT6781
-    default 0x11002014 if MEDIATEK_MT6785
-    default 0x11002014 if MEDIATEK_MT6771
-    default 0x11002014 if MEDIATEK_MT6797
-    default 0x11002014 if MEDIATEK_MT8127
-    default 0x11002014 if MEDIATEK_MT8163
-    default 0x11005014 if MEDIATEK_MT8516
-    default 0x11002014 if MEDIATEK_MT6833
-    default 0x11002014 if MEDIATEK_MT6877
-    default 0x11002014 if MEDIATEK_MT8168
-
-config UART_REG1
-    hex "UART1 register"
+config UART_BASE
+    hex "UART base address"
     default 0x11005000 if MEDIATEK_MT6572
     default 0x11002000 if MEDIATEK_MT6750
     default 0x11002000 if MEDIATEK_MT6757

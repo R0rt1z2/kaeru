@@ -13,11 +13,15 @@
 #include <lib/framebuffer.h>
 #endif
 
+#define UART_THR_OFFSET     0x00    /* Transmit Holding Register */
+#define UART_LSR_OFFSET     0x14    /* Line Status Register */
+#define UART_LSR_THRE       0x20    /* TX holding register empty */
+
 void low_uart_put(int ch) {
-    // The SoC sets 0x20 when UART isn't busy
-    while (!(*(volatile uint32_t*)CONFIG_UART_REG0 & 0x20))
+    // Wait until TX holding register is empty
+    while (!(*(volatile uint32_t*)(CONFIG_UART_BASE + UART_LSR_OFFSET) & UART_LSR_THRE))
         ;
-    *(volatile uint32_t*)CONFIG_UART_REG1 = ch;
+    *(volatile uint32_t*)(CONFIG_UART_BASE + UART_THR_OFFSET) = ch;
 }
 
 void uart_putc(int c, void* ctx) {
