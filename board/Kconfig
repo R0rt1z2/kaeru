@@ -82,7 +82,7 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Realme 8
-          
+
     config XIAOMI_NIKEL
         bool "Support Redmi Note 4"
         default n
@@ -244,6 +244,31 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Honor X30 Max
+
+    config MOTOROLA_MALTA_FAMILY
+        bool
+        help
+        Internal config to enable Malta family board support
+
+    config MOTOROLA_MALTA
+        bool "Support Motorola Moto E7 (malta)"
+        select MOTOROLA_MALTA_FAMILY
+        default n
+
+    config MOTOROLA_MALTA_64
+        bool "Support Motorola Moto E7 64-bit (malta_64)"
+        select MOTOROLA_MALTA_FAMILY
+        default n
+
+    config MOTOROLA_MALTA_L
+        bool "Support Motorola Moto E7 Power (malta_l)"
+        select MOTOROLA_MALTA_FAMILY
+        default n
+
+    config MOTOROLA_MALTA_L_64
+        bool "Support Motorola Moto E7 Power 64-bit (malta_l_64)"
+        select MOTOROLA_MALTA_FAMILY
+        default n
 endmenu
 
 menu "Fastboot Support"
@@ -272,7 +297,7 @@ menu "Memory and Address Mapping"
 
         config BOOTLOADER_SIZE
             hex "LK size"
-        
+
         config BOOTMODE_ADDRESS
             hex "Bootmode address"
     endmenu
