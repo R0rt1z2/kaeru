@@ -41,9 +41,10 @@ typedef struct {
     uint32_t width;
     uint32_t height;
     uint32_t bppx;
+    uint32_t stride;
 } fb_config_t;
 
-void fb_init(uint32_t *fb_addr, uint32_t width, uint32_t height, uint32_t bppx);
+void fb_init(uint32_t *fb_addr, uint32_t width, uint32_t height, uint32_t bppx, uint32_t alignment);
 void fb_clear(uint32_t color);
 void fb_pixel(uint32_t x, uint32_t y, uint32_t color);
 void fb_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color);
