@@ -4,14 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
-#include <arch/arm.h>
 #include <board_ops.h>
-#include <lib/common.h>
-#include <lib/debug.h>
-#include <lib/fastboot.h>
-#include <lib/string.h>
-
-#define KAERU_ENV_BLDR_SPOOF "kaeru_bootloader_spoof_status"
 
 int set_env(char *name, char *value) {
     uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0x2200, 0xF7FF, 0xBF0D, 0xBF00);

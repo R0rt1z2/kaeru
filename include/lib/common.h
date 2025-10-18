@@ -9,6 +9,8 @@
 #include <lib/debug.h>
 #include <stdbool.h>
 
+#define KAERU_ENV_BLDR_SPOOF "kaeru_bootloader_spoof_status"
+
 #define LK_BASE CONFIG_BOOTLOADER_BASE
 #define LK_SIZE CONFIG_BOOTLOADER_SIZE
 

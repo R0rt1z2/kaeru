@@ -3,12 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
-#include <arch/arm.h>
 #include <board_ops.h>
-#include <lib/common.h>
-#include <lib/debug.h>
-#include <lib/fastboot.h>
-#include <lib/string.h>
 
 int is_partition_protected(const char* partition) {
     if (!partition || *partition == '\0') return 1;

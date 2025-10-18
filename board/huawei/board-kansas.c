@@ -5,9 +5,6 @@
 //
 
 #include <board_ops.h>
-#include <lib/fastboot.h>
-#include <lib/string.h>
-#include <lib/debug.h>
 
 #define VOLUME_UP 17
 #define VOLUME_DOWN 1

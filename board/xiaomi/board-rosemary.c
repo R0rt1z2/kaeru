@@ -5,7 +5,6 @@
 
 #include <board_ops.h>
 
-
 void spoof_lock_state(void) {
     uint32_t addr = 0;
 

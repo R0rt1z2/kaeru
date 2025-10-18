@@ -4,15 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
-#include <arch/arm.h>
 #include <board_ops.h>
-#include <lib/bootmode.h>
-#include <lib/common.h>
-#include <lib/debug.h>
-#include <lib/fastboot.h>
-#include <lib/string.h>
-
-#define KAERU_ENV_BLDR_SPOOF "kaeru_bootloader_spoof_status"
 
 void cmd_help(const char *arg, void *data, unsigned sz) {
     // TODO: Find a better way to get the command list
