@@ -12,11 +12,12 @@ static uint32_t cursor_x = 0;
 static uint32_t cursor_y = 0;
 static uint32_t text_color = FB_WHITE;
 
-void fb_init(uint32_t *fb_addr, uint32_t width, uint32_t height, uint32_t bppx) {
+void fb_init(uint32_t *fb_addr, uint32_t width, uint32_t height, uint32_t bppx, uint32_t alignment) {
     fb_config.buffer = fb_addr;
     fb_config.width = width;
     fb_config.height = height;
     fb_config.bppx = bppx;
+    fb_config.stride = ((width * bppx + alignment - 1) & ~(alignment - 1));
     
     cursor_x = 0;
     cursor_y = 0;
@@ -34,15 +35,18 @@ bool fb_valid(uint32_t x, uint32_t y) {
 
 void fb_pixel(uint32_t x, uint32_t y, uint32_t color) {
     if (!fb_valid(x, y) || !fb_config.buffer) return;
-    fb_config.buffer[y * fb_config.width + x] = color;
+    
+    uint32_t offset = (y * fb_config.stride / sizeof(uint32_t)) + x;
+    fb_config.buffer[offset] = color;
 }
 
 void fb_clear(uint32_t color) {
     if (!fb_config.buffer) return;
     
-    uint32_t total_pixels = fb_config.width * fb_config.height;
-    for (uint32_t i = 0; i < total_pixels; i++) {
-        fb_config.buffer[i] = color;
+    for (uint32_t y = 0; y < fb_config.height; y++) {
+        for (uint32_t x = 0; x < fb_config.width; x++) {
+            fb_pixel(x, y, color);
+        }
     }
     
     cursor_x = 0;

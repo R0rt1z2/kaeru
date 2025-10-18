@@ -14,7 +14,8 @@ void kaeru(void) {
     fb_init((uint32_t*)CONFIG_FRAMEBUFFER_ADDRESS, 
             CONFIG_FRAMEBUFFER_WIDTH, 
             CONFIG_FRAMEBUFFER_HEIGHT, 
-            CONFIG_FRAMEBUFFER_BYTES_PER_PIXEL);
+            CONFIG_FRAMEBUFFER_BYTES_PER_PIXEL,
+            CONFIG_FRAMEBUFFER_ALIGNMENT);
 #endif
 
     board_late_init();

@@ -51,6 +51,13 @@ menu "Framebuffer Configuration"
 		  Calculated bytes per pixel based on BPP setting.
 		  This is used internally for buffer calculations.
 
+	config FRAMEBUFFER_ALIGNMENT
+		int "Framebuffer row alignment (bytes)"
+		default 32
+		help
+		  Row alignment requirement for framebuffer.
+		  Common values: 32, 64, 128, 256
+		  64 bytes works for most MediaTek devices.
 endmenu
 
 choice
