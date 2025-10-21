@@ -101,12 +101,6 @@ menu "Device Support"
         help
           Say Y if you want to include support for Realme C3/Narzo 10A
 
-    config HUAWEI_AMMAN
-        bool "Support Huawei Y5 2019"
-        default n
-        help
-          Say Y if you want to include support for Huawei Y5 2019
-
     config SONY_CANOPY
         bool "Support Sony Xperia XA1 / Ultra / Plus"
         default n

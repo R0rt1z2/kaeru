@@ -17,7 +17,6 @@ lib-$(CONFIG_REALME_SALAA) += realme/board-salaa.o
 lib-$(CONFIG_AMAZON_CUPCAKE) += amazon/board-cupcake.o
 lib-$(CONFIG_BQ_BROLLY) += bq/board-brolly.o
 lib-$(CONFIG_REALME_MONET) += realme/board-monet.o
-lib-$(CONFIG_HUAWEI_AMMAN) += huawei/board-amman.o
 lib-$(CONFIG_SONY_CANOPY) += sony/board-canopy.o
 lib-$(CONFIG_ZTE_P662F02) += zte/board-p662f02.o
 lib-$(CONFIG_NOKIA_IRONMAN) += nokia/board-ironman.o
