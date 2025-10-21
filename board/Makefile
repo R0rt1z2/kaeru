@@ -42,3 +42,4 @@ lib-$(CONFIG_HUAWEI_KANSAS) += huawei/board-kansas.o
 lib-$(CONFIG_INFINIX_X6812) += infinix/board-X6812.o
 lib-$(CONFIG_HONOR_KINGKONG) += honor/board-kingkong.o
 lib-$(CONFIG_MOTOROLA_MALTA_FAMILY) += motorola/board-malta.o
+lib-$(CONFIG_HONOR_GINA) += honor/board-gina.o
