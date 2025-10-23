@@ -269,6 +269,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Honor 60 SE
+
+    config AMAZON_CROWN
+        bool "Support Echo Show 8 1st Gen (2019)"
+        default n
+        help
+          Say Y if you want to include support for Echo Show 8 1st Gen (2019)
 endmenu
 
 menu "Fastboot Support"
