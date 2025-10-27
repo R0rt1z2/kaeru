@@ -275,6 +275,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Echo Show 8 1st Gen (2019)
+
+    config MOTOROLA_BORAG
+        bool "Support Motorola E22"
+        default n
+        help
+          Say Y if you want to include support for Motorola E22
 endmenu
 
 menu "Fastboot Support"
