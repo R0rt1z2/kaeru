@@ -69,3 +69,4 @@ void mtk_wdt_reset(void);
 bool mtk_detect_key(unsigned short key);
 const char* get_mode_string(unsigned int mode);
 void print_kaeru_info(output_type_t output_type);
+void reboot_emergency(void);

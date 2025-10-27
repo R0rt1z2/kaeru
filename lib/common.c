@@ -9,6 +9,9 @@
 #include <lib/debug.h>
 #include <lib/fastboot.h>
 
+#include <wdt/mtk_wdt.h>
+#include <usbdl/mtk_usbdl.h>
+
 const char* get_mode_string(unsigned int mode) {
     switch (mode) {
         case 0x10:
@@ -34,11 +37,8 @@ const char* get_mode_string(unsigned int mode) {
     }
 }
 
-void mtk_wdt_reset(void) {
-    volatile uint32_t *wdt_regs = (volatile uint32_t *)CONFIG_WDT_BASE;
-    wdt_regs[6] = 0x1971;
-    wdt_regs[0] = 0x22000014;
-    wdt_regs[5] = 0x1209;
+void reboot_emergency(void) {
+    mtk_reboot_emergency();
 }
 
 bool mtk_detect_key(unsigned short key) {

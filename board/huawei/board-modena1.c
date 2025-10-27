@@ -24,21 +24,6 @@ void mt_power_off(void) {
     ((void (*)(void))(0x4800F96C | 1))();
 }
 
-void reboot_emergency(void) {
-    // USB download register value for bootrom mode with no timeout
-    // 0x444C0000 = magic number for brom check
-    // 0x0000FFFC = no timeout (max timeout value shifted)
-    // 0x00000001 = download bit enabled
-    uint32_t usbdl_value = 0x444C0000 | 0x0000FFFC | 0x00000001;
-    
-    *(volatile uint32_t*)0x1001A100 = 0xAD98;      // MISC_LOCK_KEY magic
-    *(volatile uint32_t*)0x1001A108 |= 1;          // Set RST_CON bit
-    *(volatile uint32_t*)0x1001A100 = 0;           // Clear MISC_LOCK_KEY
-    *(volatile uint32_t*)0x1001A080 = usbdl_value; // Set BOOT_MISC0/USBDL_FLAG
-    
-    mtk_arch_reset(0);
-}
-
 void cmd_reboot_emergency(const char* arg, void* data, unsigned sz) {
     fastboot_info("The device will reboot into bootrom mode...");
     fastboot_okay("");

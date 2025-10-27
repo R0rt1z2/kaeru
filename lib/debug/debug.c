@@ -13,21 +13,15 @@
 #include <lib/framebuffer.h>
 #endif
 
-#define UART_THR_OFFSET     0x00    /* Transmit Holding Register */
-#define UART_LSR_OFFSET     0x14    /* Line Status Register */
-#define UART_LSR_THRE       0x20    /* TX holding register empty */
-
-void low_uart_put(int ch) {
-    // Wait until TX holding register is empty
-    while (!(*(volatile uint32_t*)(CONFIG_UART_BASE + UART_LSR_OFFSET) & UART_LSR_THRE))
-        ;
-    *(volatile uint32_t*)(CONFIG_UART_BASE + UART_THR_OFFSET) = ch;
-}
+#include <uart/mtk_uart.h>
 
 void uart_putc(int c, void* ctx) {
     (void)ctx;
-    if (c == '\n') low_uart_put('\r');
-    low_uart_put(c);
+    
+    if (c == '\n')
+        mtk_uart_putc('\r');
+    
+    mtk_uart_putc(c);
 }
 
 #ifdef CONFIG_LK_LOG_STORE

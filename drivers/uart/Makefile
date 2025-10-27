@@ -1,0 +1,1 @@
+obj-y += mtk_uart.o

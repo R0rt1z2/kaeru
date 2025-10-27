@@ -192,6 +192,7 @@ AFLAGS_KERNEL	=
 # Needed to be compatible with the O= option
 LINUXINCLUDE    := -Iinclude \
                    $(if $(KBUILD_SRC), -I$(srctree)/include) \
+                   -I$(srctree)/drivers \
                    -include include/generated/autoconf.h
 
 KBUILD_CPPFLAGS := -D__KERNEL__
@@ -355,6 +356,7 @@ objs-y		:= main
 # Libraries
 libs-y		:= arch
 libs-y		+= board
+libs-y		+= drivers
 libs-y		+= lib
 
 kaeru-dirs	:= $(objs-y) $(libs-y)
@@ -368,7 +370,7 @@ kaeru-all	:= $(kaeru-objs) $(kaeru-libs)
 # Do modpost on a prelinked vmlinux. The finally linked vmlinux has
 # relevant sections renamed as per the linker script.
 quiet_cmd_kaeru = LD      $@.o
-cmd_kaeru = $(LD) $(kaeru-objs) --whole-archive board/lib.a --no-whole-archive lib/built-in.o arch/lib.a -o $@.o --script=arch/$(ARCH)/linker.lds
+cmd_kaeru = $(LD) $(kaeru-objs) --whole-archive board/lib.a --no-whole-archive drivers/built-in.o lib/built-in.o arch/lib.a -o $@.o --script=arch/$(ARCH)/linker.lds
 
 arch/$(ARCH)/linker.lds: arch/$(ARCH)/linker.lds.S
 	$(CPP) $< -P -o $@

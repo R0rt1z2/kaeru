@@ -28,21 +28,6 @@ int32_t partition_erase(const char *part_name) {
     return ((int32_t (*)(const char *))(MALTA_PARTITION_ERASE_ADDRESS | 1))(part_name);
 }
 
-void reboot_emergency(void) {
-    // USB download register value for bootrom mode with no timeout
-    // 0x444C0000 = magic number for brom check
-    // 0x0000FFFC = no timeout (max timeout value shifted)
-    // 0x00000001 = download bit enabled
-    uint32_t usbdl_value = 0x444C0000 | 0x0000FFFC | 0x00000001;
-
-    *(volatile uint32_t*)0x1001A100 = 0xAD98;      // MISC_LOCK_KEY magic
-    *(volatile uint32_t*)0x1001A108 |= 1;          // Set RST_CON bit
-    *(volatile uint32_t*)0x1001A100 = 0;           // Clear MISC_LOCK_KEY
-    *(volatile uint32_t*)0x1001A080 = usbdl_value; // Set BOOT_MISC0/USBDL_FLAG
-
-    mtk_wdt_reset();
-}
-
 void cmd_reboot_emergency(const char* arg, void* data, unsigned sz) {
     fastboot_info("The device will reboot into bootrom mode...");
     fastboot_okay("");
