@@ -44,3 +44,4 @@ lib-$(CONFIG_MOTOROLA_MALTA_FAMILY) += motorola/board-malta.o
 lib-$(CONFIG_HONOR_GINA) += honor/board-gina.o
 lib-$(CONFIG_AMAZON_CROWN) += amazon/board-crown.o
 lib-$(CONFIG_MOTOROLA_BORAG) += motorola/board-borag.o
+lib-$(CONFIG_ENERGY_ADAD) += energy/board-adad.o

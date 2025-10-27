@@ -281,6 +281,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Motorola E22
+
+    config ENERGY_ADAD
+        bool "Support Energy Phone Pro 3"
+        default n
+        help
+          Say Y if you want to include support for Energy Phone Pro 3
 endmenu
 
 menu "Fastboot Support"
