@@ -208,6 +208,7 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Wno-builtin-declaration-mismatch -fPIE -Wno-main -nostdlib \
 		   -mcpu=cortex-a15
 KBUILD_CFLAGS += -DKAERU_VERSION=\"$(KAERU_VERSION)\" -DKAERU_DEBUG=$(KAERU_DEBUG)
+KBUILD_CFLAGS += $(foreach var,$(filter CONFIG_%,$(.VARIABLES)),-D$(var)=$($(var)))
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__
