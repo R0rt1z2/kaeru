@@ -287,6 +287,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Energy Phone Pro 3
+
+    config REALME_RMX2156
+        bool "Support Realme Narzo 30 4G"
+        default n
+        help
+          Say Y if you want to include support for Realme Narzo 30 4G
 endmenu
 
 menu "Fastboot Support"
