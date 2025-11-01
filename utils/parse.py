@@ -83,6 +83,17 @@ patterns = {
         'export': False,
     },
     'video_printf': {'patterns': ['0f b4 30 b5 c9 b0 4c ab'], 'export': True},
+    'thread_create': {
+        'patterns': ['2D E9 F8 43 81 46 64 20 88 46 17 46 1D 46'],
+        'export': True,
+    },
+    'thread_resume': {
+        'patterns': [
+            '02 68 47 F2 64 23 C7 F2 68 43 30 B5 05 46',
+            'f8 b5 83 69 01 3b 01 2b 2d d9 18 4d 04 46',
+        ],
+        'export': True,
+    },
 }
 
 
