@@ -287,6 +287,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Energy Phone Pro 3
+
+    config AMAZON_CHECKERS
+        bool "Support Echo Show 5 1st Gen (2019)"
+        default n
+        help
+          Say Y if you want to include support for Echo Show 5 1st Gen (2019)
 endmenu
 
 menu "Fastboot Support"
