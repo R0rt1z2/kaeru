@@ -34,6 +34,15 @@ int memcmp(const void* s1, const void* s2, size_t n) {
     return (0);
 }
 
+void *memcpy(void *dest, const void *src, size_t n)
+{
+    char *dp = dest;
+    const char *sp = src;
+    while (n--)
+        *dp++ = *sp++;
+    return dest;
+}
+
 void* memmove(void* dest, const void* src, size_t count) {
     unsigned char* d = (unsigned char*)dest;
     const unsigned char* s = (const unsigned char*)src;
