@@ -46,6 +46,7 @@ bool mtk_detect_key(unsigned short key) {
 }
 
 void print_kaeru_info(output_type_t output_type) {
+#ifndef CONFIG_EXCLUDE_BRANDING
     unsigned int sp, lr, pe, vbar;
 
     READ_SP(sp);
@@ -100,19 +101,32 @@ void print_kaeru_info(output_type_t output_type) {
 }
 
 #undef PRINT_INFO
+#else
+    (void)output_type;
+#endif
 }
 
 void cmd_version(const char* arg, void* data, unsigned sz) {
+#ifndef CONFIG_EXCLUDE_BRANDING
     char buffer[64];
     npf_snprintf(buffer, sizeof(buffer), "kaeru v%s", KAERU_VERSION);
     fastboot_info(buffer);
     print_kaeru_info(OUTPUT_VIDEO);
     fastboot_okay("");
+#else
+    (void)arg;
+    (void)data;
+    (void)sz;
+#endif
 }
 
 void __attribute__((weak)) common_late_init(void) {}
 
 void __attribute__((weak)) common_early_init(void) {
+#ifndef CONFIG_EXCLUDE_BRANDING
     fastboot_publish("kaeru-version", KAERU_VERSION);
     fastboot_register("oem kaeru-version", cmd_version, 1);
+#else
+#warning "Branding is excluded, you are not allowed to share copies of this image."
+#endif
 }
