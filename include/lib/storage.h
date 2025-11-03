@@ -13,6 +13,9 @@
 #define PART_META_INFO_NAMELEN  64
 #define PART_META_INFO_UUIDLEN  16
 
+#define BOOT0_PART 1
+#define USER_PART  8
+
 struct part_meta_info {
     uint8_t name[PART_META_INFO_NAMELEN];
     uint8_t uuid[PART_META_INFO_UUIDLEN];
