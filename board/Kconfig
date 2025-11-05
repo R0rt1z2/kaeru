@@ -17,11 +17,11 @@ menu "Device Support"
         help
           Say Y if you want to include support for Huawei Y6 2019
 
-    config LENOVO_AKITA
-        bool "Support Lenovo Tab M8"
+    config LENOVO_AKITA_ROW_CALL
+        bool "Support Lenovo Tab M8 HD (2nd Gen) LTE"
         default n
         help
-          Say Y if you want to include support for Lenovo Tab M8
+          Say Y if you want to include support for Lenovo Tab M8 HD (2nd Gen) LTE (TB-8505X)
 
     config MEIZU_M3NOTE
         bool "Support Meizu M3 Note"
