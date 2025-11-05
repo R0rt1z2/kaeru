@@ -5,6 +5,17 @@
 
 #include <board_ops.h>
 
+void mt_power_off(void) {
+    ((void (*)(void))(0x48006748 | 1))();
+}
+
+void cmd_shutdown(const char* arg, void* data, unsigned sz) {
+    fastboot_info("The device will power off...");
+    fastboot_info("Make sure to unplug the USB cable!");
+    fastboot_okay("");
+    mt_power_off();
+}
+
 void board_early_init(void) {
     printf("Entering early init for Lenovo Tab M8\n");
 }
@@ -36,5 +47,17 @@ void board_late_init(void) {
     if (addr) {
         printf("Found dm_verity_corruption at 0x%08X\n", addr);
         FORCE_RETURN(addr, 0);
+    }
+
+    if (get_bootmode() == BOOTMODE_FASTBOOT) {
+        // There is no easy way to power off the device from fastboot mode.
+        // Holding the power button simply reboots the device, forcing you to
+        // boot into the OS to shut it down properly. This is not ideal, so
+        // we add a fastboot command that allows powering off directly.
+        //
+        // This was shamelessly borrowed from Motorola’s (or Huaqin’s) LK image.
+        // It simply calls mt_power_off().
+        fastboot_register("oem shutdown", cmd_shutdown, 1);
+        fastboot_register("oem poweroff", cmd_shutdown, 1);
     }
 }
