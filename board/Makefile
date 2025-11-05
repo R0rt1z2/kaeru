@@ -1,7 +1,7 @@
 lib-$(CONFIG_BQ_FREEZERHD) += bq/board-freezerhd.o
 lib-$(CONFIG_FPLUS_T1100) += fplus/board-t1100.o
 lib-$(CONFIG_HUAWEI_MADRID) += huawei/board-madrid.o
-lib-$(CONFIG_LENOVO_AKITA) += lenovo/board-akita.o
+lib-$(CONFIG_LENOVO_AKITA_ROW_CALL) += lenovo/board-akita_row_call.o
 lib-$(CONFIG_MEIZU_M3NOTE) += meizu/board-m3note.o
 lib-$(CONFIG_MOTOROLA_PENANGF) += motorola/board-penangf.o
 lib-$(CONFIG_MOTOROLA_FOGOROW) += motorola/board-fogorow.o
