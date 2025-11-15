@@ -46,3 +46,4 @@ lib-$(CONFIG_AMAZON_CROWN) += amazon/board-crown.o
 lib-$(CONFIG_MOTOROLA_BORAG) += motorola/board-borag.o
 lib-$(CONFIG_ENERGY_ADAD) += energy/board-adad.o
 lib-$(CONFIG_AMAZON_CHECKERS) += amazon/board-checkers.o
+lib-$(CONFIG_REALME_RMX2156) += realme/board-RMX2156.o
