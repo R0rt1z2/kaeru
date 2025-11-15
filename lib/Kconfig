@@ -93,7 +93,6 @@ endif
 
 endmenu
 
-
 menu "Thread Support"
     config THREAD_SUPPORT
         bool "Create your own threads"
