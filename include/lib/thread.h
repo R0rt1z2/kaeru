@@ -61,3 +61,6 @@ typedef struct thread {
 	uint32_t tls[MAX_TLS_ENTRY];
 	char name[32];
 } thread_t;
+
+thread_t *thread_create(const char *name, thread_start_routine entry, void *arg, int priority, size_t stack_size);
+int thread_resume(thread_t *);
