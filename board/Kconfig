@@ -360,3 +360,19 @@ menu "Logging Options"
         help
           "lk_log_store() address"
 endmenu
+
+menu "Thread Support"
+    config THREAD_SUPPORT
+        bool "Create your own threads"
+        default n
+        help
+          Say Y if you want to create your own threads
+
+    menu "Thread Related Addresses"
+        config THREAD_CREATE_ADDRESS
+            hex "Thread create address"
+
+        config THREAD_RESUME_ADDRESS
+            hex "Thread resume address"
+    endmenu
+endmenu
