@@ -13,6 +13,7 @@
 #include <usbdl/mtk_usbdl.h>
 
 const char* get_mode_string(unsigned int mode) {
+#ifndef CONFIG_EXCLUDE_BRANDING
     switch (mode) {
         case 0x10:
             return "User Mode (PL0)";
@@ -35,6 +36,10 @@ const char* get_mode_string(unsigned int mode) {
         default:
             return "Unknown Mode";
     }
+#else
+    (void)mode;
+    return "Unknown Mode";
+#endif
 }
 
 void reboot_emergency(void) {
