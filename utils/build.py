@@ -8,7 +8,14 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from liblk import LkImage
 
+def get_cfg(path, key):
+    with open(path) as f:
+        for line in f:
+            if line.startswith('CONFIG_' + key + '='):
+                return line.strip().split('=', 1)[1]
+    return None
 
 class TermColors:
     RED = '\033[0;31m'
@@ -66,17 +73,17 @@ class KaeruPatcher:
 
     def find_defconfig(self):
         config_filename = f'{self.device}_defconfig'
-        
+
         config_path = self.CONFIGS_DIR / config_filename
         if config_path.is_file():
             self.log('DEBUG', f'Found config at: {config_path}')
             return config_path
-        
+
         for config_path in self.CONFIGS_DIR.rglob(config_filename):
             if config_path.is_file():
                 self.log('DEBUG', f'Found config at: {config_path}')
                 return config_path
-        
+
         return None
 
     def validate_inputs(self):
@@ -91,7 +98,7 @@ class KaeruPatcher:
                 f'Configuration file for {self.device} not found in {self.CONFIGS_DIR} or its subdirectories',
             )
             return False
-        
+
         self.config_path = config_path
 
         if not self.lk_path.exists():
@@ -158,13 +165,24 @@ class KaeruPatcher:
         output_file = f'{self.device}{self.OUTPUT_SUFFIX}'
 
         self.log('STEP', f'Applying patches and generating {output_file}')
+
+        lk_path = Path(self.lk_path)
+        stage1_enabled = get_cfg(self.config_path, "STAGE1_SUPPORT") == 'y'
+
+        if stage1_enabled:
+            payload = 'stageone'
+            temp_stage1 = Path(f'{self.device}-stage1.bin')
+        else:
+            payload = 'kaeru'
+            temp_stage1 = None
+
         cmd_args = [
             str(self.UTILS_DIR / 'patch.py'),
             str(self.config_path),
-            str(self.lk_path),
-            'kaeru',
+            str(lk_path),
+            payload,
             '-o',
-            output_file,
+            str(output_file if not stage1_enabled else temp_stage1),
         ]
         self.log('DEBUG', f'Running: python3 {" ".join(cmd_args)}')
 
@@ -174,18 +192,35 @@ class KaeruPatcher:
             self.log('ERROR', 'Patching failed')
             return False
 
-        output_path = Path(output_file)
-        if output_path.is_file():
-            self.log(
-                'SUCCESS',
-                f'Patching completed: {output_file} has been created ({output_path.stat().st_size} bytes)',
-            )
-        else:
-            self.log(
-                'WARNING',
-                'Patching command succeeded but output file was not created',
-            )
+        if not stage1_enabled:
+            output_path = Path(output_file)
+            if output_path.is_file():
+                self.log('SUCCESS', f'Patching completed: {output_file} created ({output_path.stat().st_size} bytes)')
+                return True
+            self.log('WARNING', 'Patching succeeded but no output file was created')
             return False
+
+        lk = LkImage(str(temp_stage1))
+
+        with open("kaeru", "rb") as f:
+            kaeru_data = f.read()
+
+        if 'kaeru' in lk.partitions:
+            self.log('DEBUG', 'Partition kaeru already exists, removing it')
+            lk.remove_partition('kaeru')
+
+        lk.add_partition(
+            name='kaeru',
+            data=kaeru_data,
+            memory_address=0,
+            use_extended=True,
+        )
+
+        lk.save(output_file)
+        self.log('SUCCESS', f'Kaeru partition injected and final image saved: {output_file}')
+
+        self.log('DEBUG', f'Removing temporary stage 1 LK image: {temp_stage1}')
+        temp_stage1.unlink()
 
         return True
 

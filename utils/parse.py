@@ -77,7 +77,7 @@ patterns = {
     },
     'bootstrap2': {
         'patterns': [
-            '48 10 b5 78 44 XX f0 XX XX XX 4b',
+            '48 XX 10 b5 78 44 XX f0 XX XX XX 4b',
             '08 b5 ff f7 38 ea df f7 e3 fb',
         ],
         'export': False,
@@ -91,6 +91,48 @@ patterns = {
         'patterns': [
             '02 68 47 F2 64 23 C7 F2 68 43 30 B5 05 46',
             'f8 b5 83 69 01 3b 01 2b 2d d9 18 4d 04 46',
+        ],
+        'export': True,
+    },
+    'dprintf': {
+        'patterns': [
+            '0f b4 XX 4b f0 b5 9b b0 7b 44'
+        ],
+        'export': True,
+    },
+    'malloc': {
+        'patterns': [
+            '00 21 ff f7 XX XX 00 bf'
+        ],
+        'export': True,
+    },
+    'init_storage': {
+        'patterns': [
+            '70 b5 00 20 0e 4c XX f0 d7 XX'
+        ],
+        'export': True,
+    },
+    'init_storage_caller': {
+        'patterns': [
+            'ff f7 XX fe 00 22 00 XX'
+        ],
+        'export': True,
+    },
+    'free': {
+        'patterns': [
+            'd8 b1 38 b5 05 46 0d 4c'
+        ],
+        'export': True,
+    },
+    "partition_read": {
+        'patterns': [
+            '2d e9 f0 4f 85 b0 1f 46 16 46 03 90 0f 9d fe f7 XX fe'
+        ],
+        'export': True,
+    },
+    'partition_get_size_by_name': {
+        'patterns': [
+            '08 b5 ff f7 XX ff bd e8 XX 40 ff f7 bb bc'
         ],
         'export': True,
     },
