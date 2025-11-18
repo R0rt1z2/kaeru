@@ -132,7 +132,7 @@ HOSTCXXFLAGS = -O2
 #         cmd_cc_o_c       = $(CC) $(c_flags) -c -o $@ $<
 #
 # If $(quiet) is empty, the whole command will be printed.
-# If it is set to "quiet_", only the short version will be printed. 
+# If it is set to "quiet_", only the short version will be printed.
 # If it is set to "silent_", nothing will be printed at all, since
 # the variable $(silent_cmd_cc_o_c) doesn't exist.
 #
@@ -346,7 +346,7 @@ endif # $(dot-config)
 # command line.
 # This allow a user to issue only 'make' to build a kernel including modules
 # Defaults to vmlinux, but the arch makefile usually adds further targets
-all: arch/$(ARCH)/linker.lds kaeru
+all: arch/$(ARCH)/linker.lds kaeru stage1
 
 # List of main executables
 main-y	:= main/main.o
@@ -382,7 +382,7 @@ kaeru: $(kaeru-all)
 	$(OBJCOPY) -O binary kaeru.o kaeru
 
 
-# The actual objects are generated when descending, 
+# The actual objects are generated when descending,
 # make sure no implicit rule kicks in
 $(sort $(kaeru-all)): $(kaeru-dirs) ;
 
@@ -398,6 +398,23 @@ PHONY += $(kaeru-dirs)
 $(kaeru-dirs): scripts_basic
 	$(Q)$(MAKE) $(build)=$@
 
+ifeq ($(CONFIG_STAGE1_SUPPORT),y)
+
+PHONY += stage1
+stage1: stage1/built-in.o arch/lib.a
+	$(call if_changed,stage1)
+	@echo '  OBJCOPY $@'
+	$(OBJCOPY) -O binary stage1.o stageone
+
+quiet_cmd_stage1 = LD      $@.o
+cmd_stage1 = $(LD) $^ -o $@.o --script=arch/$(ARCH)/linker.lds
+
+stage1/built-in.o: scripts_basic
+	$(Q)$(MAKE) $(build)=stage1
+
+CLEAN_FILES += stageone
+endif
+
 ###
 # Cleaning is done on three levels.
 # make clean     Delete most generated files
@@ -407,7 +424,7 @@ $(kaeru-dirs): scripts_basic
 
 # Directories & files removed with 'make clean'
 CLEAN_DIRS  +=
-CLEAN_FILES +=	kaeru
+CLEAN_FILES +=	kaeru stageone
 
 # Directories & files removed with 'make mrproper'
 MRPROPER_DIRS  += include/config include/generated

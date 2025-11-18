@@ -62,6 +62,14 @@
 #define ROUNDUP(a, b) (((a) + ((b)-1)) & ~((b)-1))
 #define ROUND_TO_PAGE(x, y) (((x) + (y)) & (~(y)))
 
+#define LE32(p) ( \
+    ((uint32_t)((const uint8_t *)(p))[0])       | \
+    ((uint32_t)((const uint8_t *)(p))[1] << 8)  | \
+    ((uint32_t)((const uint8_t *)(p))[2] << 16) | \
+    ((uint32_t)((const uint8_t *)(p))[3] << 24) )
+
+#define LE64(hi, lo) ((((uint64_t)(hi)) << 32) | (uint64_t)(lo))
+
 void common_early_init(void);
 void common_late_init(void);
 

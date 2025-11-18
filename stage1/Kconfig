@@ -1,0 +1,57 @@
+menu "Stage 1 Support"
+
+config STAGE1_SUPPORT
+	bool "Enable support for kaeru stage 1"
+	default n
+	help
+	  Enable support for loading kaeru in multiple stages.
+	  This allows to a small initial stage that then loads the full kaeru stage 2.
+	  This is useful for devices with very limited bootloader space or where corruption
+	  happens because of big board files.
+
+if STAGE1_SUPPORT
+
+menu "Stage1 Options"
+    config LEGACY_LK
+        bool "Build stage1 with legacy LK support"
+        default n
+        help
+            Enable this if the device's lk is a legacy one, which have different
+            function implementations that are not compatible with modern LK.
+
+    config INIT_STORAGE_CALLER
+        hex "init_storage()'s caller address"
+
+    config INIT_STORAGE_ADDRESS
+        hex "init_storage() address"
+
+    config MALLOC_ADDRESS
+        hex "malloc() address"
+
+    config DPRINTF_ADDRESS
+        hex "dprtinf() address"
+
+    config FREE_ADDRESS
+        hex "free() address"
+
+    config MT_PART_GET_DEVICE_ADDRESS
+        hex "mt_part_get_device() address"
+        depends on LEGACY_LK
+
+    config MT_PART_GET_PARTITION_ADDRESS
+        hex "mt_part_get_partition() address"
+        depends on LEGACY_LK
+
+    config PARTITION_READ_ADDRESS
+        hex "mboot_load_part() address"
+        depends on !LEGACY_LK
+
+    config PARTITION_GET_SIZE_BY_NAME_ADDRESS
+        hex "partition_get_size_by_name() address"
+        depends on !LEGACY_LK
+
+endmenu
+
+endif
+
+endmenu
