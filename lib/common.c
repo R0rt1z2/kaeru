@@ -72,7 +72,7 @@ void print_kaeru_info(output_type_t output_type) {
                 "                            \n",                                                 \
                 KAERU_VERSION, ARM_MODE(lr));                                                     \
         print_function("********************************************************************\n"); \
-        print_function(" Copyright (C) 2023-2025 Skidbladnir Labs, S.L.\n");                      \
+        print_function(" Copyright (C) 2023-2025 KAERU Labs, S.L.\n");                            \
         print_function(" SPDX-License-Identifier: AGPL-3.0-or-later\n\n");                        \
         print_function("");                                                                       \
         print_function(" Developed by Roger Ortiz <me@r0rt1z2.com> and\n");                       \
