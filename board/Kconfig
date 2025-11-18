@@ -305,6 +305,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for NUU A1
+
+    config HONOR_CARTIER5G
+        bool "Support Honor 90 Lite"
+        default n
+        help
+          Say Y if you want to include support for Honor 90 Lite
 endmenu
 
 menu "Fastboot Support"
