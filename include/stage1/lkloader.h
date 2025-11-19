@@ -12,9 +12,4 @@
 #define LK_EXT_MAGIC 0x58891689U
 #define BFBF_MAGIC 0x42464246U
 
-typedef struct {
-    const uint8_t* data; /* Pointer to the LK Region data */
-    size_t data_size;    /* Size of data */
-} LkPartitionRegion;
-
 ssize_t load_kaeru_partition(void* buffer, size_t buffer_size);

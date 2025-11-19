@@ -9,6 +9,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#if KAERU_DEBUG
+    #define LOG(fmt, ...) dprintf(fmt, ##__VA_ARGS__)
+#else
+    #define LOG(fmt, ...) 
+#endif
+
 typedef long long off_t;
 typedef long ssize_t;
 
