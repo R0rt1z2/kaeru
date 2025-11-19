@@ -4,6 +4,7 @@
 //
 
 #include <board_ops.h>
+#include "include/lamu.h"
 
 int is_partition_protected(const char* partition) {
     if (!partition || *partition == '\0') return 1;
@@ -32,7 +33,7 @@ void cmd_flash(const char* arg, void* data, unsigned sz) {
         return;
     }
 
-    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0xB5F8, 0x4605, 0x4C60, 0x460F);
+    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, CMD_FLASH_PATTERN);
     if (addr) {
         printf("Found cmd_flash at 0x%08X\n", addr);
         ((void (*)(const char* arg, void* data, unsigned sz))(addr | 1))(arg, data, sz);
@@ -58,7 +59,7 @@ void cmd_erase(const char* arg, void* data, unsigned sz) {
 
 
 int set_env(char *name, char *value) {
-    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0x2200, 0xF7FF, 0xBF0D, 0xBF00);
+    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, SET_ENV_PATTERN);
     if (addr) {
         printf("Found set_env at 0x%08X\n", addr);
         return ((int (*)(char *name, char *value))(addr | 1))(name, value);
@@ -220,7 +221,7 @@ void spoof_lock_state(void) {
 }
 
 void board_early_init(void) {
-    printf("Entering early init for Motorola G15 / G05\n");
+    printf("Entering early init for Motorola G15 / G05 / E15\n");
 
     uint32_t addr = 0;
 
@@ -229,7 +230,7 @@ void board_early_init(void) {
     // To work around this timing issue, we hook into a printf call that executes
     // after environment initialization is complete and redirect it to our
     // spoof_lock_state function.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF040, 0xFAA4, 0X6823, 0x2000);
+    addr = SEARCH_PATTERN(LK_START, LK_END, ENV_INIT_DONE_PATTERN);
     if (addr) {
         printf("Found env_init_done at 0x%08X\n", addr);
         PATCH_CALL(addr, (void*)spoof_lock_state, TARGET_THUMB);
@@ -241,13 +242,13 @@ void board_early_init(void) {
     //
     // To prevent this, we disable the original handlers and replace them with
     // custom wrappers that verify whether the target partition is protected.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF7FF, 0xFA04, 0xF8DF, 0x1624);
+    addr = SEARCH_PATTERN(LK_START, LK_END, CMD_FLASH_REGISTER_PATTERN);
     if (addr) {
         printf("Found cmd_flash_register at 0x%08X\n", addr);
         NOP(addr, 2);
     }
 
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF7FF, 0xFAF9, 0xF8DF, 0x1618);
+    addr = SEARCH_PATTERN(LK_START, LK_END, CMD_ERASE_REGISTER_PATTERN);
     if (addr) {
         printf("Found cmd_erase_register at 0x%08X\n", addr);
         NOP(addr, 2);
@@ -258,7 +259,7 @@ void board_early_init(void) {
     // Locking while running a custom or modified LK image can leave the device in an
     // unbootable state after reboot, since the expected secure environment is no longer
     // present.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF7FF, 0xF8D7, 0xF8DF, 0x14B0);
+    addr = SEARCH_PATTERN(LK_START, LK_END, CMD_FLASHING_LOCK_REGISTER_PATTERN);
     if (addr) {
         printf("Found cmd_flashing_lock_register at 0x%08X\n", addr);
         NOP(addr, 2);
@@ -269,7 +270,7 @@ void board_early_init(void) {
     //
     // Fortunately, they don’t verify LK integrity, so we can bypass this check entirely
     // by patching the function to return immediately before it does anything.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB538, 0xF04A, 0xFBF9, 0xB110);
+    addr = SEARCH_PATTERN(LK_START, LK_END, TINNO_COMMERCIAL_LOCK_PATTERN);
     if (addr) {
         printf("Found tinno_commercial_device_force_lock at 0x%08X\n", addr);
         FORCE_RETURN(addr, 0);
@@ -326,7 +327,7 @@ void board_early_init(void) {
 }
 
 void board_late_init(void) {
-    printf("Entering late init for Motorola G15 / G05\n");
+    printf("Entering late init for Motorola G15 / G05 / E15\n");
 
     uint32_t addr = 0;
 

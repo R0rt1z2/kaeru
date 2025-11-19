@@ -311,6 +311,12 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Honor 90 Lite
+
+    config MOTOROLA_LAMULG
+        bool "Support Motorola E15"
+        default n
+        help
+          Say Y if you want to include support for Motorola E15
 endmenu
 
 menu "Fastboot Support"
