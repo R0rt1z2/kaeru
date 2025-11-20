@@ -103,7 +103,7 @@ void print_kaeru_info(output_type_t output_type) {
             PRINT_INFO(fb_printf);
             break;
     #endif
-}
+    }
 
 #undef PRINT_INFO
 #else
