@@ -25,17 +25,17 @@ static inline void kaeru_stage1(void) {
     kaeru_stage2 = malloc(MAX_STAGE2_SIZE);
 
     if (kaeru_stage2 == NULL) {
-        dprintf("Kaeru Stage 1 malloc failed\n");
+        dprintf("kaeru stage 1 malloc failed\n");
         goto fail;
     }
 
     ret = load_kaeru_partition(kaeru_stage2, MAX_STAGE2_SIZE);
     if (ret <= 0 || ret > MAX_STAGE2_SIZE) {
-        dprintf("Failed to load Kaeru Stage 2!\n");
+        dprintf("Failed to load kaeru stage 2!\n");
         goto fail;
     }
 
-    dprintf("Jumping to Kaeru stage 2\n");
+    dprintf("Jumping to kaeru stage 2\n");
     ((void (*)(void))((uint32_t)kaeru_stage2 | 1))();
 
     return;
@@ -48,7 +48,7 @@ fail:
 }
 
 __attribute__((section(".text.start"))) void main(void) {
-    dprintf("Welcome from Kaeru Stage 1!\n");
+    dprintf("Hello from kaeru stage 1!\n");
     init_storage();
     kaeru_stage1();
 }

@@ -13,12 +13,22 @@ ssize_t load_kaeru_partition(void* buffer, size_t buffer_size) {
     if (!buffer || buffer_size == 0)
         return -1;
 
+    uint64_t lk_size = partition_get_size_by_name("lk");
+    if (lk_size == 0) {
+        LOG("Failed to get lk partition size\n");
+        return -1;
+    }
+
     const char* part_name = CONFIG_BOOTLOADER_PARTITION_NAME;
     size_t pos = 0;
 
     uint8_t min_hdr[80];
 
     while (1) {
+        if (pos + sizeof(min_hdr) > lk_size) {
+            LOG("Reached end of partition without finding kaeru\n");
+            goto fail;
+        }
 
         ssize_t read = partition_read(part_name, pos, min_hdr, sizeof(min_hdr));
         if (read != sizeof(min_hdr))
@@ -34,6 +44,10 @@ ssize_t load_kaeru_partition(void* buffer, size_t buffer_size) {
 
         uint32_t hsz = is_ext ? LE32(min_hdr + 52) : 512;
         if (hsz < 512) hsz = 512;
+        if (pos + hsz > lk_size) {
+            LOG("Header size would exceed partition bounds\n");
+            goto fail;
+        }
 
         uint8_t* hdr = malloc(hsz);
         if (!hdr)
@@ -58,6 +72,13 @@ ssize_t load_kaeru_partition(void* buffer, size_t buffer_size) {
             LOG("Found kaeru in lk image!\n");
 
             size_t data_start = pos + hsz;
+
+            if (data_start + data_size > lk_size) {
+                LOG("kaeru data would exceed partition bounds\n");
+                free(hdr);
+                goto fail;
+            }
+
             free(hdr);
 
             ssize_t kaeru_data = partition_read(part_name, data_start, buffer, (size_t)data_size);
