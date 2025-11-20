@@ -125,8 +125,6 @@ void cmd_version(const char* arg, void* data, unsigned sz) {
 #endif
 }
 
-void __attribute__((weak)) common_late_init(void) {}
-
 void __attribute__((weak)) common_early_init(void) {
 #ifndef CONFIG_EXCLUDE_BRANDING
     fastboot_publish("kaeru-version", KAERU_VERSION);

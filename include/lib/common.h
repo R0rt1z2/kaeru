@@ -71,7 +71,6 @@
 #define LE64(hi, lo) ((((uint64_t)(hi)) << 32) | (uint64_t)(lo))
 
 void common_early_init(void);
-void common_late_init(void);
 
 void mtk_wdt_reset(void);
 bool mtk_detect_key(unsigned short key);

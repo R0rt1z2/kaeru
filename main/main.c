@@ -8,8 +8,6 @@
 #include <board_ops.h>
 
 void kaeru(void) {
-    common_late_init();
-
 #ifdef CONFIG_FRAMEBUFFER_SUPPORT
     fb_init((uint32_t*)CONFIG_FRAMEBUFFER_ADDRESS, 
             CONFIG_FRAMEBUFFER_WIDTH, 
