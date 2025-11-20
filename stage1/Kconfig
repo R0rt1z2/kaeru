@@ -19,6 +19,14 @@ menu "Stage1 Options"
             Enable this if the device's lk is a legacy one, which have different
             function implementations that are not compatible with modern LK.
 
+    config BOOTLOADER_PARTITION_NAME
+        string "Bootloader partition name"
+        default "lk"
+        help
+            Name of the partition containing the bootloader image.
+            On most MediaTek devices this is "lk", but some devices may use
+            different names like "UBOOT" or "LK".
+
     config INIT_STORAGE_CALLER
         hex "init_storage()'s caller address"
 

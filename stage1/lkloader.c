@@ -13,13 +13,14 @@ ssize_t load_kaeru_partition(void* buffer, size_t buffer_size) {
     if (!buffer || buffer_size == 0)
         return -1;
 
+    const char* part_name = CONFIG_BOOTLOADER_PARTITION_NAME;
     size_t pos = 0;
 
     uint8_t min_hdr[80];
 
     while (1) {
 
-        ssize_t read = partition_read("lk", pos, min_hdr, sizeof(min_hdr));
+        ssize_t read = partition_read(part_name, pos, min_hdr, sizeof(min_hdr));
         if (read != sizeof(min_hdr))
             goto fail;
 
@@ -38,7 +39,7 @@ ssize_t load_kaeru_partition(void* buffer, size_t buffer_size) {
         if (!hdr)
             return -1;
 
-        read = partition_read("lk", pos, hdr, hsz);
+        read = partition_read(part_name, pos, hdr, hsz);
         if (read != hsz) {
             free(hdr);
             goto fail;
@@ -59,7 +60,7 @@ ssize_t load_kaeru_partition(void* buffer, size_t buffer_size) {
             size_t data_start = pos + hsz;
             free(hdr);
 
-            ssize_t kaeru_data = partition_read("lk", data_start, buffer, (size_t)data_size);
+            ssize_t kaeru_data = partition_read(part_name, data_start, buffer, (size_t)data_size);
             if (kaeru_data <= 0)
                 return -1;
 
