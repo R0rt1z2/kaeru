@@ -20,7 +20,7 @@ static inline void kaeru_stage1(void) {
     volatile uint16_t* x = (volatile uint16_t*)CONFIG_INIT_STORAGE_CALLER;
     x[0] = 0xBF00;  // nop
     x[1] = 0xBF00;  // nop
-    arch_clean_invalidate_cache_range((uintptr_t)CONFIG_INIT_STORAGE_CALLER, 2);
+    arch_clean_invalidate_cache_range((uintptr_t)CONFIG_INIT_STORAGE_CALLER, 4);
 
     kaeru_stage2 = malloc(MAX_STAGE2_SIZE);
 
