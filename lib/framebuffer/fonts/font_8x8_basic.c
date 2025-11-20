@@ -146,7 +146,7 @@ void fb_char(uint32_t x, uint32_t y, char c, uint32_t color) {
     uint32_t scale = fb_get_text_scale();
     
     for (int row = 0; row < 8; row++) {
-        uint8_t line = font8x8_data[c][row];
+        uint8_t line = font8x8_data[(unsigned char)c][row];
         for (int col = 0; col < 8; col++) {
             if (line & (1 << col)) {
                 for (uint32_t sy = 0; sy < scale; sy++) {
