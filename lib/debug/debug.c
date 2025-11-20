@@ -27,9 +27,7 @@ void uart_putc(int c, void* ctx) {
 #ifdef CONFIG_LK_LOG_STORE
 void lk_log_store(int c, void* ctx) {
     (void)ctx;
-#ifdef CONFIG_LK_LOG_STORE_ADDRESS
     ((void (*)(int))(CONFIG_LK_LOG_STORE_ADDRESS | 1))(c);
-#endif
 }
 #endif
 
@@ -40,10 +38,8 @@ int printf(const char* fmt, ...) {
     int ret = npf_vpprintf(&uart_putc, NULL, fmt, args);
 
 #ifdef CONFIG_LK_LOG_STORE
-#ifdef CONFIG_LK_LOG_STORE_ADDRESS
     va_start(args, fmt);
     npf_vpprintf(&lk_log_store, NULL, fmt, args);
-#endif
 #endif
 
     va_end(args);
@@ -51,13 +47,7 @@ int printf(const char* fmt, ...) {
 }
 
 int video_printf(const char* fmt, ...) {
-#if defined(CONFIG_VIDEO_PRINTF_ADDRESS)
     return ((int (*)(const char*))(CONFIG_VIDEO_PRINTF_ADDRESS | 1))(fmt);
-#else
-#warning "video_printf() is not implemented"
-    printf("video_printf() is not implemented\n");
-    return 0;
-#endif
 }
 
 #ifdef CONFIG_FRAMEBUFFER_SUPPORT
