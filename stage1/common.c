@@ -8,7 +8,7 @@
 #include <lib/storage.h>
 
 void init_storage(void) {
-#ifdef CONFIG_LEGACY_LK
+#ifdef CONFIG_INIT_STORAGE_TAKES_ARG
     // Legacy lk needs a int argument to know what device to init (emmc, sdcard..)
     ((void (*)(int))(CONFIG_INIT_STORAGE_ADDRESS | 1))(1);
 #else

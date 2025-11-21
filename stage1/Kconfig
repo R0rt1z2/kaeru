@@ -33,6 +33,15 @@ menu "Stage1 Options"
     config INIT_STORAGE_ADDRESS
         hex "init_storage() address"
 
+    config INIT_STORAGE_TAKES_ARG
+        bool "init_storage() takes an int argument"
+        default LEGACY_LK
+        help
+            Enable this if init_storage() takes an int argument to specify
+            the device to init (emmc=1, sdcard=2, etc). This is independent
+            of LEGACY_LK - some devices have legacy init_storage but modern
+            partition_read functions.
+
     config MALLOC_ADDRESS
         hex "malloc() address"
 
