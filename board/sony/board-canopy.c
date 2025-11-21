@@ -6,7 +6,42 @@
 #include <board_ops.h>
 
 #define VOLUME_UP 17
-#define VOLUME_DOWN 1
+#define S1BOOT_DATA_ADDRESS 0x46093BD8
+
+typedef enum {
+    BOOT_NORMAL_IMAGE = 0,
+    BOOT_DUMPER_IMAGE = 1,
+    BOOT_FOTA_IMAGE = 2,
+    BOOT_S1_SERVICE_IMAGE = 3,
+    BOOT_FASTBOOT_IMAGE = 4,
+    BOOT_RECOVERY_IMAGE = 5
+} s1boot_image_t;
+
+typedef struct s1boot_data {
+    s1boot_image_t image_to_boot;    // controls which image to boot (BOOT_NORMAL_IMAGE, etc.)
+    char *s1_cmdline_additions;      // additional cmdline parameters to append
+    uint32_t boot_aid;               // some kind of boot authentication/authorization ID
+    uint32_t override_mach;          // ARM machine type override (0 = don't override)
+} s1boot_data_t;
+
+char* get_image_to_boot(int image_id) {
+    switch (image_id) {
+        case 0:
+            return "NORMAL";
+        case 1:
+            return "DUMPER";
+        case 2:
+            return "FOTA";
+        case 3:
+            return "S1 SERVICE";
+        case 4:
+            return "FASTBOOT";
+        case 5:
+            return "RECOVERY";
+        default:
+            return "UNKNOWN";
+    }
+}
 
 void led_set_brightness(unsigned int idx, unsigned int bg) {
     ((void (*)(unsigned int, unsigned int))(0x46022890 | 1))(idx, bg);
@@ -42,8 +77,71 @@ void patch_cmdline(void) {
     }
 }
 
+int mt_get_gpio_in(uint32_t pin) {
+    return ((int (*)(uint32_t))(0x460006C0 | 1))(pin);
+}
+
+int is_volume_down_pressed(void) {
+    return mt_get_gpio_in(0x80000000 + 104) == 0; // GPIO_ACTIVE_LOW
+}
+
+s1boot_data_t* get_s1boot_data(void) {
+    return (s1boot_data_t*)S1BOOT_DATA_ADDRESS;
+}
+
+s1boot_image_t s1boot_get_bootimage(void) {
+    return get_s1boot_data()->image_to_boot;
+}
+
+void s1boot_set_bootimage(s1boot_image_t mode) {
+    get_s1boot_data()->image_to_boot = mode;
+}
+
+void s1boot_bootimage_shim(void) {
+    s1boot_data_t* s1boot_data = get_s1boot_data();
+
+    printf("Image to boot: %s (%d)\n",
+           get_image_to_boot(s1boot_data->image_to_boot),
+           s1boot_data->image_to_boot);
+    printf("Cmdline additions: %s\n", s1boot_data->s1_cmdline_additions ?: "None");
+    printf("Boot AID: 0x%08X\n", s1boot_data->boot_aid);
+    printf("Override machine type: %s\n",
+           s1boot_data->override_mach ? "enabled" : "disabled");
+
+    if (mtk_detect_key(VOLUME_UP)) {
+        printf("Volume Up detected, forcing recovery mode\n");
+        s1boot_set_bootimage(BOOT_RECOVERY_IMAGE);
+    } else if (is_volume_down_pressed()) {
+        printf("Volume Down detected, forcing fastboot mode\n");
+        s1boot_set_bootimage(BOOT_FASTBOOT_IMAGE);
+    }
+}
+
 void board_early_init(void) {
     printf("Entering early init for Sony Xperia XA1 / Ultra / Plus\n");
+
+    // Sony has multiple boot mode handlers, and they are extremely broken and
+    // annoying to deal with.
+    //
+    // Because of this, we inject a hook right in the middle of the main boot mode
+    // detection function so we can do our own handling of volume keys and boot modes.
+    PATCH_CALL(0x460296D8, (void*)s1boot_bootimage_shim, TARGET_THUMB);
+
+    // There is some annoying USB check inside of platform_init() that reboots the
+    // device if the charger / USB has been disconnected between Preloader and LK
+    // execution.
+    //
+    // This is pretty overkill when booting Preloaders with plstage, since we quickly
+    // disconnect USB after sending the Preloader.
+    NOP(0x4600234C, 2);
+
+    // Sony controls UART output via the Trim Area. This is controlled by the 0x9A9
+    // TA unit. When this unit is read, UART output gets disabled if the value
+    // says so.
+    //
+    // This patch forces dprintf calls to skip the check completely, so UART
+    // stays enabled no matter what's in the TA.
+    NOP(0x46002978, 1);
 
     // Kept for backward compatibility with other LK builds, even though it's not
     // strictly necessary, other patches already target the functions used to check
@@ -75,15 +173,7 @@ void board_late_init(void) {
                   0xe12fff1e   // bx lr
     );
 
-    if (mtk_detect_key(VOLUME_UP)) {
-        // Not entirely sure why this is necessary, but without it the device
-        // boots into service mode instead of fastboot. Volume Down doesn't work
-        // here, as it always triggers recovery mode regardless of what you try
-        // to force.
-        set_bootmode(BOOTMODE_FASTBOOT);
-    }
-
-    if (get_bootmode() == BOOTMODE_FASTBOOT) {
+    if (s1boot_get_bootimage() == BOOT_FASTBOOT_IMAGE) {
         // Sony had the brilliant idea of setting up a thread that constantly checks
         // whether USB is connected while the device is in fastboot mode. If the
         // device is disconnected, it will forcefully reboot.
@@ -123,18 +213,12 @@ void board_late_init(void) {
         // It simply calls mt_power_off().
         fastboot_register("oem shutdown", cmd_shutdown, 1);
         fastboot_register("oem poweroff", cmd_shutdown, 1);
+
+        // Show the current boot mode on the screen for clarity.
+        show_bootmode(BOOTMODE_FASTBOOT);
     }
 
-    if (get_bootmode() != BOOTMODE_NORMAL) {
-        // Show the current boot mode on screen when not performing a normal boot.
-        // This is standard behavior in many LK images, but not in this one by default.
-        //
-        // Displaying the boot mode can be helpful for developers, as it provides
-        // immediate feedback and can prevent debugging headaches.
-        show_bootmode(get_bootmode());
-    }
-
-    if (get_bootmode() != BOOTMODE_FASTBOOT) {
+    if (s1boot_get_bootimage() != BOOT_FASTBOOT_IMAGE) {
         // Sets the boot status to green. This is likely ineffective, as it seems
         // to be overridden later by the bootloader. Still, it doesn't hurt to
         // include it here.
