@@ -19,8 +19,6 @@ void kaeru(void) {
     board_late_init();
 
     ((void (*)(const struct app_descriptor *))(CONFIG_APP_ADDRESS | 1))(NULL);
-
-    arch_idle();
 }
 
 __attribute__((section(".text.start"))) void main(void) {
