@@ -317,4 +317,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Motorola E15
+
+    config REALME_EVEN
+        bool "Support realme C25s"
+        default n
+        help
+          Say Y if you want to include support for realme C25s
 endmenu
