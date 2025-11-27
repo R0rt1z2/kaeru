@@ -22,6 +22,7 @@
           pkgs.python3
           pkgs.gnumake
           pkgs.android-tools
+          pkgs.python3Packages.capstone
 
           frostix.lkpatcher
           frostix.gcc-arm-linux-gnueabihf
