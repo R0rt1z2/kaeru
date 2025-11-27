@@ -183,5 +183,6 @@ sphinx_*/
 
 # Kaeru
 kaeru
+stageone
 *-kaeru
 *.lds
