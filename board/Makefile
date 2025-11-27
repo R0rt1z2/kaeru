@@ -51,3 +51,4 @@ lib-$(CONFIG_NUU_NUU_A1) += nuu/board-NUU_A1.o
 lib-$(CONFIG_HONOR_CARTIER5G) += honor/board-cartier5g.o
 lib-$(CONFIG_MOTOROLA_LAMULG) += motorola/board-lamu.o
 lib-$(CONFIG_REALME_EVEN) += realme/board-even.o
+lib-$(CONFIG_HUAWEI_MAYA) += huawei/board-maya.o
