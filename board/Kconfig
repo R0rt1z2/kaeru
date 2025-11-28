@@ -329,4 +329,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Huawei Y5/Y6 2017
+
+    config INNIOASIS_Y1
+        bool "Support Innioasis Y1"
+        default n
+        help
+          Say Y if you want to include support for Innioasis Y1
 endmenu
