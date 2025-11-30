@@ -7,7 +7,7 @@ menu "Framebuffer Support"
 		help
 		  Enable the framebuffer library for drawing graphics and text.
 		  This adds support for basic shapes, text rendering, and UI elements.
-		  
+
 		  Say Y unless you want to minimize binary size and don't need graphics.
 
 	if FRAMEBUFFER_SUPPORT
@@ -50,7 +50,7 @@ menu "Framebuffer Support"
 			help
 			  Number of bits per pixel. Common values:
 			  16 - RGB565 format
-			  24 - RGB888 format  
+			  24 - RGB888 format
 			  32 - ARGB8888 format (recommended)
 
 		config FRAMEBUFFER_BYTES_PER_PIXEL
@@ -103,15 +103,15 @@ menu "Thread Support"
         default n
         help
           Say Y if you want to create your own threads
-    
+
     config THREAD_CREATE_ADDRESS
         hex "Thread create address"
         depends on THREAD_SUPPORT
         help
           Address for thread creation function
-    
+
     config THREAD_RESUME_ADDRESS
-        hex "Thread resume address" 
+        hex "Thread resume address"
         depends on THREAD_SUPPORT
         help
           Address for thread resume function
@@ -210,4 +210,13 @@ menu "Logging Options"
         depends on LK_LOG_STORE
         help
           Address of the lk_log_store() function in the bootloader
+endmenu
+
+menu "Third party libraries"
+    config LIBSEJ_SUPPORT
+        bool "Enable libsej support"
+        default n
+        help
+          Say Y to enable libsej support, allowing to interact with
+          the device crypto engine.
 endmenu

@@ -9,11 +9,16 @@
 
 void kaeru(void) {
 #ifdef CONFIG_FRAMEBUFFER_SUPPORT
-    fb_init((uint32_t*)CONFIG_FRAMEBUFFER_ADDRESS, 
-            CONFIG_FRAMEBUFFER_WIDTH, 
-            CONFIG_FRAMEBUFFER_HEIGHT, 
+    fb_init((uint32_t*)CONFIG_FRAMEBUFFER_ADDRESS,
+            CONFIG_FRAMEBUFFER_WIDTH,
+            CONFIG_FRAMEBUFFER_HEIGHT,
             CONFIG_FRAMEBUFFER_BYTES_PER_PIXEL,
             CONFIG_FRAMEBUFFER_ALIGNMENT);
+#endif
+
+#ifdef CONFIG_LIBSEJ_SUPPORT
+    set_sej_base(CONFIG_SEJ_BASE);
+    init_sej_ctx();
 #endif
 
     board_late_init();

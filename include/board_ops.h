@@ -20,5 +20,9 @@
 #include <lib/framebuffer.h>
 #endif
 
+#ifdef CONFIG_LIBSEJ_SUPPORT
+#include <lib/sej.h>
+#endif
+
 void board_early_init(void);
 void board_late_init(void);
