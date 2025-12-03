@@ -341,4 +341,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Motorola E22i
+
+    config BQ_KAITO
+        bool "Support BQ Aquaris E10 3G"
+        default n
+        help
+          Say Y if you want to include support for BQ Aquaris E10 3G
 endmenu

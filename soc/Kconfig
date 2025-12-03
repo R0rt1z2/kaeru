@@ -11,6 +11,9 @@ config MEDIATEK_MT6572
 config MEDIATEK_MT6580
     bool "Mediatek MT6580 SoC"
 
+config MEDIATEK_MT6592
+    bool "MediaTek MT6592 SoC"
+
 config MEDIATEK_MT6737
     bool "MediaTek MT6737 SoC"
 
@@ -71,6 +74,7 @@ config SECURITY_AO_BASE
     hex "Security Always-On base address"
     default 0x1001A000 if MEDIATEK_MT6572
     default 0x1001A000 if MEDIATEK_MT6580
+    default 0x1001A000 if MEDIATEK_MT6592
     default 0x1001A000 if MEDIATEK_MT6737
     default 0x1001A000 if MEDIATEK_MT6739
     default 0x1001A000 if MEDIATEK_MT6750
@@ -94,6 +98,7 @@ config SEJ_BASE
     hex "Security Engine for JTAG Protection / HACC base address"
     default 0xF000A000 if MEDIATEK_MT6572
     default 0x1000A000 if MEDIATEK_MT6580
+    default 0x1000A000 if MEDIATEK_MT6592
     default 0x10008000 if MEDIATEK_MT6737
     default 0x1000A000 if MEDIATEK_MT6739
     default 0x1000A000 if MEDIATEK_MT6750
@@ -117,6 +122,7 @@ config UART_BASE
     hex "UART base address"
     default 0x11005000 if MEDIATEK_MT6572
     default 0x11005000 if MEDIATEK_MT6580
+    default 0x11002000 if MEDIATEK_MT6592
     default 0x11002000 if MEDIATEK_MT6750
     default 0x11002000 if MEDIATEK_MT6757
     default 0x11002000 if MEDIATEK_MT6761
@@ -140,6 +146,7 @@ config WDT_BASE
     hex "Watchdog timer base address"
     default 0x10007000 if MEDIATEK_MT6572
     default 0x10007000 if MEDIATEK_MT6580
+    default 0x10007000 if MEDIATEK_MT6592
     default 0x10212000 if MEDIATEK_MT6737
     default 0x10007000 if MEDIATEK_MT6739
     default 0x10007000 if MEDIATEK_MT6750
