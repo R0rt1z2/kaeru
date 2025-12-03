@@ -53,3 +53,4 @@ lib-$(CONFIG_MOTOROLA_LAMULG) += motorola/board-lamu.o
 lib-$(CONFIG_REALME_EVEN) += realme/board-even.o
 lib-$(CONFIG_HUAWEI_MAYA) += huawei/board-maya.o
 lib-$(CONFIG_INNIOASIS_Y1) += innioasis/board-y1.o
+lib-$(CONFIG_MOTOROLA_BORAGO) += motorola/board-borag.o

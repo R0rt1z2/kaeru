@@ -335,4 +335,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Innioasis Y1
+
+    config MOTOROLA_BORAGO
+        bool "Support Motorola E22i"
+        default n
+        help
+          Say Y if you want to include support for Motorola E22i
 endmenu

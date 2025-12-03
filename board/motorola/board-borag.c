@@ -4,6 +4,7 @@
 //
 
 #include <board_ops.h>
+#include "include/borag.h"
 
 void cmd_reboot_emergency(const char* arg, void* data, unsigned sz) {
     fastboot_info("The device will reboot into bootrom mode...");
@@ -28,7 +29,7 @@ void board_early_init(void) {
     //
     // To prevent this, we force the function to not run by making it
     // just return 0
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB530, 0x2300, 0xB083, 0xF8AD, 0x3004);
+    addr = SEARCH_PATTERN(LK_START, LK_END, LOCK_FUNC_PATTERN);
     if (addr) {
         printf("Found lock function at 0x%08X\n", addr);
         FORCE_RETURN(addr, 0);
@@ -37,7 +38,7 @@ void board_early_init(void) {
     // Register our custom signature command that always sets the flag to 1.
     // Not necessarily needed, but at least we are sure the flag won't
     // get changed to 0
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF7FF, 0xFB16, 0xF8DF, 0x1564);
+    addr = SEARCH_PATTERN(LK_START, LK_END, CMD_SIGNATURE_PATTERN);
     if (addr) {
         printf("Found cmd_signature at 0x%08X\n", addr);
         NOP(addr, 2);
