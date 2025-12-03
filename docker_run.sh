@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 CONTAINER_NAME="kaeru"
 DOCKERFILE="Dockerfile"
