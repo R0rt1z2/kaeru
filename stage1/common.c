@@ -8,12 +8,9 @@
 #include <lib/storage.h>
 
 void init_storage(void) {
-#ifdef CONFIG_INIT_STORAGE_TAKES_ARG
-    // Legacy lk needs a int argument to know what device to init (emmc, sdcard..)
+    // AAPCS: r0-r3 are caller-saved scratch registers regardless of
+    // callee's actual parameter count. Passing an unused arg is harmless.
     ((void (*)(int))(CONFIG_INIT_STORAGE_ADDRESS | 1))(1);
-#else
-    ((void (*)(void))(CONFIG_INIT_STORAGE_ADDRESS | 1))();
-#endif
 }
 
 size_t dprintf(const char* format, ...) {
