@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 print_usage() {
     echo "Usage: $0 [OPTIONS]"
