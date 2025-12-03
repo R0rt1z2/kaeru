@@ -5,7 +5,7 @@ config STAGE1_SUPPORT
 	default n
 	help
 	  Enable support for loading kaeru in multiple stages.
-	  This allows to a small initial stage that then loads the full kaeru stage 2.
+	  This allows to inject a small initial stage that then loads the full kaeru stage 2.
 	  This is useful for devices with very limited bootloader space or where corruption
 	  happens because of big board files.
 
@@ -16,19 +16,29 @@ menu "Stage1 Options"
         bool "Build stage1 with legacy LK support"
         default n
         help
-            Enable this if the device's lk is a legacy one, which have different
+            Enable this if the devices LK is a legacy one, which has different
             function implementations that are not compatible with modern LK.
+
+    config USE_PMT_PARTITION
+        bool "Use PMT partition table"
+        default n
+        depends on LEGACY_LK
+        help
+            Enable this for legacy devices that use PMT (Partition Meta Table)
+            instead of GPT. This selects the correct part_t structure layout
+            returned by mt_part_get_partition(). PMT devices use startblk/blknum
+            fields while GPT devices use start_sect/nr_sects fields.
 
     config BOOTLOADER_PARTITION_NAME
         string "Bootloader partition name"
         default "lk"
         help
             Name of the partition containing the bootloader image.
-            On most MediaTek devices this is "lk", but some devices may use
+            On most MediaTek devices this is lk, but some devices may use
             different names like "UBOOT" or "LK".
 
     config INIT_STORAGE_CALLER
-        hex "init_storage()'s caller address"
+        hex "init_storage() caller address"
 
     config INIT_STORAGE_ADDRESS
         hex "init_storage() address"
@@ -37,7 +47,7 @@ menu "Stage1 Options"
         hex "malloc() address"
 
     config DPRINTF_ADDRESS
-        hex "dprtinf() address"
+        hex "dprintf() address"
 
     config FREE_ADDRESS
         hex "free() address"
@@ -51,7 +61,7 @@ menu "Stage1 Options"
         depends on LEGACY_LK
 
     config PARTITION_READ_ADDRESS
-        hex "mboot_load_part() address"
+        hex "partition_read() address"
         depends on !LEGACY_LK
 
     config PARTITION_GET_SIZE_BY_NAME_ADDRESS

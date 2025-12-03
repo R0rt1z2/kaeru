@@ -5,38 +5,50 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #define BLOCK_SIZE 512
 
 #define MISC_PAGES            3
 #define MISC_COMMAND_PAGE     1
 
-#define PART_META_INFO_NAMELEN  64
-#define PART_META_INFO_UUIDLEN  16
-
 #define BOOT0_PART 1
 #define USER_PART  8
 
-struct part_meta_info {
-    uint8_t name[PART_META_INFO_NAMELEN];
-    uint8_t uuid[PART_META_INFO_UUIDLEN];
-};
+#ifdef CONFIG_LEGACY_LK
 
-typedef struct part_t {
-    unsigned long  start_sect;
-    unsigned long  nr_sects;
+#ifdef CONFIG_USE_PMT_PARTITION
+
+typedef struct {
+    char *name;
+    unsigned long blknum;
+    unsigned long flags;
+    unsigned long startblk;
+    unsigned int part_id;
+} part_t;
+
+#else
+
+typedef struct {
+    unsigned long start_sect;
+    unsigned long nr_sects;
     unsigned int part_id;
     char *name;
-    struct part_meta_info *info;
+    void *info;
 } part_t;
+
+#endif
 
 struct device_t {
     uint32_t init;
     uint32_t id;
     void *blkdev;
-    int (*init_dev) (int id);
+    int (*init_dev)(int id);
     size_t (*read)(struct device_t *dev, uint64_t dev_addr, void *dst, uint32_t size, uint32_t part);
     size_t (*write)(struct device_t *dev, void *src, uint64_t block_off, size_t size, uint32_t part);
 };
+
+#endif
 
 struct misc_message {
     char command[32];

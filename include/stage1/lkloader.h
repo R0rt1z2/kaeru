@@ -12,4 +12,8 @@
 #define LK_EXT_MAGIC 0x58891689U
 #define BFBF_MAGIC 0x42464246U
 
+#define MIN_HEADER_SIZE 80
+#define DEFAULT_HEADER_SIZE 512
+#define DEFAULT_ALIGNMENT 8
+
 ssize_t load_kaeru_partition(void* buffer, size_t buffer_size);
