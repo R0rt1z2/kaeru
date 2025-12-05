@@ -6,15 +6,27 @@
 #include <lib/fastboot.h>
 
 void fastboot_info(const char* reason) {
+#ifdef CONFIG_USE_FASTBOOT_ACK
+    ((void (*)(const char* type, const char* reason))(CONFIG_FASTBOOT_ACK_ADDRESS | 1))("INFO", reason);
+#else
     ((void (*)(const char* reason))(CONFIG_FASTBOOT_INFO_ADDRESS | 1))(reason);
+#endif
 }
 
 void fastboot_fail(const char* reason) {
+#ifdef CONFIG_USE_FASTBOOT_ACK
+    ((void (*)(const char* type, const char* reason))(CONFIG_FASTBOOT_ACK_ADDRESS | 1))("FAIL", reason);
+#else
     ((void (*)(const char* reason))(CONFIG_FASTBOOT_FAIL_ADDRESS | 1))(reason);
+#endif
 }
 
 void fastboot_okay(const char* reason) {
+#ifdef CONFIG_USE_FASTBOOT_ACK
+    ((void (*)(const char* type, const char* reason))(CONFIG_FASTBOOT_ACK_ADDRESS | 1))("OKAY", reason);
+#else
     ((void (*)(const char* reason))(CONFIG_FASTBOOT_OKAY_ADDRESS | 1))(reason);
+#endif
 }
 
 void fastboot_register(const char* prefix, void (*handle)(const char* arg, void* data, unsigned sz),

@@ -143,6 +143,23 @@ menu "Fastboot Support"
             hex "Fastboot register address"
             help
               Address of the fastboot_register() function in the bootloader
+
+        config USE_FASTBOOT_ACK
+            bool "Use unified fastboot_ack() function"
+            default n
+            help
+              Enable this for devices that use a single fastboot_ack()
+              function instead of separate fastboot_okay(), fastboot_fail(),
+              and fastboot_info() functions. The unified function takes two
+              parameters: fastboot_ack(const char* type, const char* reason)
+              where type is "OKAY", "FAIL", or "INFO".
+
+        config FASTBOOT_ACK_ADDRESS
+            hex "Fastboot ack address"
+            depends on USE_FASTBOOT_ACK
+            help
+              Address of the fastboot_ack() function in the bootloader.
+              Only needed when USE_FASTBOOT_ACK is enabled.
     endmenu
 endmenu
 
