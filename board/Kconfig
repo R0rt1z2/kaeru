@@ -347,4 +347,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for BQ Aquaris E10 3G
+
+    config MOTOROLA_LAGOS
+        bool "Support Motorola G06"
+        default n
+        help
+          Say Y if you want to include support for Motorola G06
 endmenu

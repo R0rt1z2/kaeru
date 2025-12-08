@@ -55,3 +55,4 @@ lib-$(CONFIG_HUAWEI_MAYA) += huawei/board-maya.o
 lib-$(CONFIG_INNIOASIS_Y1) += innioasis/board-y1.o
 lib-$(CONFIG_MOTOROLA_BORAGO) += motorola/board-borag.o
 lib-$(CONFIG_BQ_KAITO) += bq/board-kaito.o
+lib-$(CONFIG_MOTOROLA_LAGOS) += motorola/board-lagos.o
