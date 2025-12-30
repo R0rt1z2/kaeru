@@ -21,42 +21,42 @@
 
 #ifdef CONFIG_REALME_RMX2156_UI2 // Realme UI2 C18
 // calls
-#define CLEAN_SCREEN            0X4C431DC0
-#define GET_ROWS                0X4C431DB4
-#define GET_COLUMNS             0X4C5277A0     
-#define SET_CURSOR              0X4C431D78
-#define DRINTF_ADDR             0X4C432040
-#define SHOW_LOGO_ADDR          0X4C405364
-#define MDELAY_ADDR             0X4C451D48
-#define CONTINUE_ADDR           0X4C427024
-#define REBOOT_RECOVERY_ADDR    0X4C427260
-#define POWER_OFF_ADDR          0X4C4187B4
-#define REBOOT_BL_ADDR          0X4C4276F8
-#define REBOOT_ADDR             0X4C4276C8
-#define DISP_UPDATE_ADDR        0X4C4014F8
+#define CLEAN_SCREEN            0x4C431DC0
+#define GET_ROWS                0x4C431DB4
+#define GET_COLUMNS             0x4C5277A0     
+#define SET_CURSOR              0x4C431D78
+#define DRINTF_ADDR             0x4C432040
+#define SHOW_LOGO_ADDR          0x4C405364
+#define MDELAY_ADDR             0x4C451D48
+#define CONTINUE_ADDR           0x4C427024
+#define REBOOT_RECOVERY_ADDR    0x4C427260
+#define POWER_OFF_ADDR          0x4C4187B4
+#define REBOOT_BL_ADDR          0x4C4276F8
+#define REBOOT_ADDR             0x4C4276C8
+#define DISP_UPDATE_ADDR        0x4C4014F8
 // basic patches
-#define VERIFY_OK               0X4C46768C
-#define ORANGE_STATE            0X4C444214
-#define DM_VERITY               0X4C458E60
-#define FIVE_SEC_DELAY          0X4C427070  // removed unnecessary 5 sec delay in cmd_continue
-#define FASTBOOT_INIT1          0X4C4264DC  // video_clean_screen
-#define FASTBOOT_INIT2          0X4C4264E0  // video_get_rows
-#define FASTBOOT_INIT3          0X4C4264EE  // video_set_cursor
-#define FASTBOOT_INIT4          0X4C4264F8  // video_printf("[Fastboot    Mode] \n");
+#define VERIFY_OK               0x4C46768C
+#define ORANGE_STATE            0x4C444214
+#define DM_VERITY               0x4C458E60
+#define FIVE_SEC_DELAY          0x4C427070  // removed unnecessary 5 sec delay in cmd_continue
+#define FASTBOOT_INIT1          0x4C4264DC  // video_clean_screen
+#define FASTBOOT_INIT2          0x4C4264E0  // video_get_rows
+#define FASTBOOT_INIT3          0x4C4264EE  // video_set_cursor
+#define FASTBOOT_INIT4          0x4C4264F8  // video_printf("[Fastboot    Mode] \n");
 // lock spoof related patches
-#define LIB_SEC_ADDR            0X4C46B418
-#define LOCK_STATE_JUMP         0X4C46C116
-#define FASTBOOT_HNDLR1         0X4C4261F0
-#define FASTBOOT_HNDLR2         0X4C42621E
-#define VFY_POLICY_ADDR         0X4C4154A0
-#define DL_POLICY_ADDR          0X4C4154AC
-#define AVB_APND_OPTS1          0X4C4532E2
-#define AVB_APND_OPTS2          0X4C4532E6
-#define ENV_INIT_CALL           0X4C40344E
-#define ENV_INIT_ADDR           0X4C44BAD8
-#define SET_ENV_ADDR            0X4C44BF50
-#define GET_ENV_ADDR            0X4C44BCCC // get_env_with_area
-#define DATA_WIPE_ADDR          0X4C42E6B4 // use it with caution
+#define LIB_SEC_ADDR            0x4C46B418
+#define LOCK_STATE_JUMP         0x4C46C116
+#define FASTBOOT_HNDLR1         0x4C4261F0
+#define FASTBOOT_HNDLR2         0x4C42621E
+#define VFY_POLICY_ADDR         0x4C4154A0
+#define DL_POLICY_ADDR          0x4C4154AC
+#define AVB_APND_OPTS1          0x4C4532E2
+#define AVB_APND_OPTS2          0x4C4532E6
+#define ENV_INIT_CALL           0x4C40344E
+#define ENV_INIT_ADDR           0x4C44BAD8
+#define SET_ENV_ADDR            0x4C44BF50
+#define GET_ENV_ADDR            0x4C44BCCC // get_env_with_area
+#define DATA_WIPE_ADDR          0x4C42E6B4 // use it with caution
 // End of RUI2 patches
 #else // Realme UI3 F18 by default
 // calls
