@@ -14,6 +14,7 @@
 #define PAYLOAD_DST 0x41000000
 #define PAYLOAD_SIZE 0x80000
 #define PAYLOAD_SRC 0x80000
+#define DOWNLOAD_BASE 0x45000000
 
 uint32_t pmic_read_interface(uint32_t reg, uint32_t* val, uint32_t mask, uint32_t shift) {
     return ((uint32_t (*)(uint32_t, uint32_t*, uint32_t, uint32_t))(0x4BD15664 | 1))(reg, val, mask,
@@ -175,6 +176,12 @@ static int flash_payload(void *data, unsigned sz)
     return 0;
 }
 
+void* payload_thread_entry(void* arg) {
+    void (*payload_entry)(void) = (void (*)(void))(DOWNLOAD_BASE | 1);
+    payload_entry();
+    return NULL;
+}
+
 void cmd_flash_wrapper(const char *arg, void *data, unsigned sz)
 {
     if (strcmp(arg, "boot") == 0 || strcmp(arg, "recovery") == 0) {
@@ -189,6 +196,24 @@ void cmd_flash_wrapper(const char *arg, void *data, unsigned sz)
         } else {
             fastboot_okay("");
         }
+        return;
+    }
+    else if (strcmp(arg, "payload") == 0) {
+        fastboot_info("[amonet] Executing payload...");
+        
+        memcpy((void *)DOWNLOAD_BASE, data, sz);
+        arch_clean_invalidate_cache_range(DOWNLOAD_BASE, sz);
+        *(volatile uint32_t *)0x42000000 = 0x4BD26A24 | 1; // thread_exit()
+        
+        void* thread = thread_create("payload", (void *)payload_thread_entry, NULL, 10, 8192);
+        if (thread) {
+            thread_resume(thread);
+        } else {
+            fastboot_fail("[amonet] Failed to create payload thread");
+        }
+
+        fastboot_okay("");
+
         return;
     }
     else if (strstr(arg, "_amonet")) {
