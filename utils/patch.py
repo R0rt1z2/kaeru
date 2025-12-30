@@ -28,7 +28,12 @@ def get_cfg(path, key):
 
 
 def find_bss_start(data, size, base, hdr_sz):
-    pos = 0x12C + 4
+    min_pos = 0x12C + 4
+    
+    if len(data) < min_pos:
+        return None, None
+    
+    pos = min_pos
 
     patterns = [
         '10B50446',  # for amazon bootloaders
@@ -47,14 +52,17 @@ def find_bss_start(data, size, base, hdr_sz):
     pos += offset
 
     j = pos - 4
-    while j >= 0x12C + 4 and data[j : j + 4] == b'\0\0\0\0':
+    while j >= min_pos and j + 4 <= len(data):
+        if data[j:j + 4] != b'\0\0\0\0':
+            break
         j -= 4
 
-    if j >= 0x12C + 4:
+    if j >= min_pos and j + 4 <= len(data):
         j -= 4
-        bss_pos = j - hdr_sz
-        bss_val = struct.unpack('<I', data[j : j + 4])[0]
-        return bss_pos, bss_val
+        if j + 4 <= len(data):
+            bss_pos = j - hdr_sz
+            bss_val = struct.unpack('<I', data[j:j + 4])[0]
+            return bss_pos, bss_val
 
     return None, None
 
