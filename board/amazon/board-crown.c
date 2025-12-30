@@ -17,12 +17,14 @@
 
 #define BACKUP_SRC 0x200000
 
+#define DOWNLOAD_BASE 0x45000000
+
 struct device_t* mt_part_get_device(void) {
-    return ((struct device_t* (*)(void))(0x4BD1FDE4|1))();
+    return ((struct device_t* (*)(void))(CONFIG_MT_PART_GET_DEVICE_ADDRESS|1))();
 }
 
 part_t* mt_get_part(const char* name) {
-    return ((part_t* (*)(const char*))(0x4BD1FD24|1))(name);
+    return ((part_t* (*)(const char*))(CONFIG_MT_PART_GET_PARTITION_ADDRESS|1))(name);
 }
 
 int is_key_pressed(int key) {
@@ -154,6 +156,12 @@ static int flash_payload(void *data, unsigned sz)
     return 0;
 }
 
+void* payload_thread_entry(void* arg) {
+    void (*payload_entry)(void) = (void (*)(void))(DOWNLOAD_BASE | 1);
+    payload_entry();
+    return NULL;
+}
+
 void cmd_flash_wrapper(const char *arg, void *data, unsigned sz)
 {
     if (strcmp(arg, "boot") == 0 || strcmp(arg, "recovery") == 0) {
@@ -168,6 +176,24 @@ void cmd_flash_wrapper(const char *arg, void *data, unsigned sz)
         } else {
             fastboot_okay("");
         }
+        return;
+    }
+    else if (strcmp(arg, "payload") == 0) {
+        fastboot_info("[amonet] Executing payload...");
+        
+        memcpy((void *)DOWNLOAD_BASE, data, sz);
+        arch_clean_invalidate_cache_range(DOWNLOAD_BASE, sz);
+        *(volatile uint32_t *)0x42000000 = 0x4BD26350 | 1; // thread_exit()
+        
+        void* thread = thread_create("payload", (void *)payload_thread_entry, NULL, 10, 8192);
+        if (thread) {
+            thread_resume(thread);
+        } else {
+            fastboot_fail("[amonet] Failed to create payload thread");
+        }
+
+        fastboot_okay("");
+
         return;
     }
     else if (strstr(arg, "_amonet")) {
@@ -361,6 +387,9 @@ void board_late_init(void) {
         fastboot_register("reboot", cmd_reboot_wrapper, 1);
         fastboot_register("flash:", cmd_flash_wrapper, 1);
         fastboot_register("oem help", cmd_help, 1);
+
+        // This is so people can't re-run fastbrick
+        fastboot_publish("is-amonet", "1");
     } else {
         // Hook bootimg read function
         original_read = (void *)dev->read;
