@@ -359,4 +359,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Echo Show 5 2nd Gen (2021)
+
+    config MEIZU_M711H
+        bool "Support Meizu M6"
+        default n
+        help
+          Say Y if you want to include support for Meizu M6
 endmenu

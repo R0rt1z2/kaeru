@@ -57,3 +57,4 @@ lib-$(CONFIG_MOTOROLA_BORAGO) += motorola/board-borag.o
 lib-$(CONFIG_BQ_KAITO) += bq/board-kaito.o
 lib-$(CONFIG_MOTOROLA_LAGOS) += motorola/board-lagos.o
 lib-$(CONFIG_AMAZON_CRONOS) += amazon/board-cronos.o
+lib-$(CONFIG_MEIZU_M711H) += meizu/board-m711h.o
