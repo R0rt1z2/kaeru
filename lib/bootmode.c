@@ -34,6 +34,24 @@ const char* bootmode2str(bootmode_t mode) {
     }
 }
 
+bool is_unknown_mode(bootmode_t mode) {
+    switch (mode) {
+        case BOOTMODE_NORMAL:
+        case BOOTMODE_META:
+        case BOOTMODE_RECOVERY:
+        case BOOTMODE_FACTORY:
+        case BOOTMODE_ADVMETA:
+        case BOOTMODE_ATEFACT:
+        case BOOTMODE_ALARM:
+        case BOOTMODE_POWEROFF_CHARGING:
+        case BOOTMODE_FASTBOOT:
+        case BOOTMODE_ERECOVERY:
+            return false;
+        default:
+            return true;
+    }
+}
+
 bootmode_t get_bootmode(void) {
     return READ32(CONFIG_BOOTMODE_ADDRESS);
 }

@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 typedef enum {
     BOOTMODE_NORMAL = 0,
     BOOTMODE_META = 1,
@@ -22,3 +24,4 @@ const char* bootmode2str(bootmode_t mode);
 void show_bootmode(bootmode_t mode);
 bootmode_t get_bootmode(void);
 void set_bootmode(bootmode_t mode);
+bool is_unknown_mode(bootmode_t mode);
