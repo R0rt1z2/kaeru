@@ -170,7 +170,7 @@ class KaeruPatcher:
         stage1_enabled = get_cfg(self.config_path, "STAGE1_SUPPORT") == 'y'
 
         if stage1_enabled:
-            payload = 'stageone'
+            payload = 'stage1.bin'
             temp_stage1 = Path(f'{self.device}-stage1.bin')
         else:
             payload = 'kaeru'
