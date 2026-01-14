@@ -346,7 +346,7 @@ endif # $(dot-config)
 # command line.
 # This allow a user to issue only 'make' to build a kernel including modules
 # Defaults to vmlinux, but the arch makefile usually adds further targets
-all: arch/$(ARCH)/linker.lds kaeru stageone
+all: arch/$(ARCH)/linker.lds kaeru stage1.bin
 
 # List of main executables
 main-y	:= main/main.o
@@ -410,14 +410,13 @@ cmd_stage1 = $(LD) $(filter-out %.lds,$^) -o $@ --script=arch/$(ARCH)/linker.lds
 stage1.o: stage1/built-in.o arch/lib.a arch/$(ARCH)/linker.lds
 	$(call if_changed,stage1)
 
-PHONY += stageone
-stageone: stage1.o
+stage1.bin: stage1.o
 	$(call if_changed,objcopy)
 
 stage1/built-in.o: scripts_basic
 	$(Q)$(MAKE) $(build)=stage1
 
-CLEAN_FILES += stageone stage1.o
+CLEAN_FILES += stage1.bin stage1.o
 endif
 
 ###
@@ -429,7 +428,7 @@ endif
 
 # Directories & files removed with 'make clean'
 CLEAN_DIRS  +=
-CLEAN_FILES +=	kaeru kaeru.o stageone stage1.o
+CLEAN_FILES +=	kaeru kaeru.o stage1.bin stage1.o
 
 # Directories & files removed with 'make mrproper'
 MRPROPER_DIRS  += include/config include/generated
