@@ -6,6 +6,19 @@
 
 #include <board_ops.h>
 
+#define VOLUME_UP 17
+#define VOLUME_DOWN 1
+
+long partition_read(const char* part_name, long long offset, uint8_t* data, size_t size) {
+    return ((long (*)(const char*, long long, uint8_t*, size_t))(CONFIG_PARTITION_READ_ADDRESS | 1))(
+            part_name, offset, data, size);
+}
+
+long partition_write(const char* part_name, long long offset, uint8_t* data, size_t size) {
+    return ((long (*)(const char*, long long, uint8_t*, size_t))(0x4c45877c | 1))(
+            part_name, offset, data, size);
+}
+
 void cmd_help(const char *arg, void *data, unsigned sz) {
     // TODO: Find a better way to get the command list
     struct fastboot_cmd *cmd = (struct fastboot_cmd *)0x4C5B2144;
@@ -94,6 +107,30 @@ char *get_env(char *name) {
         return ((char* (*)(char *name))(addr | 1))(name);
     }
     return NULL;
+}
+
+void parse_bootloader_messages(void) {
+    struct misc_message misc_msg = {0};
+
+    if (partition_read("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg)) < 0) {
+        printf("Failed to read misc partition\n");
+        return;
+    }
+
+    printf("Read bootloader command: %s\n", misc_msg.command);
+
+    if (strncmp(misc_msg.command, "boot-recovery", 13) == 0) {
+        printf("Found boot-recovery, forcing recovery\n");
+        set_bootmode(BOOTMODE_RECOVERY);
+        memset(&misc_msg, 0, sizeof(misc_msg));
+        partition_write("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg));
+    }
+    else if (strncmp(misc_msg.command, "boot-bootloader", 15) == 0) {
+        printf("Found boot-bootloader, forcing fastboot\n");
+        set_bootmode(BOOTMODE_FASTBOOT);
+        memset(&misc_msg, 0, sizeof(misc_msg));
+        partition_write("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg));
+    }
 }
 
 void cmd_spoof_bootloader_lock(const char* arg, void* data, unsigned sz) {
@@ -342,10 +379,37 @@ void board_late_init(void) {
         NOP(addr, 2);
     }
 
-#ifdef KAERU_DEBUG
+    // The stock bootloader ignores boot commands written to the misc partition,
+    // making it impossible to programmatically reboot into fastboot or recovery.
+    // We implement our own misc parsing so tools like mtkclient or Penumbra can
+    // trigger these modes automatically by writing to misc before rebooting.
+    parse_bootloader_messages();
+
+    // The stock bootloader has the worst key combo handling I've ever seen.
+    // It works whenever it feels like it, making it a nightmare to enter
+    // recovery or fastboot mode through key combos.
+    //
+    // This patch restores expected behavior:
+    // - Volume Up → Recovery
+    // - Volume Down → Fastboot
+    if (mtk_detect_key(VOLUME_UP)) {
+        set_bootmode(BOOTMODE_RECOVERY);
+    } else if (mtk_detect_key(VOLUME_DOWN)) {
+        set_bootmode(BOOTMODE_FASTBOOT);
+    }
+
+    bootmode_t mode = get_bootmode();
+    if (mode != BOOTMODE_NORMAL 
+        && mode != BOOTMODE_POWEROFF_CHARGING &&  !is_unknown_mode(mode)) {
+        // Show the current boot mode on screen when not performing a normal boot.
+        // This is standard behavior in many LK images, but not in this one by default.
+        show_bootmode(mode);
+    }
+
+#if KAERU_DEBUG
     // Redirect "lk finished" message from printf to video_printf to ensure we
     // got past lk. Useful for debugging ROMS and kernels, and to know if
     // the kernel is even being loaded.
-    PATCH_CALL(0x4c42ad30, (void*)CONFIG_VIDEO_PRINTF_ADDRESS, TARGET_THUMB);
+    PATCH_CALL(0x4C42AD30, (void*)CONFIG_VIDEO_PRINTF_ADDRESS, TARGET_THUMB);
 #endif
 }
