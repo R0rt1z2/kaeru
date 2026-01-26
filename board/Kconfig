@@ -222,10 +222,10 @@ menu "Device Support"
           Say Y if you want to include support for Lenovo Tab M10HD (2nd Gen) WiFI
 
     config HUAWEI_KANSAS
-        bool "Support Huawei Y5 2019 / Honor 8A"
+        bool "Support Huawei Y5 2019 / Honor 8S"
         default n
         help
-          Say Y if you want to include support for Huawei Y5 2019 / Honor 8A
+          Say Y if you want to include support for Huawei Y5 2019 / Honor 8S
 
     config INFINIX_X6812
         bool "Support Infinix X6812"
