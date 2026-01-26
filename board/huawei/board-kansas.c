@@ -10,7 +10,7 @@
 #define VOLUME_DOWN 1
 
 void board_early_init(void) {
-    printf("Entering early init for Huawei Y5 2019 / Honor 8A\n");
+    printf("Entering early init for Huawei Y5 2019 / Honor 8S\n");
 
     // Likely unnecessary, but done as a precaution.
     //
@@ -37,7 +37,7 @@ void board_early_init(void) {
 }
 
 void board_late_init(void) {
-    printf("Entering late init for Huawei Y5 2019 / Honor 8A\n");
+    printf("Entering late init for Huawei Y5 2019 / Honor 8S\n");
 
     // Suppresses the bootloader unlock warning shown during boot on
     // unlocked devices. In addition to the visual warning, it also
