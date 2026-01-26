@@ -346,7 +346,7 @@ endif # $(dot-config)
 # command line.
 # This allow a user to issue only 'make' to build a kernel including modules
 # Defaults to vmlinux, but the arch makefile usually adds further targets
-all: arch/$(ARCH)/linker.lds kaeru stageone
+all: arch/$(ARCH)/linker.lds kaeru stage1
 
 # List of main executables
 main-y	:= main/main.o
@@ -370,20 +370,16 @@ kaeru-all	:= $(kaeru-objs) $(kaeru-libs)
 
 # Do modpost on a prelinked vmlinux. The finally linked vmlinux has
 # relevant sections renamed as per the linker script.
-quiet_cmd_kaeru = LD      $@
-cmd_kaeru = $(LD) $(kaeru-objs) --whole-archive board/lib.a --no-whole-archive drivers/built-in.o lib/built-in.o arch/lib.a -o $@ --script=arch/$(ARCH)/linker.lds
-
-quiet_cmd_objcopy = OBJCOPY $@
-cmd_objcopy = $(OBJCOPY) -O binary $< $@
+quiet_cmd_kaeru = LD      $@.o
+cmd_kaeru = $(LD) $(kaeru-objs) --whole-archive board/lib.a --no-whole-archive drivers/built-in.o lib/built-in.o arch/lib.a -o $@.o --script=arch/$(ARCH)/linker.lds
 
 arch/$(ARCH)/linker.lds: arch/$(ARCH)/linker.lds.S
 	$(CPP) $< -P -o $@
 
-kaeru.o: $(kaeru-all) arch/$(ARCH)/linker.lds
+kaeru: $(kaeru-all)
 	$(call if_changed,kaeru)
-
-kaeru: kaeru.o
-	$(call if_changed,objcopy)
+	@echo '  OBJCOPY $@'
+	$(OBJCOPY) -O binary kaeru.o kaeru
 
 
 # The actual objects are generated when descending,
@@ -404,20 +400,19 @@ $(kaeru-dirs): scripts_basic
 
 ifeq ($(CONFIG_STAGE1_SUPPORT),y)
 
-quiet_cmd_stage1 = LD      $@
-cmd_stage1 = $(LD) $(filter-out %.lds,$^) -o $@ --script=arch/$(ARCH)/linker.lds
-
-stage1.o: stage1/built-in.o arch/lib.a arch/$(ARCH)/linker.lds
+PHONY += stage1
+stage1: stage1/built-in.o arch/lib.a
 	$(call if_changed,stage1)
+	@echo '  OBJCOPY $@'
+	$(OBJCOPY) -O binary stage1.o stageone
 
-PHONY += stageone
-stageone: stage1.o
-	$(call if_changed,objcopy)
+quiet_cmd_stage1 = LD      $@.o
+cmd_stage1 = $(LD) $^ -o $@.o --script=arch/$(ARCH)/linker.lds
 
 stage1/built-in.o: scripts_basic
 	$(Q)$(MAKE) $(build)=stage1
 
-CLEAN_FILES += stageone stage1.o
+CLEAN_FILES += stageone
 endif
 
 ###
@@ -429,7 +424,7 @@ endif
 
 # Directories & files removed with 'make clean'
 CLEAN_DIRS  +=
-CLEAN_FILES +=	kaeru kaeru.o stageone stage1.o
+CLEAN_FILES +=	kaeru stageone
 
 # Directories & files removed with 'make mrproper'
 MRPROPER_DIRS  += include/config include/generated
