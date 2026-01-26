@@ -365,4 +365,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Meizu M6
+
+    config DIGIT_NEXT_ULTRA
+        bool "Support Digit Next Ultra"
+        default n
+        help
+          Say Y if you want to include support for Digit Next Ultra
 endmenu
