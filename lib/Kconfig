@@ -176,9 +176,13 @@ menu "Memory and Address Mapping"
               Address of the platform_init() function
 
         config APP_CALLER
-            hex "app()'s caller address"
+            hex "app()'s caller address (optional)"
+            default 0x0
             help
-              Address of the function that calls app()
+              Address of the function that calls app().
+              This is only used as a fallback when the app init pointer
+              cannot be located dynamically. Can be left at 0x0 for new
+              defconfigs.
 
         config APP_ADDRESS
             hex "app() address"

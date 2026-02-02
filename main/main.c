@@ -23,14 +23,35 @@ void kaeru(void) {
 
     board_late_init();
 
-    ((void (*)(const struct app_descriptor *))(CONFIG_APP_ADDRESS | 1))(NULL);
+    ((void (*)(const struct app_descriptor*))(CONFIG_APP_ADDRESS | 1))(NULL);
 }
 
 __attribute__((section(".text.start"))) void main(void) {
+    uint32_t search_val = CONFIG_APP_ADDRESS | 1;
+    uint32_t start = CONFIG_BOOTLOADER_BASE;
+    uint32_t end = CONFIG_BOOTLOADER_BASE + CONFIG_BOOTLOADER_SIZE;
+    uint32_t ptr_addr = 0;
+
     print_kaeru_info(OUTPUT_CONSOLE);
     common_early_init();
     board_early_init();
 
-    PATCH_CALL(CONFIG_APP_CALLER, (void*)kaeru, TARGET_THUMB);
+    for (uint32_t addr = start; addr < end; addr += 4) {
+        if (*(volatile uint32_t*)addr == search_val) {
+            ptr_addr = addr;
+            break;
+        }
+    }
+
+    if (ptr_addr != 0) {
+        *(volatile uint32_t*)ptr_addr = (uint32_t)kaeru | 1;
+        arch_clean_invalidate_cache_range(ptr_addr, 4);
+    } else {
+#if defined(CONFIG_APP_CALLER) && CONFIG_APP_CALLER != 0
+        PATCH_CALL(CONFIG_APP_CALLER, (void*)kaeru, TARGET_THUMB);
+        arch_clean_invalidate_cache_range(CONFIG_APP_CALLER, 4);
+#endif
+    }
+
     ((void (*)(void))(CONFIG_PLATFORM_INIT_ADDRESS | 1))();
 }
