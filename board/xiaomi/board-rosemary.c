@@ -158,6 +158,49 @@ void spoof_lock_state(void) {
     }
 }
 
+static void patch_cmdline(char* cmdline) {
+    char* p;
+
+    p = strstr(cmdline, "androidboot.verifiedbootstate=green");
+    if (p) {
+        char* t = p + strlen("androidboot.verifiedbootstate=green");
+        memmove(t + 1, t, strlen(t) + 1);
+        memcpy(p + strlen("androidboot.verifiedbootstate="), "orange", 6);
+        printf("Patched verifiedbootstate: green -> orange\n");
+    }
+
+    p = strstr(cmdline, "androidboot.secureboot=1");
+    if (p) {
+        p[strlen("androidboot.secureboot=")] = '0';
+        printf("Patched secureboot: 1 -> 0\n");
+    }
+
+    p = strstr(cmdline, "androidboot.vbmeta.device_state=locked");
+    if (p) {
+        char* t = p + strlen("androidboot.vbmeta.device_state=locked");
+        memmove(t + 2, t, strlen(t) + 1);
+        memcpy(p + strlen("androidboot.vbmeta.device_state="), "unlocked", 8);
+        printf("Patched device_state: locked -> unlocked\n");
+    }
+}
+
+void handle_recovery_boot(void) {
+    char* env = get_env(KAERU_ENV_BLDR_SPOOF);
+    if (get_bootmode() != BOOTMODE_RECOVERY || !env || strcmp(env, "1") != 0)
+        return;
+
+    printf("Recovery boot detected, modifying cmdline for unlocked state.\n");
+
+    char* cmdline1 = (char*)0x4C5A0698;
+    char* cmdline2 = (char*)0x4C59FE94;
+
+    printf("Patching cmdline at 0x4C5A0698\n");
+    patch_cmdline(cmdline1);
+
+    printf("Patching cmdline at 0x4C59FE94\n");
+    patch_cmdline(cmdline2);
+}
+
 void board_early_init(void) {
     printf("Entering early init for Redmi 10S / POCO M5s\n");
 
@@ -225,5 +268,15 @@ void board_late_init(void) {
     if (addr) {
         printf("Found dm_verity_corruption at 0x%08X\n", addr);
         FORCE_RETURN(addr, 0);
+    }
+
+    // If we're booting into recovery mode, we need to ensure the verifiedbootstate
+    // is set to "orange" (unlocked) so fastbootd detects the device as unlocked
+    // and allows flashing. Otherwise, it may treat the device as locked and reject
+    // flash commands.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF016, 0xF909, 0xF001, 0xFCD9);
+    if (addr) {
+        printf("Found cmdline_pre_process at 0x%08X\n", addr);
+        PATCH_CALL(addr, (void*)handle_recovery_boot, TARGET_THUMB);
     }
 }
