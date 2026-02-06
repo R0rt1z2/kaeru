@@ -50,6 +50,27 @@ bool mtk_detect_key(unsigned short key) {
     return ((bool (*)(unsigned short))(CONFIG_MTK_DETECT_KEY_ADDRESS | 1))(key);
 }
 
+void cmdline_replace(char *cmdline, const char *param,
+                     const char *old, const char *new) {
+    size_t param_len = strlen(param);
+    size_t old_len = strlen(old);
+    size_t new_len = strlen(new);
+
+    char *p = strstr(cmdline, param);
+    if (!p)
+        return;
+
+    char *value = p + param_len;
+    char *after = value + old_len;
+    int diff = (int)new_len - (int)old_len;
+
+    if (diff)
+        memmove(after + diff, after, strlen(after) + 1);
+
+    memcpy(value, new, new_len);
+    printf("Patched %s: %s -> %s\n", param, old, new);
+}
+
 void print_kaeru_info(output_type_t output_type) {
 #ifndef CONFIG_EXCLUDE_BRANDING
     unsigned int sp, lr, pe, vbar;
