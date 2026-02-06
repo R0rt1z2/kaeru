@@ -371,4 +371,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Digit Next Ultra
+
+    config XIAOMI_EARTH
+        bool "Support Redmi 12C / POCO C55"
+        default n
+        help
+          Say Y if you want to include support for Redmi 12C / POCO C55
 endmenu

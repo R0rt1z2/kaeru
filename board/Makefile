@@ -59,3 +59,4 @@ lib-$(CONFIG_MOTOROLA_LAGOS) += motorola/board-lagos.o
 lib-$(CONFIG_AMAZON_CRONOS) += amazon/board-cronos.o
 lib-$(CONFIG_MEIZU_M711H) += meizu/board-m711h.o
 lib-$(CONFIG_DIGIT_NEXT_ULTRA) += digit/board-next_ultra.o
+lib-$(CONFIG_XIAOMI_EARTH) += xiaomi/board-earth.o
