@@ -17,6 +17,13 @@ SECTIONS
         *(.rodata .rodata.* .gnu.linkonce.r.*)
     }
 
+    .got :
+    {
+        __got_start = .;
+        *(.got .got.*)
+        __got_end = .;
+    }
+
     .data :
     {
         *(.data .data.* .gnu.linkonce.d.*)

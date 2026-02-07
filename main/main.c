@@ -5,6 +5,7 @@
 
 #include <arch/arm.h>
 #include <arch/ops.h>
+#include <reloc.h>
 #include <board_ops.h>
 
 void kaeru(void) {
@@ -27,6 +28,8 @@ void kaeru(void) {
 }
 
 __attribute__((section(".text.start"))) void main(void) {
+    self_relocate();
+
     uint32_t search_val = CONFIG_APP_ADDRESS | 1;
     uint32_t start = CONFIG_BOOTLOADER_BASE;
     uint32_t end = CONFIG_BOOTLOADER_BASE + CONFIG_BOOTLOADER_SIZE;
