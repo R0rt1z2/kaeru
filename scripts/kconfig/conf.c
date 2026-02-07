@@ -641,13 +641,11 @@ int main(int ac, char **av)
 	}
 	return 0;
 }
+
 /*
  * Helper function to facilitate fgets() by Jean Sacren.
  */
-void xfgets(str, size, in)
-	char *str;
-	int size;
-	FILE *in;
+void xfgets(char *str, int size, FILE *in)
 {
 	if (fgets(str, size, in) == NULL)
 		fprintf(stderr, "\nError in reading or end of file.\n");
