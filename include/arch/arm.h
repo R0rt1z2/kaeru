@@ -34,6 +34,20 @@ typedef enum { TARGET_THUMB, TARGET_ARM } arm_mode_t;
         *(p + 1) = lo_inst;                                                        \
     } while (0)
 
+#define PATCH_BRANCH(addr, func)                          \
+    do {                                                  \
+        uint32_t cur = (addr) + 4;                        \
+        uint32_t tgt = ((uint32_t)(func)) & ~1;           \
+        int32_t off = tgt - cur;                          \
+        uint16_t hi = (off >> 12) & 0x7FF;                \
+        uint16_t lo = (off >> 1) & 0x7FF;                 \
+        uint16_t hi_inst = 0xF000 | hi;                   \
+        uint16_t lo_inst = 0xB800 | lo;                   \
+        volatile uint16_t* p = (volatile uint16_t*)(addr);\
+        *p = hi_inst;                                     \
+        *(p + 1) = lo_inst;                               \
+    } while (0)
+
 #define PATCH_MEM(addr, ...)                                                      \
     do {                                                                          \
         const uint16_t patch_data[] = {__VA_ARGS__};                              \
