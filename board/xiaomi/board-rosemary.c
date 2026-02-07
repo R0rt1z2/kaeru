@@ -5,200 +5,116 @@
 
 #include <board_ops.h>
 
-int set_env(char *name, char *value) {
-    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0x2200, 0xF7FF, 0xBF0D, 0xBF00, 0xE92D);
-    if (addr) {
-        printf("Found set_env at 0x%08X\n", addr);
-        return ((int (*)(char *name, char *value))(addr | 1))(name, value);
-    }
-    return -1;
+#define CMDLINE1_ADDR 0x4C59FE94
+#define CMDLINE2_ADDR 0x4C5A0698
+
+static void patch_cmdline(char *cmdline) {
+    cmdline_replace(cmdline, "androidboot.verifiedbootstate=",
+                    "green", "orange");
+    cmdline_replace(cmdline, "androidboot.secureboot=",
+                    "1", "0");
+    cmdline_replace(cmdline, "androidboot.vbmeta.device_state=",
+                    "locked", "unlocked");
 }
 
-char *get_env(char *name) {
-    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0xB510, 0x4602, 0x4604, 0x4909, 0x2300);
-    if (addr) {
-        printf("Found get_env at 0x%08X\n", addr);
-        return ((char* (*)(char *name))(addr | 1))(name);
-    }
-    return NULL;
-}
-
-void cmd_spoof_bootloader_lock(const char* arg, void* data, unsigned sz) {
-    uint32_t status = 0;
-    const char* env_value = get_env(KAERU_ENV_BLDR_SPOOF);
-    const char *option = arg + 1;
-    status = (env_value && strcmp(env_value, "1") == 0) ? 1 : 0;
-
-    if (option) {
-        if (!strcmp(option, "off")) {
-            if (status) {
-                set_env(KAERU_ENV_BLDR_SPOOF, "0");
-                fastboot_publish("is-spoofing", "0");
-                fastboot_info("Bootloader spoofing disabled.");
-                fastboot_info("A factory reset may be required.");
-            } else {
-                fastboot_info("Bootloader spoofing is already disabled.");
-            }
-            fastboot_okay("");
-            return;
-        }
-
-        if (!strcmp(option, "on")) {
-            if (!status) {
-                set_env(KAERU_ENV_BLDR_SPOOF, "1");
-                fastboot_publish("is-spoofing", "1");
-                fastboot_info("Bootloader spoofing enabled.");
-                fastboot_info("A factory reset may be required.");
-            } else {
-                fastboot_info("Bootloader spoofing is already enabled.");
-            }
-            fastboot_okay("");
-            return;
-        }
-
-        if (!strcmp(option, "status")) {
-            fastboot_info(status ?
-                "Bootloader spoofing is currently enabled." :
-                "Bootloader spoofing is currently disabled.");
-            fastboot_info(status ?
-                "Device is currently spoofed as bootloader locked." :
-                "Device is not being spoofed as bootloader locked.");
-            fastboot_okay("");
-            return;
-        }
-    }
-
-
-    fastboot_info("kaeru bootloader lock spoofing control");
-    fastboot_info("");
-    fastboot_info("When enabled, device reports as 'locked' to TEE");
-    fastboot_info("while maintaining full fastboot and root capabilities.");
-    fastboot_info("");
-    fastboot_info("Commands:");
-    fastboot_info("  on     - Enable spoofing (reboot required)");
-    fastboot_info("  off    - Disable spoofing (reboot required)");
-    fastboot_info("  status - Show current state");
-    fastboot_fail("Usage: fastboot oem bldr_spoof <on|off|status>");
-}
-
-void spoof_lock_state(void) {
-    uint32_t addr = 0;
-
-    // Put the bootloader spoofing patches behind an env flag to make it optional,
-    // as well as allowing toggling (needed for testing or GSI)
-    char* env_value = get_env(KAERU_ENV_BLDR_SPOOF);
-    if (env_value && strcmp(env_value, "1") == 0) {
-        printf("Bootloader lock status spoofing enabled, applying patches.\n");
-        fastboot_publish("is-spoofing", "1");
-    } else {
-        printf("Bootloader lock status spoofing disabled.\n");
-        fastboot_publish("is-spoofing", "0");
-        return;
-    }
-
-    // Need to spoof the LKS_STATE as "locked" for certain scenarios, but still
-    // return success so other parts of the system don't freak out. This makes
-    // seccfg_get_lock_state always report lock_state=1 and return 2.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB1D0, 0xB510, 0x4604, 0xF7FF, 0xFFDD);
-    if (addr) {
-        printf("Found seccfg_get_lock_state at 0x%08X\n", addr);
-        PATCH_MEM(addr + 6, 
-            0x2301,  // movs r3, #1
-            0x6023,  // str r3, [r4, #0]
-            0x2002,  // movs r0, #2
-            0xbd10   // pop {r4, pc}
-        );
-    }
-
-    // Force the secure boot state to ATTR_SBOOT_ENABLE (0x11). This controls whether
-    // secure boot verification is enabled and is separate from the LKS_STATE above.
-    // Setting it to 0x11 indicates secure boot is properly enabled.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB510, 0x4604, 0x2001, 0xF7FF);
-    if (addr) {
-        printf("Found get_sboot_state at 0x%08X\n", addr);
-        PATCH_MEM(addr,
-            0x2311,  // movs r3, #0x11
-            0x6003,  // str r3, [r0,#0]
-            0x2000,  // movs r0, #0
-            0x4770   // bx lr
-        );
-    }
-
-    // When we spoof the lock state to appear "locked", fastboot starts rejecting 
-    // commands with "not support on security" and "not allowed in locked state" 
-    // errors. This is annoying since the device is actually unlocked underneath, 
-    // the security checks are just being overly paranoid.
-    //
-    // This patch removes both security gates so fastboot commands work regardless
-    // of what the spoofed lock state reports.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x4FF0, 0xB08D, 0x4C8D);
-    if (addr) {
-        printf("Found fastboot command processor at 0x%08X\n", addr);
-        
-        // NOP the error message calls
-        NOP(addr + 0x228, 2);  // "not support on security" call
-        NOP(addr + 0x234, 2);  // "not allowed in locked state" call
-        
-        // Jump directly to command handler
-        PATCH_MEM(addr + 0x19A, 0xE00F);  // b +12 (branch to command handler)
-    }
-
-    // AVB adds device state info to the kernel cmdline, but it keeps showing
-    // "unlocked" even when we want it to say "locked". This patch forces
-    // the cmdline to always use the "locked" string instead of checking
-    // the actual device state.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x4FF0, 0x4691, 0xF102);
-    if (addr) {
-        printf("Found AVB cmdline function at 0x%08X\n", addr);
-        
-        // Find where in libavb the device state is first fetched and then stored,
-        // then Nop out the code that checks the actual device state.
-        // This forces libavb to always use the "locked" string.
-        NOP(addr + 0x9C, 4);
-    }
-}
-
-static void patch_cmdline(char* cmdline) {
-    char* p;
-
-    p = strstr(cmdline, "androidboot.verifiedbootstate=green");
-    if (p) {
-        char* t = p + strlen("androidboot.verifiedbootstate=green");
-        memmove(t + 1, t, strlen(t) + 1);
-        memcpy(p + strlen("androidboot.verifiedbootstate="), "orange", 6);
-        printf("Patched verifiedbootstate: green -> orange\n");
-    }
-
-    p = strstr(cmdline, "androidboot.secureboot=1");
-    if (p) {
-        p[strlen("androidboot.secureboot=")] = '0';
-        printf("Patched secureboot: 1 -> 0\n");
-    }
-
-    p = strstr(cmdline, "androidboot.vbmeta.device_state=locked");
-    if (p) {
-        char* t = p + strlen("androidboot.vbmeta.device_state=locked");
-        memmove(t + 2, t, strlen(t) + 1);
-        memcpy(p + strlen("androidboot.vbmeta.device_state="), "unlocked", 8);
-        printf("Patched device_state: locked -> unlocked\n");
-    }
-}
-
-void handle_recovery_boot(void) {
-    char* env = get_env(KAERU_ENV_BLDR_SPOOF);
-    if (get_bootmode() != BOOTMODE_RECOVERY || !env || strcmp(env, "1") != 0)
+static void handle_recovery_boot(void) {
+    if (get_bootmode() != BOOTMODE_RECOVERY || !is_spoofing_enabled())
         return;
 
     printf("Recovery boot detected, modifying cmdline for unlocked state.\n");
 
-    char* cmdline1 = (char*)0x4C5A0698;
-    char* cmdline2 = (char*)0x4C59FE94;
+    static const uint32_t cmdline_addrs[] = { CMDLINE1_ADDR, CMDLINE2_ADDR };
+    for (int i = 0; i < ARRAY_SIZE(cmdline_addrs); i++) {
+        printf("Patching cmdline at 0x%08X\n", cmdline_addrs[i]);
+        patch_cmdline((char *)cmdline_addrs[i]);
+    }
+}
 
-    printf("Patching cmdline at 0x4C5A0698\n");
-    patch_cmdline(cmdline1);
+static void spoof_lock_state(void) {
+    uint32_t addr = 0;
 
-    printf("Patching cmdline at 0x4C59FE94\n");
-    patch_cmdline(cmdline2);
+    // On most MediaTek devices, lock state is fetched by calling
+    // seccfg_get_lock_state() directly. Some vendors (e.g. Xiaomi)
+    // add a wrapper that also checks a custom lock mechanism, but
+    // this device does not have one. All callers reach
+    // seccfg_get_lock_state() through a single b.w thunk.
+    //
+    // Rather than patching the function body directly, we redirect
+    // the thunk to our own get_lock_state(), keeping the original
+    // function intact while covering all call sites with a single
+    // patch.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF04E, 0xBF04);
+    if (addr) {
+        printf("Found seccfg_get_lock_state thunk at 0x%08X\n", addr);
+        PATCH_BRANCH(addr, (void*)get_lock_state);
+    }
+
+    // LK has two security gates in the fastboot command processor that
+    // reject commands with "not support on security" and "not allowed
+    // in locked state" errors. When spoofing lock state, these would
+    // block all fastboot operations despite the device being actually
+    // unlocked underneath.
+    //
+    // Even without spoofing, we patch these out as a safety measure
+    // since OEM-specific checks could still interfere with fastboot
+    // commands in unexpected ways.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x4FF0, 0xB08D, 0x4C8D);
+    if (addr) {
+        printf("Found fastboot command processor at 0x%08X\n", addr);
+        
+        // "not support on security" call
+        NOP(addr + 0x228, 2);
+
+        // "not allowed in locked state" call
+        NOP(addr + 0x234, 2);
+        
+        // Jump directly to command handler
+        PATCH_MEM(addr + 0x19A, 0xE00F);
+    }
+
+    // AVB adds device state info to the kernel cmdline, but it
+    // keeps showing "unlocked" even when we want it to say "locked".
+    // This patch forces the cmdline to always use the "locked"
+    // string instead of checking the actual device state.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x4FF0, 0x4691, 0xF102);
+    if (addr) {
+        printf("Found AVB cmdline function at 0x%08X\n", addr);
+        
+        // NOP out the code that checks the actual device state,
+        // forcing libavb to always use the "locked" string.
+        NOP(addr + 0x9C, 4);
+    }
+
+    // When booting into recovery, we need to ensure verifiedbootstate
+    // is set to "orange" so fastbootd detects the device as unlocked
+    // and allows flashing. We also patch a few other cmdline params
+    // (secureboot, device_state) as a precaution in case stock
+    // recovery checks them as well.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF016, 0xF909, 0xF001, 0xFCD9);
+    if (addr) {
+        printf("Found cmdline_pre_process at 0x%08X\n", addr);
+        PATCH_CALL(addr, (void *)handle_recovery_boot, TARGET_THUMB);
+    }
+
+    // AVB verifies vbmeta public keys in two places: once for the main
+    // vbmeta image (validate_vbmeta_public_key) and once for chained
+    // vbmeta images (avb_safe_memcmp against the expected key). Both
+    // reject the boot if the key doesn't match, causing the "Public key
+    // used to sign data rejected" error. We patch both checks so any
+    // key is accepted regardless.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF47F, 0xAE6B, 0xE688, 0xF8DD);
+    if (addr) {
+        printf("Found load_and_verify_vbmeta at 0x%08X\n", addr);
+
+        // NOP the bne.w that rejects mismatched chained vbmeta keys,
+        // falling through to the success path unconditionally.
+        NOP(addr, 2);
+
+        // Replace "cmp r3, #0" with "movs r3, #1" so key_is_trusted
+        // is always nonzero and the following bne.w takes the success
+        // branch.
+        PATCH_MEM(addr + 0x72, 0x2301);
+    }
 }
 
 void board_early_init(void) {
@@ -206,31 +122,45 @@ void board_early_init(void) {
 
     uint32_t addr = 0;
 
-    // Since we're spoofing the LKS_STATE as locked, get_vfy_policy would normally
-    // require partition verification during boot. Force it to return 0 to disable
-    // this verification and allow booting with modified partitions.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB508, 0xF7FF, 0xFF67);
+    // Regardless of whether spoofing is enabled, we always need to disable
+    // image authentication. The user may just be using this custom LK to
+    // unlock (bypassing Xiaomi's RPMB lock), or they may be spoofing where
+    // the locked state would enforce verification.
+    //
+    // Forcing get_vfy_policy to return 0 skips certificate verification for
+    // all partitions and firmware images (boot, recovery, dtbo, SCP, etc.)
+    // so the device can boot with modified or unsigned images.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB508, 0xF7FF, 0xFF67, 0xF3C0);
     if (addr) {
         printf("Found get_vfy_policy at 0x%08X\n", addr);
         FORCE_RETURN(addr, 0);
     }
 
-    // Yet another function used to verify the integrity of certain partitions.
-    // This one is used for specific partitions only, like spmfw, scp, etc.
-    //
-    // Applying the same logic as above, we patch it to always return 0, skipping
-    // verification and allowing unsigned images to be flashed and booted.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x47F0, 0xB082);
+    // Same idea but for download policy, forcing get_dl_policy to return
+    // 0 ensures no partition is marked as download-forbidden, so flashing
+    // via fastboot works for all partitions.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB508, 0xF7FF, 0xFF61, 0xF000);
     if (addr) {
-        printf("Found verify_partition at 0x%08X\n", addr);
+        printf("Found get_dl_policy at 0x%08X\n", addr);
         FORCE_RETURN(addr, 0);
     }
 
-    // The environment area is not yet initialized when board_early_init runs,
-    // so environment variable checks will always return NULL at this stage.
-    // To work around this timing issue, we hook into a printf call that executes
-    // after environment initialization is complete and redirect it to our
-    // spoof_lock_state function.
+    // This function handles certificate chain and hash verification for
+    // modem-related images (md1rom, md3rom, etc.) during the modem loading
+    // process. Same idea as above, force it to return 0 so modem images
+    // can be loaded without passing signature verification.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x41F0, 0x460A, 0x4604);
+    if (addr) {
+        printf("Found ccci_ld_md_sec_ptr_hdr_verify at 0x%08X\n", addr);
+        FORCE_RETURN(addr, 0);
+    }
+
+    // The environment area isn't initialized yet when board_early_init
+    // runs, so any get_env calls would return NULL at this stage. We
+    // hook a printf call in platform_init that runs right after env
+    // initialization completes, it's a convenient entry point since
+    // the call itself is non-essential and we need the env to be ready
+    // before applying our lock state patches.
     addr = SEARCH_PATTERN(LK_START, LK_END, 0xF03D, 0xF9BE, 0x6823, 0x4638);
     if (addr) {
         printf("Found env_init_done at 0x%08X\n", addr);
@@ -238,7 +168,7 @@ void board_early_init(void) {
     }
 
     // Register our custom fastboot commands.
-    fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
+    fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 0);
 }
 
 void board_late_init(void) {
@@ -259,24 +189,13 @@ void board_late_init(void) {
         FORCE_RETURN(addr, 0);
     }
 
-    // Disables the warning shown during boot when the device is unlocked and
-    // the dm-verity state is corrupted. This behaves like the previous lock
-    // state warnings, visual only, with no real impact.
-    //
-    // Same approach: patch the function to always return 0.
+    // Disables the dm-verity corruption warning shown during boot when
+    // the device is unlocked. Without this patch, the user gets a scary
+    // "Your device is corrupt" screen that waits for a power button
+    // press and powers off after 5 seconds if ignored.
     addr = SEARCH_PATTERN(LK_START, LK_END, 0xB530, 0xB083, 0xAB02, 0x2200);
     if (addr) {
         printf("Found dm_verity_corruption at 0x%08X\n", addr);
         FORCE_RETURN(addr, 0);
-    }
-
-    // If we're booting into recovery mode, we need to ensure the verifiedbootstate
-    // is set to "orange" (unlocked) so fastbootd detects the device as unlocked
-    // and allows flashing. Otherwise, it may treat the device as locked and reject
-    // flash commands.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF016, 0xF909, 0xF001, 0xFCD9);
-    if (addr) {
-        printf("Found cmdline_pre_process at 0x%08X\n", addr);
-        PATCH_CALL(addr, (void*)handle_recovery_boot, TARGET_THUMB);
     }
 }
