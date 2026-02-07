@@ -146,6 +146,37 @@ menu "Fastboot Support"
     endmenu
 endmenu
 
+menu "Environment Support"
+    config ENVIRONMENT_SUPPORT
+        bool "Enable environment support"
+        default n
+        help
+          Say Y to enable get_env/set_env wrappers.
+          Required for features like bootloader lock spoofing.
+
+    if ENVIRONMENT_SUPPORT
+        config GET_ENV_ADDRESS
+            hex "get_env() address"
+            help
+              Address of the get_env() function in the bootloader
+
+        config SET_ENV_ADDRESS
+            hex "set_env() address"
+            help
+              Address of the set_env() function in the bootloader
+    endif
+endmenu
+
+menu "Spoof Support"
+    config SPOOF_SUPPORT
+        bool "Enable bootloader lock state spoofing"
+        default n
+        depends on ENVIRONMENT_SUPPORT
+        help
+          Common library for bootloader lock state spoofing.
+          Requires environment support to be enabled.
+endmenu
+
 menu "Memory and Address Mapping"
     menu "Bootloader Configuration"
         config BOOTLOADER_BASE

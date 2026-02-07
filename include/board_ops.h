@@ -25,5 +25,9 @@
 #include <lib/sej.h>
 #endif
 
+#ifdef CONFIG_SPOOF_SUPPORT
+#include <lib/spoof.h>
+#endif
+
 void board_early_init(void);
 void board_late_init(void);
