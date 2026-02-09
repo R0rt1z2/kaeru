@@ -8,8 +8,67 @@
 
 #define VOLUME_UP 17
 #define VOLUME_DOWN 1
+#define POWER 8
 #define CMDLINE1_ADDR 0x4C50AC6C
 #define CMDLINE2_ADDR 0x4C50BC70
+
+typedef struct {
+    const char label[32];
+    void (*callback)(void);
+} fb_ui_option_t;
+
+typedef enum {
+    FB_OPTION_REBOOT = 0,
+    FB_OPTION_BOOTLOADER,
+    FB_OPTION_RECOVERY,
+    FB_OPTION_FASTBOOTD,
+    FB_OPTION_POWEROFF,
+    FB_OPTION_CHANGE_SPOOF,
+    FB_OPTION_KAERU_INFO,
+    FB_OPTION_COUNT
+} fb_option_idx_t;
+
+const uint32_t fb_ui_options_count = FB_OPTION_COUNT;
+
+fb_ui_option_t fb_ui_options[FB_OPTION_COUNT] = {
+        [FB_OPTION_REBOOT] = {.label = "REBOOT", .callback = NULL},
+        [FB_OPTION_BOOTLOADER] = {.label = "BOOTLOADER", .callback = NULL},
+        [FB_OPTION_RECOVERY] = {.label = "RECOVERY", .callback = NULL},
+        [FB_OPTION_FASTBOOTD] = {.label = "FASTOOT (USERSPACE)", .callback = NULL},
+        [FB_OPTION_POWEROFF] = {.label = "POWEROFF", .callback = NULL},
+        [FB_OPTION_CHANGE_SPOOF] = {.label = "CHANGE SPOOF STATUS", .callback = NULL},
+        [FB_OPTION_KAERU_INFO] = {.label = "VIEW KAERU INFO", .callback = NULL},
+};
+
+
+char* g_spoof_status = "0";
+int8_t g_fb_ui_idx = 0;
+
+static void video_clean_screen(void) {
+    ((void (*)(void))(0x4C43A4B0 | 1))();
+}
+
+static int video_get_rows(void) {
+    return ((int (*)(void))(0x4C43A4A4 | 1))();
+}
+
+static void video_set_cursor(int row, int col) {
+    ((void (*)(int, int))(0x4C43A468 | 1))(row, col);
+}
+
+static void video_center(void) {
+    video_set_cursor(video_get_rows() / 2, 0);
+}
+
+static void mt_disp_update(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
+    ((void (*)(uint32_t, uint32_t, uint32_t, uint32_t))(0x4C4016B8 | 1))(x, y, width, height);
+}
+
+
+static void mdelay(unsigned long msecs) {
+    ((void (*)(unsigned long))(0x4C45D9E0 | 1))(msecs);
+}
+
 
 long partition_read(const char* part_name, long long offset, uint8_t* data, size_t size) {
     return ((long (*)(const char*, long long, uint8_t*, size_t))(CONFIG_PARTITION_READ_ADDRESS | 1))(
@@ -19,6 +78,126 @@ long partition_read(const char* part_name, long long offset, uint8_t* data, size
 long partition_write(const char* part_name, long long offset, uint8_t* data, size_t size) {
     return ((long (*)(const char*, long long, uint8_t*, size_t))(0x4C45877C | 1))(
             part_name, offset, data, size);
+}
+
+void switch_spoof_status(void) {
+    int new_status = !is_spoofing_enabled();
+
+    g_spoof_status = new_status ? "1" : "0";
+    set_env(KAERU_ENV_BLDR_SPOOF, g_spoof_status);
+}
+
+static void fastboot_ui_info(void) {
+    const char* title = "FASTBOOT MODE (kaeru)";
+
+    static char kaeru_version[32];
+    static char spoofing_status[32];
+
+    npf_snprintf(kaeru_version, sizeof(kaeru_version), "Kaeru version: %s", KAERU_VERSION);
+
+    npf_snprintf(spoofing_status, sizeof(spoofing_status), "Spoofing status: %s", g_spoof_status);
+
+    const char* lines[] = {kaeru_version, spoofing_status};
+
+    const int num_lines = sizeof(lines) / sizeof(lines[0]);
+
+    const uint32_t left_margin = 8;
+    const uint32_t right_margin = 16;
+    const uint32_t bottom_margin = 120;
+    const uint32_t line_spacing = 2;
+    const uint32_t title_extra_gap = 6;
+    const uint32_t char_h = fb_get_char_height();
+
+    const uint32_t title_h =
+            CONFIG_FRAMEBUFFER_HEIGHT - bottom_margin - title_extra_gap - char_h * num_lines;
+
+    uint32_t region_start_h = title_h;
+    uint32_t region_height = char_h + title_extra_gap + (char_h * num_lines) +
+                             (line_spacing * (num_lines - 1)) + char_h + bottom_margin;
+    uint32_t region_width = CONFIG_FRAMEBUFFER_WIDTH - left_margin - right_margin;
+
+    fb_fill_rect(left_margin, region_start_h, region_width, region_height, FB_BLACK);
+
+    fb_text(left_margin, title_h, title, FB_RED);
+
+    uint32_t current_h = title_h + char_h + title_extra_gap;
+    for (int i = 0; i < num_lines; i++) {
+        fb_text(left_margin, current_h, lines[i], FB_WHITE);
+        current_h += char_h + line_spacing;
+    }
+
+    static char selected_label[64];
+    npf_snprintf(selected_label, sizeof(selected_label), "Selected: %s",
+                 fb_ui_options[g_fb_ui_idx].label);
+
+    fb_text(left_margin, current_h + title_extra_gap + 30, selected_label, FB_CYAN);
+}
+
+static int fastboot_ui(void* arg) {
+    video_clean_screen();
+    video_center();
+    fb_set_text_scale(2);
+    fb_clear(FB_BLACK);
+
+    g_fb_ui_idx = 0;
+    g_spoof_status = is_spoofing_enabled() ? "1" : "0";
+    fastboot_ui_info();
+    mt_disp_update(0, 0, CONFIG_FRAMEBUFFER_WIDTH, CONFIG_FRAMEBUFFER_HEIGHT);
+
+    mdelay(1500);
+
+    for (;;) {
+        fastboot_ui_info();
+        mt_disp_update(0, 0, CONFIG_FRAMEBUFFER_WIDTH, CONFIG_FRAMEBUFFER_HEIGHT);
+
+        if (mtk_detect_key(VOLUME_UP)) {
+            g_fb_ui_idx = (g_fb_ui_idx + fb_ui_options_count - 1) % fb_ui_options_count;
+            mdelay(100);
+        } else if (mtk_detect_key(VOLUME_DOWN)) {
+            g_fb_ui_idx = (g_fb_ui_idx + 1) % fb_ui_options_count;
+            mdelay(100);
+        }
+
+
+        else if (mtk_detect_key(POWER)) {
+            switch (g_fb_ui_idx) {
+                case FB_OPTION_REBOOT:
+                    mtk_wdt_reset();
+                    break;
+
+                case FB_OPTION_BOOTLOADER:
+                    ((void (*)(void))(0x4C42DD7C | 1))();
+                    break;
+
+                case FB_OPTION_RECOVERY:
+                    ((void (*)(void))(0x4C42D8E4 | 1))();
+                    break;
+
+                case FB_OPTION_FASTBOOTD:
+                    ((void (*)(void))(0x4C42D920 | 1))();
+                    break;
+
+                case FB_OPTION_POWEROFF:
+                    ((void (*)(void))(0x4C41B9B8 | 1))();
+                    break;
+
+                case FB_OPTION_CHANGE_SPOOF:
+                    switch_spoof_status();
+                    break;
+
+                case FB_OPTION_KAERU_INFO:
+                    video_center();
+                    print_kaeru_info(OUTPUT_VIDEO);
+                    break;
+
+                default:
+                    break;
+            }
+            mdelay(300);
+        }
+        mdelay(100);
+    }
+    return 0;
 }
 
 void cmd_help(const char *arg, void *data, unsigned sz) {
@@ -360,12 +539,19 @@ void board_late_init(void) {
     }
 
     bootmode_t mode = get_bootmode();
-    if (mode != BOOTMODE_NORMAL 
+    if (mode != BOOTMODE_NORMAL
         && mode != BOOTMODE_POWEROFF_CHARGING &&  !is_unknown_mode(mode)) {
         // Show the current boot mode on screen when not performing a normal boot.
         // This is standard behavior in many LK images, but not in this one by default.
         show_bootmode(mode);
     }
+
+    if (mode == BOOTMODE_FASTBOOT) {
+         thread_t* thr;
+         thr = thread_create("fastboot_ui", fastboot_ui, NULL, LOW_PRIORITY, DEFAULT_STACK_SIZE);
+         if (thr) thread_resume(thr);
+     }
+
 
 #if KAERU_DEBUG
     // Redirect "lk finished" message from printf to video_printf to ensure we
