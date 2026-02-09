@@ -8,38 +8,6 @@
 #define CMDLINE1_ADDR 0x4C56FCF4
 #define CMDLINE2_ADDR 0x4C5704F8
 
-static int set_env(char *name, char *value) {
-    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0x2200, 0xF7FF, 0xBF0D, 0xBF00, 0xE92D);
-    if (addr) {
-        printf("Found set_env at 0x%08X\n", addr);
-        return ((int (*)(char *name, char *value))(addr | 1))(name, value);
-    }
-    return -1;
-}
-
-static char *get_env(char *name) {
-    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0xB510, 0x4602, 0x4604, 0x4909, 0x2300);
-    if (addr) {
-        printf("Found get_env at 0x%08X\n", addr);
-        return ((char* (*)(char *name))(addr | 1))(name);
-    }
-    return NULL;
-}
-
-static int is_spoofing_enabled(void) {
-    const char *env_value = get_env(KAERU_ENV_BLDR_SPOOF);
-    return env_value && strcmp(env_value, "1") == 0;
-}
-
-static int get_lock_state(uint32_t *lock_state) {
-    int spoofing = is_spoofing_enabled();
-    printf("Attempted to get lock state, spoofing is %s\n",
-            spoofing ? "enabled" : "disabled");
-
-    *lock_state = spoofing ? LKS_LOCK : LKS_UNLOCK;
-    return 0;
-}
-
 static void patch_cmdline(char *cmdline) {
     cmdline_replace(cmdline, "androidboot.verifiedbootstate=",
                     "green", "orange");
@@ -60,56 +28,6 @@ static void handle_recovery_boot(void) {
         printf("Patching cmdline at 0x%08X\n", cmdline_addrs[i]);
         patch_cmdline((char *)cmdline_addrs[i]);
     }
-}
-
-static void cmd_spoof_bootloader_lock(const char* arg, void* data, unsigned sz) {
-    int status = is_spoofing_enabled();
-    const char *option = arg + 1;
-    int target = -1;
-
-    if (!strcmp(option, "on"))
-        target = 1;
-    else if (!strcmp(option, "off"))
-        target = 0;
-
-    if (target != -1) {
-        if (status != target) {
-            set_env(KAERU_ENV_BLDR_SPOOF, target ? "1" : "0");
-            fastboot_publish("is-spoofing", target ? "1" : "0");
-            fastboot_info(target ?
-                "Bootloader spoofing enabled." :
-                "Bootloader spoofing disabled.");
-            fastboot_info("A factory reset may be required.");
-        } else {
-            fastboot_info(target ?
-                "Bootloader spoofing is already enabled." :
-                "Bootloader spoofing is already disabled.");
-        }
-        fastboot_okay("");
-        return;
-    }
-
-    if (!strcmp(option, "status")) {
-        fastboot_info(status ?
-            "Bootloader spoofing is currently enabled." :
-            "Bootloader spoofing is currently disabled.");
-        fastboot_info(status ?
-            "Device is currently spoofed as bootloader locked." :
-            "Device is not being spoofed as bootloader locked.");
-        fastboot_okay("");
-        return;
-    }
-
-    fastboot_info("kaeru bootloader lock spoofing control");
-    fastboot_info("");
-    fastboot_info("When enabled, device reports as 'locked' to TEE");
-    fastboot_info("while maintaining full fastboot and root capabilities.");
-    fastboot_info("");
-    fastboot_info("Commands:");
-    fastboot_info("  on     - Enable spoofing (reboot required)");
-    fastboot_info("  off    - Disable spoofing (reboot required)");
-    fastboot_info("  status - Show current state");
-    fastboot_fail("Usage: fastboot oem bldr_spoof <on|off|status>");
 }
 
 static void spoof_lock_state(void) {
@@ -281,7 +199,7 @@ void board_early_init(void) {
     }
 
     // Register our custom fastboot commands.
-    fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
+    fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 0);
 }
 
 void board_late_init(void) {
