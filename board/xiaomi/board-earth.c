@@ -212,6 +212,13 @@ static void spoof_lock_state(void) {
     if (addr) {
         printf("Found load_and_verify_vbmeta at 0x%08X\n", addr);
 
+        // The chain key check first compares key lengths before calling
+        // memcmp. If lengths differ, it skips memcmp and falls straight
+        // to the error path. Change "cmp r2, r3" to "cmp r3, r3" so the
+        // length check always succeeds, allowing execution to reach the
+        // memcmp path (which we NOP below).
+        PATCH_MEM(addr - 0x32C, 0x451B);
+
         // NOP the bne.w that rejects mismatched chained vbmeta keys,
         // falling through to the success path unconditionally.
         NOP(addr, 2);
