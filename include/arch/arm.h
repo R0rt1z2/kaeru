@@ -20,6 +20,23 @@
 
 typedef enum { TARGET_THUMB, TARGET_ARM } arm_mode_t;
 
+#define DECODE_BL_TARGET(addr)                                      \
+    ({                                                              \
+        uint16_t _hi = *(volatile uint16_t *)(addr);                \
+        uint16_t _lo = *(volatile uint16_t *)((addr) + 2);          \
+        uint32_t _S = (_hi >> 10) & 1;                              \
+        uint32_t _imm10 = _hi & 0x3FF;                              \
+        uint32_t _J1 = (_lo >> 13) & 1;                             \
+        uint32_t _J2 = (_lo >> 11) & 1;                             \
+        uint32_t _imm11 = _lo & 0x7FF;                              \
+        uint32_t _I1 = !(_J1 ^ _S);                                 \
+        uint32_t _I2 = !(_J2 ^ _S);                                 \
+        int32_t _off = (_S << 24) | (_I1 << 23) | (_I2 << 22)       \
+                     | (_imm10 << 12) | (_imm11 << 1);              \
+        if (_S) _off |= (int32_t)0xFE000000;                        \
+        (uint32_t)((addr) + 4 + _off);                              \
+    })
+
 #define PATCH_CALL(addr, func, mode)                                               \
     do {                                                                           \
         uint32_t cur = (addr) + 4;                                                 \
@@ -47,6 +64,25 @@ typedef enum { TARGET_THUMB, TARGET_ARM } arm_mode_t;
         *p = hi_inst;                                     \
         *(p + 1) = lo_inst;                               \
     } while (0)
+
+#define PATCH_ALL_BL(func_addr, size, orig_func, hook)                    \
+    ({                                                                    \
+        int _count = 0;                                                   \
+        uint32_t _start = (uint32_t)(func_addr);                          \
+        uint32_t _end = _start + (size);                                  \
+        uint32_t _orig = (uint32_t)(orig_func) & ~1;                      \
+        for (uint32_t _a = _start; _a < _end - 2; _a += 2) {             \
+            uint16_t _hi = *(volatile uint16_t *)_a;                      \
+            uint16_t _lo = *(volatile uint16_t *)(_a + 2);                \
+            if ((_hi & 0xF800) != 0xF000) continue;                      \
+            if ((_lo & 0xD000) != 0xD000) continue;                      \
+            if ((DECODE_BL_TARGET(_a) & ~1) == _orig) {                   \
+                PATCH_CALL(_a, (void *)(hook), TARGET_THUMB);             \
+                _count++;                                                 \
+            }                                                             \
+        }                                                                 \
+        _count;                                                           \
+    })
 
 #define PATCH_MEM(addr, ...)                                                      \
     do {                                                                          \
