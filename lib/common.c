@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: 2025 Roger Ortiz <me@r0rt1z2.com>
+// SPDX-FileCopyrightText: 2025-2026 Roger Ortiz <me@r0rt1z2.com>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
@@ -7,6 +7,7 @@
 #include <arch/ops.h>
 #include <lib/common.h>
 #include <lib/debug.h>
+#include <lib/environment.h>
 #include <lib/fastboot.h>
 
 #include <wdt/mtk_wdt.h>
@@ -152,5 +153,9 @@ void __attribute__((weak)) common_early_init(void) {
     fastboot_register("oem kaeru-version", cmd_version, 1);
 #else
 #warning "Branding is excluded, you are not allowed to share copies of this image."
+#endif
+
+#ifdef CONFIG_ENVIRONMENT_SUPPORT
+    fastboot_register("oem env", cmd_env, 1);
 #endif
 }

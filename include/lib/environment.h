@@ -6,6 +6,8 @@
 #pragma once
 
 #include <lib/common.h>
+#include <lib/string.h>
 
 char *get_env(char *name);
 int set_env(char *name, char *value);
+void cmd_env(const char *arg, void *data, unsigned sz);
