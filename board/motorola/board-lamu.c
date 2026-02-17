@@ -7,6 +7,19 @@
 #include <board_ops.h>
 #include "include/lamu.h"
 
+long partition_read(const char* part_name, long long offset, uint8_t* data, size_t size) {
+    return ((long (*)(const char*, long long, uint8_t*, size_t))(CONFIG_PARTITION_READ_ADDRESS | 1))(
+            part_name, offset, data, size);
+}
+
+long partition_write(const char* part_name, long long offset, uint8_t* data, size_t size) {
+    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, PARTITION_WRITE_PATTERN);
+    if (addr)
+        return ((long (*)(const char*, long long, uint8_t*, size_t))(addr | 1))(
+            part_name, offset, data, size);
+    return -1;
+}
+
 static void handle_recovery_boot(void) {
     if (get_bootmode() != BOOTMODE_RECOVERY || !is_spoofing_enabled())
         return;
@@ -18,6 +31,30 @@ static void handle_recovery_boot(void) {
         printf("Patching cmdline at 0x%08X\n", cmdline_addrs[i]);
         cmdline_replace((char *)cmdline_addrs[i],
             "androidboot.verifiedbootstate=", "green", "orange");    
+    }
+}
+
+void parse_bootloader_messages(void) {
+    struct misc_message misc_msg = {0};
+
+    if (partition_read("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg)) < 0) {
+        printf("Failed to read misc partition\n");
+        return;
+    }
+
+    printf("Read bootloader command: %s\n", misc_msg.command);
+
+    if (strncmp(misc_msg.command, "boot-recovery", 13) == 0) {
+        printf("Found boot-recovery, forcing recovery\n");
+        set_bootmode(BOOTMODE_RECOVERY);
+        memset(&misc_msg, 0, sizeof(misc_msg));
+        partition_write("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg));
+    }
+    else if (strncmp(misc_msg.command, "boot-bootloader", 15) == 0) {
+        printf("Found boot-bootloader, forcing fastboot\n");
+        set_bootmode(BOOTMODE_FASTBOOT);
+        memset(&misc_msg, 0, sizeof(misc_msg));
+        partition_write("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg));
     }
 }
 
@@ -200,6 +237,12 @@ void board_late_init(void) {
     printf("Entering late init for Motorola G15 / G05 / E15\n");
 
     uint32_t addr = 0;
+
+    // The stock bootloader ignores boot commands written to the misc partition,
+    // making it impossible to programmatically reboot into fastboot or recovery.
+    // We implement our own misc parsing so tools like mtkclient or Penumbra can
+    // trigger these modes automatically by writing to misc before rebooting.
+    parse_bootloader_messages();
 
     // On unlocked devices, LK shows an orange state warning during boot
     // that also introduces an unnecessary 5 second delay. Forcing the
