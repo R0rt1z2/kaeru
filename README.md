@@ -45,7 +45,7 @@ For full details, please refer to the [LICENSE](https://github.com/R0rt1z2/kaeru
 
 ### Copyright & Developers
 
-- **© 2023–2025 [KAERU Labs, S.L.](https://kaeru.cat/)**
+- **© 2023–2026 [KAERU Labs, S.L.](https://kaeru.cat/)**
 - Developed by:
     - Roger Ortiz ([`@R0rt1z2`](https://github.com/R0rt1z2)) ([me@r0rt1z2.com](mailto:me@r0rt1z2.com))
     - Mateo De la Hoz ([`@AntiEngineer`](https://github.com/AntiEngineer)) ([me@antiengineer.com](mailto:me@antiengineer.com))

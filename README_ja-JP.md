@@ -49,7 +49,7 @@ kaeru の仕組みを理解するのに役立つ複数のガイドとメモを�
 
 ### 著作権と開発者
 
-- **© 2023–2025 [KAERU Labs, S.L.](https://kaeru.cat/)**
+- **© 2023–2026 [KAERU Labs, S.L.](https://kaeru.cat/)**
 - 開発者:
     - Roger Ortiz ([`@R0rt1z2`](https://github.com/R0rt1z2)) ([me@r0rt1z2.com](mailto:me@r0rt1z2.com))
     - Mateo De la Hoz ([`@AntiEngineer`](https://github.com/AntiEngineer)) ([me@antiengineer.com](mailto:me@antiengineer.com))
