@@ -70,6 +70,15 @@ This project includes [`nanoprintf`](https://github.com/charlesnicholson/nanopri
 
 > <small>_Original source: https://github.com/charlesnicholson/nanoprintf_</small>
 
+### libsej
+This project includes [`libsej`](https://github.com/shomykohai/mtk-payloads/tree/main/libsej), a library for interacting with MediaTek's Security Engine (SEJ/HACC) hardware.
+
+`libsej` is licensed under the [GNU General Public License v3](https://www.gnu.org/licenses/gpl-3.0.en.html).
+
+> © 2024 B.Kerler, 2025 Shomy.
+
+<small>_Original source: https://github.com/shomykohai/mtk-payloads/tree/main/libsej_</small>
+
 ## Disclaimer
 
 This software is provided **"as is"** without any warranty of any kind, express or implied. By using this tool, you acknowledge that:

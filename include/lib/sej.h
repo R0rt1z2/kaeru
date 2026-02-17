@@ -7,10 +7,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-extern volatile uint32_t hacc_base;
+extern uintptr_t hacc_base;
 
 static inline volatile uint32_t* SEJ_REG(uint32_t offset) {
-    return (volatile uint32_t*)((uintptr_t)hacc_base + offset);
+    return (volatile uint32_t*)(hacc_base + offset);
 }
 
 #define SEJ_CG                      (0x1 << 10)
@@ -201,7 +201,7 @@ uint32_t sej_set_mode(AES_MODE mode);
 int sp_sej_enc(uint8_t* buf, uint8_t* out, uint32_t size, bool anti_clone, bool legacy);
 int sp_sej_dec(uint8_t* buf, uint8_t* out, uint32_t size, bool anti_clone, bool legacy);
 void init_sej_ctx(void);
-void set_sej_base(uint32_t base_addr);
-uint32_t get_sej_base(void);
+void set_sej_base(uintptr_t base_addr);
+uintptr_t get_sej_base(void);
 
 #endif // SEJ_H

@@ -48,7 +48,7 @@ const uint8_t DEFAULT_KEY[32] = {
 };
 
 
-volatile uint32_t hacc_base=0x1000a000;
+uintptr_t hacc_base = 0x1000A000;
 
 int32_t toSigned32(uint32_t n){
     n = n & 0xffffffff;
@@ -370,10 +370,10 @@ void init_sej_ctx(void) {
     g_sej_ctx.use_custom_iv = false;
 }
 
-void set_sej_base(uint32_t base_addr) {
+void set_sej_base(uintptr_t base_addr) {
     hacc_base = base_addr;
 }
 
-uint32_t get_sej_base(void) {
+uintptr_t get_sej_base(void) {
     return hacc_base;
 }
