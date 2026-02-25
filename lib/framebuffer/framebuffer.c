@@ -184,3 +184,57 @@ void fb_putc(char c) {
         fb_cursor_advance();
     }
 }
+
+
+void fb_fill_triangle_rounded(uint32_t cx, uint32_t top_y, uint32_t size,
+                                      uint32_t radius, uint32_t color) {
+    for (uint32_t row = 0; row < size; row++) {
+        uint32_t half_w = row * 2 / 3;
+
+        if (half_w < radius) {
+            uint32_t trim = radius - half_w;
+            if (trim > half_w) continue;
+            half_w -= trim / 2;
+        }
+
+        uint32_t bottom_dist = size - 1 - row;
+        uint32_t trim = 0;
+        if (bottom_dist < radius) {
+            trim = (radius - bottom_dist) * (radius - bottom_dist) / radius;
+        }
+
+        if (half_w <= trim) continue;
+        uint32_t draw_hw = half_w - trim;
+
+        for (uint32_t col = 0; col < draw_hw * 2 + 1; col++) {
+            fb_pixel(cx - draw_hw + col, top_y + row, color);
+        }
+    }
+}
+
+void fb_fill_circle(uint32_t cx, uint32_t cy, uint32_t r, uint32_t color) {
+    for (int dy = -(int)r; dy <= (int)r; dy++) {
+        for (int dx = -(int)r; dx <= (int)r; dx++) {
+            if (dx * dx + dy * dy <= (int)(r * r)) {
+                fb_pixel(cx + dx, cy + dy, color);
+            }
+        }
+    }
+}
+
+void fb_warning_icon(uint32_t cx, uint32_t y, uint32_t size) {
+    uint32_t radius = size / 6;
+    fb_fill_triangle_rounded(cx, y, size + size / 5, radius, FB_RED);
+
+    uint32_t stem_r = size / 13;
+    if (stem_r < 2) stem_r = 2;
+    uint32_t stem_top = y + size * 3 / 10;
+    uint32_t stem_bot = y + size * 15 / 20;
+    fb_fill_rect(cx - stem_r, stem_top, stem_r * 2 + 1, stem_bot - stem_top, FB_BLACK);
+    fb_fill_circle(cx, stem_top, stem_r, FB_BLACK);
+    fb_fill_circle(cx, stem_bot, stem_r, FB_BLACK);
+
+    uint32_t dot_r = stem_r + 1;
+    uint32_t dot_y = stem_bot + dot_r * 3;
+    fb_fill_circle(cx, dot_y, dot_r, FB_BLACK);
+}

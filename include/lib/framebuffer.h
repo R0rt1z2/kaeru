@@ -74,3 +74,5 @@ void fb_cursor_home(void);
 bool fb_valid(uint32_t x, uint32_t y);
 fb_config_t *fb_get_config(void);
 uint32_t fb_rgb(uint8_t r, uint8_t g, uint8_t b);
+
+void fb_warning_icon(uint32_t cx, uint32_t y, uint32_t size);
