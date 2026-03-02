@@ -49,6 +49,7 @@ For full details, please refer to the [LICENSE](https://github.com/R0rt1z2/kaeru
 - Developed by:
     - Roger Ortiz ([`@R0rt1z2`](https://github.com/R0rt1z2)) ([me@r0rt1z2.com](mailto:me@r0rt1z2.com))
     - Mateo De la Hoz ([`@AntiEngineer`](https://github.com/AntiEngineer)) ([me@antiengineer.com](mailto:me@antiengineer.com))
+    - Shomy ([`@shomykohai`](https://github.com/shomykohai)) ([git@itssho.my](mailto:git@itssho.my))
 
 ## Acknowledgments
 

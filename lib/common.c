@@ -98,7 +98,8 @@ void print_kaeru_info(output_type_t output_type) {
         print_function(" SPDX-License-Identifier: AGPL-3.0-or-later\n\n");                        \
         print_function("");                                                                       \
         print_function(" Developed by Roger Ortiz <me@r0rt1z2.com> and\n");                       \
-        print_function("              Mateo De la Hoz <me@antiengineer.com>\n\n");                \
+        print_function("              Mateo De la Hoz <me@antiengineer.com>\n");                  \
+        print_function("              Shomy <git@itssho.my>\n\n");                                \
         print_function("");                                                                       \
         print_function(" !!! WARNING !!!\n");                                                     \
         print_function(" THIS IS A FREE TOOL. IF YOU PAID FOR IT, YOU HAVE BEEN SCAMMED.\n");     \
