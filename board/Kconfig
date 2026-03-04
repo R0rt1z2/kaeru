@@ -161,7 +161,7 @@ menu "Device Support"
         help
           Say Y if you want to include support for Rabbit R1
 
-    config OPPO_A5S
+    config OPPO_LEADE
         bool "Support Oppo A5s"
         default n
         help
