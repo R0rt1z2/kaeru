@@ -61,3 +61,4 @@ lib-$(CONFIG_MEIZU_M711H) += meizu/board-m711h.o
 lib-$(CONFIG_DIGIT_NEXT_ULTRA) += digit/board-next_ultra.o
 lib-$(CONFIG_XIAOMI_EARTH) += xiaomi/board-earth.o
 lib-$(CONFIG_MOTOROLA_LAMUC) += motorola/board-lamu.o
+lib-$(CONFIG_TDTECH_OCEANT) += tdtech/board-oceant.o
