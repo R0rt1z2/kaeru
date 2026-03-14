@@ -389,4 +389,9 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for TD Tech M40
+    config REALME_RMX2180
+        bool "Support Realme c15"
+        default n
+        help
+          Say Y if you want to include support for Realme c15
 endmenu
