@@ -389,4 +389,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for TD Tech M40
+
+    config MEIZU_MX6
+        bool "Support Meizu MX6"
+        default n
+        help
+          Say Y if you want to include support for Meizu MX6
 endmenu
