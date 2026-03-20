@@ -395,4 +395,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Meizu MX6
+
+    config XIAOMI_FLEUR
+        bool "Support Redmi Note 11S 4G"
+        default n
+        help
+          Say Y if you want to include support for Redmi Note 11S 4G
 endmenu
