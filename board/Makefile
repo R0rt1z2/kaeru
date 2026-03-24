@@ -64,3 +64,4 @@ lib-$(CONFIG_MOTOROLA_LAMUC) += motorola/board-lamu.o
 lib-$(CONFIG_TDTECH_OCEANT) += tdtech/board-oceant.o
 lib-$(CONFIG_MEIZU_MX6) += meizu/board-mx6.o
 lib-$(CONFIG_XIAOMI_FLEUR) += xiaomi/board-fleur.o
+lib-$(CONFIG_VIVO_Y7S) += vivo/board-y7s.o
