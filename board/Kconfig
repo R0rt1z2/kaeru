@@ -407,4 +407,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Vivo Y7s
+
+    config MOTOROLA_HAWAIIP
+        bool "Support Motorola G22"
+        default n
+        help
+          Say Y if you want to include support for Motorola G22
 endmenu
