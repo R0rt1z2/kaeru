@@ -66,3 +66,4 @@ lib-$(CONFIG_MEIZU_MX6) += meizu/board-mx6.o
 lib-$(CONFIG_XIAOMI_FLEUR) += xiaomi/board-fleur.o
 lib-$(CONFIG_VIVO_Y7S) += vivo/board-y7s.o
 lib-$(CONFIG_MOTOROLA_HAWAIIP) += motorola/board-hawaiip.o
+lib-$(CONFIG_XIAOMI_RUBY) += xiaomi/board-ruby.o
