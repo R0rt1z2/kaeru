@@ -119,30 +119,41 @@ endmenu
 
 menu "Fastboot Support"
     menu "Fastboot Function Addresses"
-        config FASTBOOT_FAIL_ADDRESS
-            hex "Fastboot fail address"
-            help
-              Address of the fastboot_fail() function in the bootloader
+        choice
+            prompt "Fastboot response style"
+            default FASTBOOT_STYLE_STANDARD
 
-        config FASTBOOT_INFO_ADDRESS
-            hex "Fastboot info address"
-            help
-              Address of the fastboot_info() function in the bootloader
+        config FASTBOOT_STYLE_STANDARD
+            bool "Standard (separate okay/fail/info)"
 
-        config FASTBOOT_OKAY_ADDRESS
-            hex "Fastboot okay address"
-            help
-              Address of the fastboot_okay() function in the bootloader
+        config FASTBOOT_STYLE_COMBINED
+            bool "Combined (send_response/send_info)"
+        endchoice
+
+        if FASTBOOT_STYLE_STANDARD
+            config FASTBOOT_FAIL_ADDRESS
+                hex "fastboot_fail() address"
+
+            config FASTBOOT_INFO_ADDRESS
+                hex "fastboot_info() address"
+
+            config FASTBOOT_OKAY_ADDRESS
+                hex "fastboot_okay() address"
+        endif
+
+        if FASTBOOT_STYLE_COMBINED
+            config FASTBOOT_SEND_RESPONSE_ADDRESS
+                hex "fastboot_send_response() address"
+
+            config FASTBOOT_SEND_INFO_ADDRESS
+                hex "fastboot_send_info() address"
+        endif
 
         config FASTBOOT_PUBLISH_ADDRESS
-            hex "Fastboot publish address"
-            help
-              Address of the fastboot_publish() function in the bootloader
+            hex "fastboot_publish() address"
 
         config FASTBOOT_REGISTER_ADDRESS
-            hex "Fastboot register address"
-            help
-              Address of the fastboot_register() function in the bootloader
+            hex "fastboot_register() address"
     endmenu
 endmenu
 
