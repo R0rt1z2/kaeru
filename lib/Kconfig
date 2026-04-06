@@ -139,6 +139,12 @@ menu "Fastboot Support"
 
             config FASTBOOT_OKAY_ADDRESS
                 hex "fastboot_okay() address"
+
+            config FASTBOOT_PUBLISH_ADDRESS
+                hex "fastboot_publish() address"
+
+            config FASTBOOT_REGISTER_ADDRESS
+                hex "fastboot_register() address"
         endif
 
         if FASTBOOT_STYLE_COMBINED
@@ -148,12 +154,6 @@ menu "Fastboot Support"
             config FASTBOOT_SEND_INFO_ADDRESS
                 hex "fastboot_send_info() address"
         endif
-
-        config FASTBOOT_PUBLISH_ADDRESS
-            hex "fastboot_publish() address"
-
-        config FASTBOOT_REGISTER_ADDRESS
-            hex "fastboot_register() address"
     endmenu
 endmenu
 

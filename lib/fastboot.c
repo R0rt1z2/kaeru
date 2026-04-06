@@ -25,6 +25,19 @@ void fastboot_info(const char* reason) {
     _send_info("INFO", reason);
 }
 
+void fastboot_register(const char* prefix,
+                       void (*handle)(const char* arg, void* data, unsigned sz),
+                       unsigned char security_enabled) {
+    (void)prefix;
+    (void)handle;
+    (void)security_enabled;
+}
+
+void fastboot_publish(const char* name, const char* value) {
+    (void)name;
+    (void)value;
+}
+
 #elif defined(CONFIG_FASTBOOT_STYLE_STANDARD)
 
 void fastboot_okay(const char* reason) {
@@ -39,10 +52,6 @@ void fastboot_info(const char* reason) {
     ((void (*)(const char*))(CONFIG_FASTBOOT_INFO_ADDRESS | 1))(reason);
 }
 
-#else
-#error "No fastboot response style selected."
-#endif
-
 void fastboot_register(const char* prefix,
                        void (*handle)(const char* arg, void* data, unsigned sz),
                        unsigned char security_enabled) {
@@ -54,3 +63,7 @@ void fastboot_register(const char* prefix,
 void fastboot_publish(const char* name, const char* value) {
     ((void (*)(const char*, const char*))(CONFIG_FASTBOOT_PUBLISH_ADDRESS | 1))(name, value);
 }
+
+#else
+#error "No fastboot response style selected."
+#endif
