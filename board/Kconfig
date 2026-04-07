@@ -425,4 +425,11 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Redmi Note 12 Pro/Pro+/Discovery 5G/Pro+ 5G
+
+    config MOTOROLA_ELLIS
+        bool "Support Motorola Moto G Pure 2021"
+        select MEDIATEK_MT6765
+        default n
+        help
+          Say Y if you want to include support for Motorola Moto G Pure 2021
 endmenu
