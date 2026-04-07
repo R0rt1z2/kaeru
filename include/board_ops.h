@@ -17,6 +17,10 @@
 #include <lib/storage.h>
 #include <lib/thread.h>
 
+#ifdef CONFIG_ENVIRONMENT_SUPPORT
+#include <lib/environment.h>
+#endif
+
 #ifdef CONFIG_FRAMEBUFFER_SUPPORT
 #include <lib/framebuffer.h>
 #endif
