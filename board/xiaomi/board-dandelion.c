@@ -1,16 +1,16 @@
 //
-// SPDX-FileCopyrightText: 2025 R0rt1z2 <me@r0rt1z2.com>
+// SPDX-FileCopyrightText: 2025-2026 R0rt1z2 <me@r0rt1z2.com>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
 #include <board_ops.h>
 
 void board_early_init(void) {
-    printf("Entering early init for Redmi 9A\n");
+    printf("Entering early init for Redmi 9A/Redmi 10A/10A Sport/9AT/9i/9A Sport\n");
 }
 
 void board_late_init(void) {
-    printf("Entering late init for Redmi 9A\n");
+    printf("Entering late init for Redmi 9A/Redmi 10A/10A Sport/9AT/9i/9A Sport\n");
 
     uint32_t addr = 0;
 
