@@ -341,6 +341,16 @@ else
 include/config/auto.conf: ;
 endif # $(dot-config)
 
+# Object directories
+objs-y      := arch main drivers
+
+# Libraries
+libs-y      := board lib
+
+kaeru-dirs  := $(objs-y) $(libs-y)
+kaeru-objs  := $(patsubst %,%/built-in.o, $(objs-y))
+kaeru-libs  := $(patsubst %,%/lib.a, $(libs-y))
+kaeru-all   := $(kaeru-objs) $(kaeru-libs)
 
 # The all: target is the default when no target is given on the
 # command line.
@@ -348,39 +358,19 @@ endif # $(dot-config)
 # Defaults to vmlinux, but the arch makefile usually adds further targets
 all: arch/$(ARCH)/linker.lds kaeru stage1
 
-# List of main executables
-main-y	:= main/main.o
-
-# Object directories
-objs-y		:= main
-
-# Libraries
-libs-y		:= arch
-libs-y		+= board
-libs-y		+= drivers
-libs-y		+= lib
-
-kaeru-dirs	:= $(objs-y) $(libs-y)
-kaeru-objs	:= $(patsubst %,%/built-in.o, $(objs-y))
-kaeru-libs	:= $(patsubst %,%/lib.a, $(libs-y))
-
-kaeru-mains := $(objs-y)/*.o
-
-kaeru-all	:= $(kaeru-objs) $(kaeru-libs)
-
 # Do modpost on a prelinked vmlinux. The finally linked vmlinux has
 # relevant sections renamed as per the linker script.
 quiet_cmd_kaeru = LD      $@.o
-cmd_kaeru = $(LD) $(kaeru-objs) --whole-archive board/lib.a --no-whole-archive drivers/built-in.o lib/built-in.o arch/lib.a -o $@.o --script=arch/$(ARCH)/linker.lds
+cmd_kaeru = $(LD) --start-group $(kaeru-objs) $(kaeru-libs) --end-group \
+			-o $@.o --script=arch/$(ARCH)/linker.lds
 
-arch/$(ARCH)/linker.lds: arch/$(ARCH)/linker.lds.S
-	$(CPP) $< -P -o $@
+arch/$(ARCH)/linker.lds: arch/$(ARCH)/linker.lds.S FORCE
+	$(CPP) -include include/generated/autoconf.h $< -P -o $@
 
-kaeru: $(kaeru-all)
+kaeru: $(kaeru-all) arch/$(ARCH)/linker.lds FORCE
 	$(call if_changed,kaeru)
 	@echo '  OBJCOPY $@'
-	$(OBJCOPY) -O binary kaeru.o kaeru
-
+	$(Q)$(OBJCOPY) -O binary kaeru.o kaeru
 
 # The actual objects are generated when descending,
 # make sure no implicit rule kicks in
@@ -400,19 +390,22 @@ $(kaeru-dirs): scripts_basic
 
 ifeq ($(CONFIG_STAGE1_SUPPORT),y)
 
+quiet_cmd_stage1 = LD      $@.o
+cmd_stage1 = $(LD) $(filter %.o,$^) -o $@.o --script=arch/$(ARCH)/linker.lds
+
 PHONY += stage1
-stage1: stage1/built-in.o arch/lib.a
+stage1: stage1/built-in.o arch/built-in.o arch/$(ARCH)/linker.lds FORCE
 	$(call if_changed,stage1)
 	@echo '  OBJCOPY $@'
-	$(OBJCOPY) -O binary stage1.o stageone
-
-quiet_cmd_stage1 = LD      $@.o
-cmd_stage1 = $(LD) $^ -o $@.o --script=arch/$(ARCH)/linker.lds
+	$(Q)$(OBJCOPY) -O binary stage1.o stageone
 
 stage1/built-in.o: scripts_basic
 	$(Q)$(MAKE) $(build)=stage1
 
-CLEAN_FILES += stageone
+CLEAN_FILES += stageone stage1.o
+else
+PHONY += stage1
+stage1: ;
 endif
 
 ###

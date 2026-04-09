@@ -1,1 +1,1 @@
-lib-y += $(ARCH)/cache.o $(ARCH)/ops.o
+include arch/$(ARCH)/Makefile
