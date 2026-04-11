@@ -361,7 +361,7 @@ all: arch/$(ARCH)/linker.lds kaeru stage1
 # Do modpost on a prelinked vmlinux. The finally linked vmlinux has
 # relevant sections renamed as per the linker script.
 quiet_cmd_kaeru = LD      $@.o
-cmd_kaeru = $(LD) --start-group $(kaeru-objs) $(kaeru-libs) --end-group \
+cmd_kaeru = $(LD) --no-warn-rwx-segments --start-group $(kaeru-objs) $(kaeru-libs) --end-group \
 			-o $@.o --script=arch/$(ARCH)/linker.lds
 
 arch/$(ARCH)/linker.lds: arch/$(ARCH)/linker.lds.S FORCE
