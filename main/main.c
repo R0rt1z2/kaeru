@@ -4,7 +4,6 @@
 //
 
 #include <arch/arm.h>
-#include <arch/ops.h>
 #include <board_ops.h>
 
 void kaeru_late_init(void) {

@@ -4,7 +4,6 @@
 //
 
 #include <arch/arm.h>
-#include <arch/ops.h>
 #include <lib/common.h>
 #include <lib/debug.h>
 #include <lib/environment.h>
