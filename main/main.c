@@ -1,14 +1,13 @@
 //
-// SPDX-FileCopyrightText: 2025 Roger Ortiz <me@r0rt1z2.com>
+// SPDX-FileCopyrightText: 2025-2026 Roger Ortiz <me@r0rt1z2.com>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
 #include <arch/arm.h>
 #include <arch/ops.h>
-#include <reloc.h>
 #include <board_ops.h>
 
-void kaeru(void) {
+void kaeru_late_init(void) {
 #ifdef CONFIG_FRAMEBUFFER_SUPPORT
     fb_init((uint32_t*)CONFIG_FRAMEBUFFER_ADDRESS,
             CONFIG_FRAMEBUFFER_WIDTH,
@@ -27,9 +26,7 @@ void kaeru(void) {
     ((void (*)(const struct app_descriptor*))(CONFIG_APP_ADDRESS | 1))(NULL);
 }
 
-__attribute__((section(".text.start"))) void main(void) {
-    self_relocate();
-
+void kaeru_early_init(void) {
     uint32_t search_val = CONFIG_APP_ADDRESS | 1;
     uint32_t start = CONFIG_BOOTLOADER_BASE;
     uint32_t end = CONFIG_BOOTLOADER_BASE + CONFIG_BOOTLOADER_SIZE;
@@ -47,11 +44,11 @@ __attribute__((section(".text.start"))) void main(void) {
     }
 
     if (ptr_addr != 0) {
-        *(volatile uint32_t*)ptr_addr = (uint32_t)kaeru | 1;
+        *(volatile uint32_t*)ptr_addr = (uint32_t)kaeru_late_init | 1;
         arch_clean_invalidate_cache_range(ptr_addr, 4);
     } else {
 #if defined(CONFIG_APP_CALLER) && CONFIG_APP_CALLER != 0
-        PATCH_CALL(CONFIG_APP_CALLER, (void*)kaeru, TARGET_THUMB);
+        PATCH_CALL(CONFIG_APP_CALLER, (void*)kaeru_late_init, TARGET_THUMB);
         arch_clean_invalidate_cache_range(CONFIG_APP_CALLER, 4);
 #endif
     }

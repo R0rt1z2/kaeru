@@ -1,1 +1,1 @@
-obj-y := main.o
+obj-y := start.o main.o
