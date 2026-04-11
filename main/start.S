@@ -38,13 +38,9 @@ main:
 .Lno_reloc:
     ldr     r0, =__bss_start
     ldr     r1, =__bss_end
-    movs    r2, #0
-.Lbss_loop:
-    cmp     r0, r1
-    bge     .Lbss_done
-    str     r2, [r0]
-    adds    r0, #4
-    b       .Lbss_loop
+    sub     r2, r1, r0
+    mov     r1, #0
+    bl     memset
 .Lbss_done:
     bl      kaeru_early_init
 

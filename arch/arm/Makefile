@@ -1,1 +1,1 @@
-obj-y += $(ARCH)/cache.o $(ARCH)/ops.o
+obj-y += $(ARCH)/cache.o $(ARCH)/ops.o $(ARCH)/memset.o $(ARCH)/memcpy.o $(ARCH)/memchr.o

@@ -34,15 +34,6 @@ int memcmp(const void* s1, const void* s2, size_t n) {
     return (0);
 }
 
-void *memcpy(void *dest, const void *src, size_t n)
-{
-    char *dp = dest;
-    const char *sp = src;
-    while (n--)
-        *dp++ = *sp++;
-    return dest;
-}
-
 void* memmove(void* dest, const void* src, size_t count) {
     unsigned char* d = (unsigned char*)dest;
     const unsigned char* s = (const unsigned char*)src;
@@ -58,27 +49,6 @@ void* memmove(void* dest, const void* src, size_t count) {
     }
 
     return dest;
-}
-
-void* memchr(const void* s, int c, size_t n) {
-    if (n != 0) {
-        const unsigned char* p = s;
-
-        do {
-            if (*p++ == (unsigned char)c) return ((void*)(p - 1));
-        } while (--n != 0);
-    }
-    return (NULL);
-}
-
-void* memset(void* dst, int c, size_t n) {
-    if (n != 0) {
-        unsigned char* d = dst;
-
-        do *d++ = (unsigned char)c;
-        while (--n != 0);
-    }
-    return (dst);
 }
 
 char* strchr(const char* p, int ch) {

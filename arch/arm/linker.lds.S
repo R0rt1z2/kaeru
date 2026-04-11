@@ -39,6 +39,8 @@ SECTIONS
 
     /DISCARD/ :
     {
+        *(.ARM.exidx*)
+        *(.ARM.attributes*)
         *(.interp)
         *(.dynsym)
         *(.dynstr)
