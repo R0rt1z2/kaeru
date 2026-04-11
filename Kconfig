@@ -1,5 +1,6 @@
 mainmenu "Kaeru Configuration"
 
+source "arch/Kconfig"
 source "soc/Kconfig"
 source "board/Kconfig"
 source "drivers/Kconfig"

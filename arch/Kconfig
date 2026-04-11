@@ -1,0 +1,9 @@
+menu "Architecture"
+	config CACHE_LINE
+		int "The CPU cache line"
+        default 64
+		help
+		  Size of a CPU cache line in bytes. Used for cache
+		  maintenance operations. Common values are 32 for
+		  Cortex-A7/A9 and 64 for Cortex-A15/A53/A55.
+endmenu
