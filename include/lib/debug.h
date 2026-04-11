@@ -10,14 +10,6 @@
 
 #include <lib/nanoprintf.h>
 
-typedef enum {
-    OUTPUT_CONSOLE,
-    OUTPUT_VIDEO,
-#ifdef CONFIG_FRAMEBUFFER_SUPPORT
-    OUTPUT_FRAMEBUFFER,
-#endif
-} output_type_t;
-
 int printf(const char* fmt, ...);
 int video_printf(const char* fmt, ...);
 
@@ -28,6 +20,6 @@ void fb_hexdump(const void* data, size_t size);
 void fb_update_display(void);
 #endif
 
-void hexdump(const void* data, size_t size, output_type_t output_type);
+void hexdump(const void* data, size_t size, int (*out)(const char *, ...));
 void uart_hexdump(const void* data, size_t size);
 void video_hexdump(const void* data, size_t size);

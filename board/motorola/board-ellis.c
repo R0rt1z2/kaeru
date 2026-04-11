@@ -19,7 +19,7 @@ static int cmd_kaeru_version(int arg_count, const char** args) {
     char buf[64];
     npf_snprintf(buf, sizeof(buf), "kaeru v%s", KAERU_VERSION);
     fastboot_info(buf);
-    print_kaeru_info(OUTPUT_VIDEO);
+    print_kaeru_info(video_printf);
     return 0;
 }
 

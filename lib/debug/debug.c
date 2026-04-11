@@ -77,65 +77,42 @@ int fb_printf(const char *fmt, ...) {
 }
 #endif
 
-void hexdump(const void* data, size_t size, output_type_t output_type) {
-    size_t i, j;
+void hexdump(const void* data, size_t size, int (*out)(const char *, ...)) {
     const uint8_t* ptr = (const uint8_t*)data;
 
-#define HEXDUMP(print_function)                                           \
-    do {                                                                  \
-        for (i = 0; i < size; i += 16) {                                  \
-            print_function("%08x: ", (uintptr_t)(ptr + i));               \
-                                                                          \
-            for (j = 0; j < 16; j++) {                                    \
-                if (i + j < size) {                                       \
-                    print_function("%02x ", ptr[i + j]);                  \
-                } else {                                                  \
-                    print_function("   ");                                \
-                }                                                         \
-                                                                          \
-                if (j == 7) {                                             \
-                    print_function(" ");                                  \
-                }                                                         \
-            }                                                             \
-                                                                          \
-            print_function(" |");                                         \
-            for (j = 0; j < 16; j++) {                                    \
-                if (i + j < size) {                                       \
-                    uint8_t c = ptr[i + j];                               \
-                    print_function("%c", (c >= 32 && c < 127) ? c : '.'); \
-                }                                                         \
-            }                                                             \
-            print_function("|\n");                                        \
-        }                                                                 \
-    } while (0)
+    for (size_t i = 0; i < size; i += 16) {
+        out("%08x: ", (uintptr_t)(ptr + i));
 
-    switch (output_type) {
-        case OUTPUT_CONSOLE:
-            HEXDUMP(printf);
-            break;
-        case OUTPUT_VIDEO:
-            HEXDUMP(video_printf);
-            break;
-#ifdef CONFIG_FRAMEBUFFER_SUPPORT
-        case OUTPUT_FRAMEBUFFER:
-            HEXDUMP(fb_printf);
-            break;
-#endif
+        for (size_t j = 0; j < 16; j++) {
+            if (i + j < size)
+                out("%02x ", ptr[i + j]);
+            else
+                out("   ");
+            if (j == 7)
+                out(" ");
+        }
+
+        out(" |");
+        for (size_t j = 0; j < 16; j++) {
+            if (i + j < size) {
+                uint8_t c = ptr[i + j];
+                out("%c", (c >= 32 && c < 127) ? c : '.');
+            }
+        }
+        out("|\n");
     }
-
-#undef HEXDUMP
 }
 
 void uart_hexdump(const void* data, size_t size) {
-    hexdump(data, size, OUTPUT_CONSOLE);
+    hexdump(data, size, printf);
 }
 
 void video_hexdump(const void* data, size_t size) {
-    hexdump(data, size, OUTPUT_VIDEO);
+    hexdump(data, size, video_printf);
 }
 
 #ifdef CONFIG_FRAMEBUFFER_SUPPORT
 void fb_hexdump(const void* data, size_t size) {
-    hexdump(data, size, OUTPUT_FRAMEBUFFER);
+    hexdump(data, size, fb_printf);
 }
 #endif

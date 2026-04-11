@@ -187,7 +187,7 @@ static int fastboot_ui(void* arg) {
 
                 case FB_OPTION_KAERU_INFO:
                     video_center();
-                    print_kaeru_info(OUTPUT_VIDEO);
+                    print_kaeru_info(video_printf);
                     break;
 
                 default:

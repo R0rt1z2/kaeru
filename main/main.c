@@ -31,7 +31,7 @@ void kaeru_early_init(void) {
     uint32_t end = CONFIG_BOOTLOADER_BASE + CONFIG_BOOTLOADER_SIZE;
     uint32_t ptr_addr = 0;
 
-    print_kaeru_info(OUTPUT_CONSOLE);
+    print_kaeru_info(printf);
     common_early_init();
     board_early_init();
 

@@ -71,7 +71,7 @@ void cmdline_replace(char *cmdline, const char *param,
     printf("Patched %s: %s -> %s\n", param, old, new);
 }
 
-void print_kaeru_info(output_type_t output_type) {
+void print_kaeru_info(int (*out)(const char *, ...)) {
 #ifndef CONFIG_EXCLUDE_BRANDING
     unsigned int sp, lr, pe, vbar;
 
@@ -82,54 +82,29 @@ void print_kaeru_info(output_type_t output_type) {
 
     pe &= 0x1F;
 
-#define PRINT_INFO(print_function)                                                                \
-    do {                                                                                          \
-        print_function(                                                                           \
-                " _                         \n"                                                   \
-                "| | ____ _  ___ _ __ _   _ \n"                                                   \
-                "| |/ / _` |/ _ \\ '__| | | |\n"                                                  \
-                "|   < (_| |  __/ |  | |_| |\n"                                                   \
-                "|_|\\_\\__,_|\\___|_|   \\__,_| v%s (%s)\n"                                      \
-                "                            \n",                                                 \
-                KAERU_VERSION, ARM_MODE(lr));                                                     \
-        print_function("********************************************************************\n"); \
-        print_function(" Copyright (C) 2023-2026 KAERU Labs, S.L.\n");                            \
-        print_function(" SPDX-License-Identifier: AGPL-3.0-or-later\n\n");                        \
-        print_function("");                                                                       \
-        print_function(" Developed by Roger Ortiz <me@r0rt1z2.com> and\n");                       \
-        print_function("              Mateo De la Hoz <me@antiengineer.com>\n");                  \
-        print_function("              Shomy <git@itssho.my>\n\n");                                \
-        print_function("");                                                                       \
-        print_function(" !!! WARNING !!!\n");                                                     \
-        print_function(" THIS IS A FREE TOOL. IF YOU PAID FOR IT, YOU HAVE BEEN SCAMMED.\n");     \
-        print_function(" THIS TOOL IS PROVIDED AS-IS WITHOUT WARRANTY OF ANY KIND.\n");           \
-        print_function(" USE AT YOUR OWN RISK.\n\n");                                             \
-        print_function("");                                                                       \
-        print_function(" Vector Base  (VBAR): 0x%08x\n", vbar);                                   \
-        print_function(" Stack Pointer  (SP): 0x%08x\n", sp);                                     \
-        print_function(" Link Register  (LR): 0x%08x\n", lr);                                     \
-        print_function(" Processor Mode (PE): %s\n", get_mode_string(pe));                        \
-        print_function(                                                                           \
-                "********************************************************************\n\n");      \
-    } while (0)
-
-    switch (output_type) {
-        case OUTPUT_CONSOLE:
-            PRINT_INFO(printf);
-            break;
-        case OUTPUT_VIDEO:
-            PRINT_INFO(video_printf);
-            break;
-    #ifdef CONFIG_FRAMEBUFFER_SUPPORT
-        case OUTPUT_FRAMEBUFFER:
-            PRINT_INFO(fb_printf);
-            break;
-    #endif
-    }
-
-#undef PRINT_INFO
+    out(" _                         \n"
+        "| | ____ _  ___ _ __ _   _ \n"
+        "| |/ / _` |/ _ \\ '__| | | |\n"
+        "|   < (_| |  __/ |  | |_| |\n"
+        "|_|\\_\\__,_|\\___|_|   \\__,_| v%s (%s)\n\n",
+        KAERU_VERSION, ARM_MODE(lr));
+    out("********************************************************************\n");
+    out(" Copyright (C) 2023-2026 KAERU Labs, S.L.\n");
+    out(" SPDX-License-Identifier: AGPL-3.0-or-later\n\n");
+    out(" Developed by Roger Ortiz <me@r0rt1z2.com> and\n");
+    out("              Mateo De la Hoz <me@antiengineer.com>\n");
+    out("              Shomy <git@itssho.my>\n\n");
+    out(" !!! WARNING !!!\n");
+    out(" THIS IS A FREE TOOL. IF YOU PAID FOR IT, YOU HAVE BEEN SCAMMED.\n");
+    out(" THIS TOOL IS PROVIDED AS-IS WITHOUT WARRANTY OF ANY KIND.\n");
+    out(" USE AT YOUR OWN RISK.\n\n");
+    out(" Vector Base  (VBAR): 0x%08x\n", vbar);
+    out(" Stack Pointer  (SP): 0x%08x\n", sp);
+    out(" Link Register  (LR): 0x%08x\n", lr);
+    out(" Processor Mode (PE): %s\n", get_mode_string(pe));
+    out("********************************************************************\n\n");
 #else
-    (void)output_type;
+    (void)out;
 #endif
 }
 
@@ -138,7 +113,7 @@ void cmd_version(const char* arg, void* data, unsigned sz) {
     char buffer[64];
     npf_snprintf(buffer, sizeof(buffer), "kaeru v%s", KAERU_VERSION);
     fastboot_info(buffer);
-    print_kaeru_info(OUTPUT_VIDEO);
+    print_kaeru_info(video_printf);
     fastboot_okay("");
 #else
     (void)arg;
