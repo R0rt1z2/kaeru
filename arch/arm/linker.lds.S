@@ -29,10 +29,12 @@ SECTIONS
         *(.data .data.* .gnu.linkonce.d.*)
     }
 
-    .bss :
-    {
-        *(.bss .bss.* .gnu.linkonce.b.*)
+    .bss ALIGN(4) : {
+        __bss_start = .;
+        *(.bss)
+        *(.bss.*)
         *(COMMON)
+        __bss_end = .;
     }
 
     /DISCARD/ :

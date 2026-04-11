@@ -36,6 +36,16 @@ main:
     bl      arch_clean_invalidate_cache_range
 
 .Lno_reloc:
+    ldr     r0, =__bss_start
+    ldr     r1, =__bss_end
+    movs    r2, #0
+.Lbss_loop:
+    cmp     r0, r1
+    bge     .Lbss_done
+    str     r2, [r0]
+    adds    r0, #4
+    b       .Lbss_loop
+.Lbss_done:
     bl      kaeru_early_init
 
     pop     {r4, pc}
