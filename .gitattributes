@@ -1,0 +1,49 @@
+* text=auto
+
+.gitattributes text
+.gitignore text
+.gitconfig text
+.gitmodules text
+
+*.bat text eol=crlf
+*.exe binary
+*.dll binary
+
+*.sh text eol=lf
+*.so binary
+
+Dockerfile text
+*.markdown text
+*.mdwn text
+*.mdown text
+*.mkd text
+*.mkdn text
+*.mdtxt text
+*.mdtext text
+*.txt text
+
+*.c text
+*.cc text
+*.cxx text
+*.cpp text
+*.c++ text
+*.hpp text
+*.h text
+*.h++ text
+*.hh text
+*.slo binary
+*.lo binary
+*.o binary
+*.obj binary
+*.gch binary
+*.pch binary
+*.so binary
+*.dylib binary
+*.dll binary
+*.lai binary
+*.la binary
+*.a binary
+*.lib binary
+*.exe binary
+*.out binary
+*.app binary
