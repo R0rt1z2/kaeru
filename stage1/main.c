@@ -12,14 +12,26 @@
 #define MAX_STAGE2_SIZE 128 * 1024
 
 static inline void kaeru_stage1(void) {
-    void* kaeru_stage2 = NULL;
     int ret = 0;
+    void* kaeru_stage2 = NULL;
 
-    // It is necessary to nop the call for init_storage in platform_init
-    // or the device will panic when stage2 calls platform_init
+    dprintf("Hello from kaeru stage 1!\n");
+    init_storage();
+
+    // The original platform_init() always attempts to initialize storage,
+    // regardless of whether it has already been initialized. Normally, this
+    // makes sense because the function is never called twice.
+    //
+    // However, this is a problem for us: we need storage initialized to load
+    // stage 2, but we also still want to execute the original platform_init()
+    // because it does much more than just initialize storage.
+    //
+    // The easiest solution is to NOP out the BL instruction used by
+    // platform_init() to call the storage init function, since we already
+    // did that manually.
     volatile uint16_t* x = (volatile uint16_t*)CONFIG_INIT_STORAGE_CALLER;
-    x[0] = 0xBF00;  // nop
-    x[1] = 0xBF00;  // nop
+    x[0] = 0xBF00;  // NOP
+    x[1] = 0xBF00;  // NOP
     arch_clean_invalidate_cache_range((uintptr_t)CONFIG_INIT_STORAGE_CALLER, 4);
 
     kaeru_stage2 = malloc(MAX_STAGE2_SIZE);
@@ -44,11 +56,22 @@ fail:
     if (kaeru_stage2) {
         free(kaeru_stage2);
     }
+
+    // We failed to load stage 2, but that doesn't necessarily mean we
+    // have to stop here.
+    //
+    // Invoke the original platform_init() to resume normal boot. This
+    // means kaeru won't be available, but at least the device won't be
+    // bricked.
     platform_init();
 }
 
-__attribute__((section(".text.start"))) void main(void) {
-    dprintf("Hello from kaeru stage 1!\n");
-    init_storage();
+// bootstrap2 called us via a BL instruction. This would have
+// executed the original platform_init(), but we take control
+// instead.
+//
+// NOTE: platform_init() is a void function, so there is no
+// return value to handle here.
+__attribute__ ((section (".text.start"))) void main(void) {
     kaeru_stage1();
 }

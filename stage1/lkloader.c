@@ -9,6 +9,11 @@
 #include <stage1/lkloader.h>
 #include <stage1/memory.h>
 
+// MediaTek firmware uses a standardized image format where a partition
+// may contain multiple "sub-partitions", each with its own header.
+//
+// We package stage 2 as a "kaeru" sub-partition within the bootloader
+// partition, so we can locate and load it without hardcoded offsets.
 ssize_t load_kaeru_partition(void* buffer, size_t buffer_size) {
     const char* part_name = CONFIG_BOOTLOADER_PARTITION_NAME;
 
