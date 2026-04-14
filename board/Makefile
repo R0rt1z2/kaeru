@@ -68,3 +68,4 @@ lib-$(CONFIG_VIVO_Y7S) += vivo/board-y7s.o
 lib-$(CONFIG_MOTOROLA_HAWAIIP) += motorola/board-hawaiip.o
 lib-$(CONFIG_XIAOMI_RUBY) += xiaomi/board-ruby.o
 lib-$(CONFIG_MOTOROLA_ELLIS) += motorola/board-ellis.o
+lib-$(CONFIG_INFINIX_X670) += infinix/board-X670.o

@@ -432,4 +432,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Motorola Moto G Pure 2021
+
+    config INFINIX_X670
+        bool "Support NOTE 12"
+        default n
+        help
+          Say Y if you want to include support for NOTE 12
 endmenu
