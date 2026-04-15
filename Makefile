@@ -345,9 +345,9 @@ endif # $(dot-config)
 objs-y      := arch main drivers
 
 # Libraries
-libs-y      := board lib
+libs-y      := arch board lib
 
-kaeru-dirs  := $(objs-y) $(libs-y)
+kaeru-dirs  := $(sort $(objs-y) $(libs-y))
 kaeru-objs  := $(patsubst %,%/built-in.o, $(objs-y))
 kaeru-libs  := $(patsubst %,%/lib.a, $(libs-y))
 kaeru-all   := $(kaeru-objs) $(kaeru-libs)
