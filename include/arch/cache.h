@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: 2025 Roger Ortiz <me@r0rt1z2.com>
+// SPDX-FileCopyrightText: 2025-2026 Roger Ortiz <me@r0rt1z2.com>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
@@ -14,3 +14,4 @@
 
 void arch_clean_cache_range(uintptr_t start, size_t len);
 void arch_clean_invalidate_cache_range(uintptr_t start, size_t len);
+void arch_sync_cache_range(uintptr_t start, uint32_t size);

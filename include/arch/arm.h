@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: 2025 Roger Ortiz <me@r0rt1z2.com>
+// SPDX-FileCopyrightText: 2025-2026 Roger Ortiz <me@r0rt1z2.com>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
@@ -49,20 +49,22 @@ typedef enum { TARGET_THUMB, TARGET_ARM } arm_mode_t;
         volatile uint16_t* p = (volatile uint16_t*)(addr);                         \
         *p = hi_inst;                                                              \
         *(p + 1) = lo_inst;                                                        \
+        arch_sync_cache_range((uint32_t)(addr), 4);                                \
     } while (0)
 
-#define PATCH_BRANCH(addr, func)                          \
-    do {                                                  \
-        uint32_t cur = (addr) + 4;                        \
-        uint32_t tgt = ((uint32_t)(func)) & ~1;           \
-        int32_t off = tgt - cur;                          \
-        uint16_t hi = (off >> 12) & 0x7FF;                \
-        uint16_t lo = (off >> 1) & 0x7FF;                 \
-        uint16_t hi_inst = 0xF000 | hi;                   \
-        uint16_t lo_inst = 0xB800 | lo;                   \
-        volatile uint16_t* p = (volatile uint16_t*)(addr);\
-        *p = hi_inst;                                     \
-        *(p + 1) = lo_inst;                               \
+#define PATCH_BRANCH(addr, func)                           \
+    do {                                                   \
+        uint32_t cur = (addr) + 4;                         \
+        uint32_t tgt = ((uint32_t)(func)) & ~1;            \
+        int32_t off = tgt - cur;                           \
+        uint16_t hi = (off >> 12) & 0x7FF;                 \
+        uint16_t lo = (off >> 1) & 0x7FF;                  \
+        uint16_t hi_inst = 0xF000 | hi;                    \
+        uint16_t lo_inst = 0xB800 | lo;                    \
+        volatile uint16_t* p = (volatile uint16_t*)(addr); \
+        *p = hi_inst;                                      \
+        *(p + 1) = lo_inst;                                \
+        arch_sync_cache_range((uint32_t)(addr), 4);        \
     } while (0)
 
 #define PATCH_ALL_BL(func_addr, size, orig_func, hook)                    \
@@ -91,7 +93,7 @@ typedef enum { TARGET_THUMB, TARGET_ARM } arm_mode_t;
         for (size_t i = 0; i < sizeof(patch_data) / sizeof(patch_data[0]); i++) { \
             p[i] = patch_data[i];                                                 \
         }                                                                         \
-        arch_clean_invalidate_cache_range((uint32_t)(addr), sizeof(patch_data));  \
+        arch_sync_cache_range((uint32_t)(addr), sizeof(patch_data));              \
     } while (0)
 
 #define PATCH_MEM_ARM(addr, ...)                                                  \
@@ -101,7 +103,7 @@ typedef enum { TARGET_THUMB, TARGET_ARM } arm_mode_t;
         for (size_t i = 0; i < sizeof(patch_data) / sizeof(patch_data[0]); i++) { \
             p[i] = patch_data[i];                                                 \
         }                                                                         \
-        arch_clean_invalidate_cache_range((uint32_t)(addr), sizeof(patch_data));  \
+        arch_sync_cache_range((uint32_t)(addr), sizeof(patch_data));              \
     } while (0)
 
 #define SEARCH_PATTERN(start_addr, end_addr, ...)                            \
@@ -170,16 +172,18 @@ typedef enum { TARGET_THUMB, TARGET_ARM } arm_mode_t;
         PATCH_MEM_ARM(addr, 0xE3A00000 | ((value)&0xFF) | ((value) << 4 & 0xF00), 0xE12FFF1E); \
     } while (0)
 
-#define NOP(addr, count)                         \
-    do {                                         \
-        for (int i = 0; i < (count); i++) {      \
-            PATCH_MEM((addr) + (i * 2), 0xBF00); \
-        }                                        \
+#define NOP(addr, count)                                      \
+    do {                                                      \
+        volatile uint16_t* p = (volatile uint16_t*)(addr);    \
+        for (int i = 0; i < (count); i++)                     \
+            p[i] = 0xBF00;                                    \
+        arch_sync_cache_range((uint32_t)(addr), (count) * 2); \
     } while (0)
 
-#define NOP_ARM(addr, count)                             \
-    do {                                                 \
-        for (int i = 0; i < (count); i++) {              \
-            PATCH_MEM_ARM((addr) + (i * 4), 0xE320F000); \
-        }                                                \
+#define NOP_ARM(addr, count)                                  \
+    do {                                                      \
+        volatile uint32_t* p = (volatile uint32_t*)(addr);    \
+        for (int i = 0; i < (count); i++)                     \
+            p[i] = 0xE320F000;                                \
+        arch_sync_cache_range((uint32_t)(addr), (count) * 4); \
     } while (0)

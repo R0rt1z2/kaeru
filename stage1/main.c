@@ -29,10 +29,8 @@ static inline void kaeru_stage1(void) {
     // The easiest solution is to NOP out the BL instruction used by
     // platform_init() to call the storage init function, since we already
     // did that manually.
-    volatile uint16_t* x = (volatile uint16_t*)CONFIG_INIT_STORAGE_CALLER;
-    x[0] = 0xBF00;  // NOP
-    x[1] = 0xBF00;  // NOP
-    arch_clean_invalidate_cache_range((uintptr_t)CONFIG_INIT_STORAGE_CALLER, 4);
+    *(volatile uint32_t *)CONFIG_INIT_STORAGE_CALLER = 0xBF00BF00;
+    arch_sync_cache_range(CONFIG_INIT_STORAGE_CALLER, 4);
 
     kaeru_stage2 = malloc(MAX_STAGE2_SIZE);
 

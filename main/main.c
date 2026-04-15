@@ -44,11 +44,10 @@ void kaeru_early_init(void) {
 
     if (ptr_addr != 0) {
         *(volatile uint32_t*)ptr_addr = (uint32_t)kaeru_late_init | 1;
-        arch_clean_invalidate_cache_range(ptr_addr, 4);
+        arch_clean_cache_range(ptr_addr, 4);
     } else {
 #if defined(CONFIG_APP_CALLER) && CONFIG_APP_CALLER != 0
         PATCH_CALL(CONFIG_APP_CALLER, (void*)kaeru_late_init, TARGET_THUMB);
-        arch_clean_invalidate_cache_range(CONFIG_APP_CALLER, 4);
 #endif
     }
 

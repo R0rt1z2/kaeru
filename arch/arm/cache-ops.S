@@ -34,4 +34,17 @@ arch_clean_cache_range:
     mcr     p15, 0, r0, c7, c10, 4 /* data sync barrier (formerly drain write buffer) */
     bx      lr
 
+.global arch_sync_cache_range
+.thumb_func
+arch_sync_cache_range:
+    push    {lr}
+    bl      arch_clean_invalidate_cache_range
+
+    mov     r0, #0
+    mcr     p15, 0, r0, c7, c5, 0  /* invalidate entire icache */
+    mcr     p15, 0, r0, c7, c10, 4 /* dsb */
+    mcr     p15, 0, r0, c7, c5, 4  /* isb */
+
+    pop     {pc}
+
 .section .note.GNU-stack, "", %progbits
