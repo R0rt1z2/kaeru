@@ -432,4 +432,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Motorola Moto G Pure 2021
+		  
+	config TECNO_LH8N
+        bool "Support Tecno Pova 5 Pro 5G"
+        default n
+        help
+          Say Y if you want to include support for Tecno Pova 5 Pro 5G
 endmenu
