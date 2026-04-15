@@ -1,31 +1,26 @@
 #pragma once
 
-#define MTK_WDT_MODE        0x00
-#define MTK_WDT_LENGTH      0x04
-#define MTK_WDT_RESTART     0x08
-#define MTK_WDT_STATUS      0x0C
-#define MTK_WDT_INTERVAL    0x10
-#define MTK_WDT_SWRST       0x14
+#include <stdint.h>
+#include <arch/mmio.h>
 
-#define MTK_WDT_MODE_KEY        0x22000000
-#define MTK_WDT_MODE_ENABLE     (1 << 0)
-#define MTK_WDT_MODE_EXT_POL    (1 << 1)
-#define MTK_WDT_MODE_EXTEN      (1 << 2)
-#define MTK_WDT_MODE_IRQ        (1 << 3)
-#define MTK_WDT_MODE_AUTO_RESTART (1 << 4)
-#define MTK_WDT_MODE_DUAL_MODE  (1 << 6)
+#define MTK_WDT_MODE        (CONFIG_WDT_BASE + 0x00)
+#define MTK_WDT_LENGTH      (CONFIG_WDT_BASE + 0x04)
+#define MTK_WDT_RESTART     (CONFIG_WDT_BASE + 0x08)
+#define MTK_WDT_STATUS      (CONFIG_WDT_BASE + 0x0C)
+#define MTK_WDT_INTERVAL    (CONFIG_WDT_BASE + 0x10)
+#define MTK_WDT_SWRST       (CONFIG_WDT_BASE + 0x14)
 
-#define MTK_WDT_LENGTH_KEY      0x08
-#define MTK_WDT_RESTART_KEY     0x1971
-#define MTK_WDT_SWRST_KEY       0x1209
+#define MTK_WDT_MODE_KEY          0x22000000
+#define MTK_WDT_MODE_ENABLE       BIT(0)
+#define MTK_WDT_MODE_EXT_POL      BIT(1)
+#define MTK_WDT_MODE_EXTEN        BIT(2)
+#define MTK_WDT_MODE_IRQ          BIT(3)
+#define MTK_WDT_MODE_AUTO_RESTART BIT(4)
+#define MTK_WDT_MODE_DUAL_MODE    BIT(6)
 
-static inline void wdt_write(uint32_t offset, uint32_t value) {
-    *(volatile uint32_t *)(CONFIG_WDT_BASE + offset) = value;
-}
-
-static inline uint32_t wdt_read(uint32_t offset) {
-    return *(volatile uint32_t *)(CONFIG_WDT_BASE + offset);
-}
+#define MTK_WDT_LENGTH_KEY   0x08
+#define MTK_WDT_RESTART_KEY  0x1971
+#define MTK_WDT_SWRST_KEY   0x1209
 
 void mtk_wdt_reset(void);
 void mtk_wdt_disable(void);
