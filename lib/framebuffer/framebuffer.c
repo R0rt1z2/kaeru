@@ -238,3 +238,11 @@ void fb_warning_icon(uint32_t cx, uint32_t y, uint32_t size) {
     uint32_t dot_y = stem_bot + dot_r * 3;
     fb_fill_circle(cx, dot_y, dot_r, FB_BLACK);
 }
+
+void framebuffer_init(void) {
+    fb_init((uint32_t*)CONFIG_FRAMEBUFFER_ADDRESS,
+            CONFIG_FRAMEBUFFER_WIDTH,
+            CONFIG_FRAMEBUFFER_HEIGHT,
+            CONFIG_FRAMEBUFFER_BYTES_PER_PIXEL,
+            CONFIG_FRAMEBUFFER_ALIGNMENT);
+}

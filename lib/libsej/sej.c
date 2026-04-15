@@ -377,3 +377,8 @@ void set_sej_base(uintptr_t base_addr) {
 uintptr_t get_sej_base(void) {
     return hacc_base;
 }
+
+void sej_init(void) {
+    set_sej_base(CONFIG_SEJ_BASE);
+    init_sej_ctx();
+}
