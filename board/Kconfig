@@ -438,4 +438,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Tecno Pova 5 Pro 5G
+
+    config INFINIX_X670
+        bool "Support NOTE 12"
+        default n
+        help
+          Say Y if you want to include support for NOTE 12
 endmenu
