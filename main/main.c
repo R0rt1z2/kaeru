@@ -46,9 +46,10 @@ void kaeru_early_init(void) {
         *(volatile uint32_t*)ptr_addr = (uint32_t)kaeru_late_init | 1;
         arch_clean_cache_range(ptr_addr, 4);
     } else {
-#if defined(CONFIG_APP_CALLER) && CONFIG_APP_CALLER != 0
-        PATCH_CALL(CONFIG_APP_CALLER, (void*)kaeru_late_init, TARGET_THUMB);
-#endif
+        // Not a critical failure, since the device should still boot
+        // but I'm sure users will appreciate some feedback about it.
+        printf("Failed to patch mt_init_boot() pointer\n");
+        printf("kaeru won't be able to run its late init!\n");
     }
 
     ((void (*)(void))(CONFIG_PLATFORM_INIT_ADDRESS | 1))();

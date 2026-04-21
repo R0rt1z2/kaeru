@@ -38,7 +38,6 @@ patterns = {
         ],
         'export': True,
     },
-    'app_caller': {'patterns': ['98 47 b5 42 f8 d1'], 'export': True},
     'fastboot_continue': {
         'patterns': ['15 4a 00 21 08 b5 15 4b 7a 44'],
         'export': False,
