@@ -1,16 +1,32 @@
 #!/usr/bin/env python3
 #
-# SPDX-FileCopyrightText: 2025 Roger Ortiz <me@r0rt1z2.com>
+# SPDX-FileCopyrightText: 2026 Roger Ortiz <me@r0rt1z2.com>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 
-import argparse
-import os
 import struct
+from argparse import ArgumentParser
+from pathlib import Path
 
-hdr_sz = 0x200
-alignment = 16
-MAGIC = 0x58881688
+from liblk import LkImage
+from liblk.structures import LkPartition
+
+
+class DeviceConfig:
+    def __init__(self, path) -> None:
+        self.config = {}
+        with open(path) as f:
+            for line in f:
+                if line.startswith('CONFIG_'):
+                    key, value = line.strip().split('=', 1)
+                    self.config[key] = value
+
+    def get(self, key) -> str:
+        return self.config.get('CONFIG_' + key, None)
+
+
+def to_int(s) -> int:
+    return int(s, 16) if s.startswith('0x') else int(s)
 
 
 def encode_bl(src, dst):
@@ -19,193 +35,123 @@ def encode_bl(src, dst):
     return struct.pack('<HH', 0xF000 | hi, 0xF800 | lo)
 
 
-def get_cfg(path, key):
-    with open(path) as f:
-        for line in f:
-            if line.startswith('CONFIG_' + key + '='):
-                return line.strip().split('=', 1)[1]
-    return None
+def patch_bss(partition: LkPartition, payload_size: int) -> None:
+    bss_start = partition.header.data_size + partition.lk_address
+    position = partition.data.find(struct.pack('<I', bss_start))
+    dest_addr = (bss_start + payload_size + 3) & ~3
+
+    # This should be fatal regardless of the injection method, because we
+    # will always need room for either kaeru or stage1.
+    if position < 0:
+        exit('ERROR: Unable to find BSS markers!')
+
+    while position > 0:
+        partition.data[position : position + 4] = struct.pack('<I', dest_addr)
+        position = partition.data.find(struct.pack('<I', bss_start))
+
+    return bss_start
 
 
-def find_bss_start(data, size, base, hdr_sz):
-    min_pos = 0x12C + 4
-    
-    if len(data) < min_pos:
-        return None, None
-    
-    pos = min_pos
-
-    patterns = [
-        '10B50446',  # for amazon bootloaders
-        '0346A8B1',  # for legacy bootloaders
-        '01487844',  # for samsung bootloaders
-        '704700BF',
-    ]
-    
-    offsets = [data[pos:].find(bytes.fromhex(pattern)) 
-               for pattern in patterns]
-    offset = min([x for x in offsets if x != -1] or [-1])
-
-    if offset == -1:
-        return None, None
-
-    pos += offset
-
-    j = pos - 4
-    while j >= min_pos and j + 4 <= len(data):
-        if data[j:j + 4] != b'\0\0\0\0':
-            break
-        j -= 4
-
-    if j >= min_pos and j + 4 <= len(data):
-        j -= 4
-        if j + 4 <= len(data):
-            bss_pos = j - hdr_sz
-            bss_val = struct.unpack('<I', data[j:j + 4])[0]
-            return bss_pos, bss_val
-
-    return None, None
-
-
-def find_actual_end(data):
-    for i in range(len(data) - 1, 0, -1):
-        if data[i] != 0:
-            return i + 1
-    return len(data)
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description='Patch a bootloader image with kaeru.'
+def main() -> None:
+    parser = ArgumentParser(
+        description='Inject payloads into a MediaTek LK bootloader binary'
     )
+
+    parser.add_argument('config', help='Path to the device configuration file')
+    parser.add_argument('input', help='Path to the input LK bootloader binary')
+    parser.add_argument('payload', help='Path to the payload binary to inject')
     parser.add_argument(
-        'defconfig', help="Path to the device's defconfig file."
+        '-o', '--output', help='Path to the output patched binary'
     )
-    parser.add_argument('input_image', help='Path to input bootloader file.')
-    parser.add_argument('payload', help='Path to the compiled kaeru payload.')
+
+    # This refers to stage1, which is used to load the actual kaeru payload.
+    # Right now only ARMv7 based LKs can boot kaeru without it, but the idea
+    # is to enforce this everywhere, so it'll eventually become mandatory.
     parser.add_argument(
-        '-o',
-        '--output',
-        help='Path to output patched file',
-        default='lk.patched',
+        '-l', '--loader', help='First stage loader for the payload'
     )
+
     args = parser.parse_args()
 
-    with open(args.input_image, 'rb') as f:
-        data = bytearray(f.read())
-        size = len(data)
+    for path in (args.config, args.input, args.payload):
+        if not Path(path).is_file():
+            exit("ERROR: File not found: '%s'!" % path)
 
-    with open(args.payload, 'rb') as f:
-        payload = f.read()
-        payload_len = len(payload)
+    lk = LkImage(args.input)
+    config = DeviceConfig(args.config)
+    device = Path(args.config).name.removesuffix('_defconfig')
 
-    try:
-        base = int(get_cfg(args.defconfig, 'BOOTLOADER_BASE'), 16)
-        pivot = int(get_cfg(args.defconfig, 'PLATFORM_INIT_CALLER'), 16)
-    except:
-        exit('unable to read base or pivot address from defconfig')
+    base = to_int(config.get('BOOTLOADER_BASE'))
+    size = to_int(config.get('BOOTLOADER_SIZE'))
+    plic = to_int(config.get('PLATFORM_INIT_CALLER'))
 
-    force_inject_cfg = get_cfg(args.defconfig, 'FORCE_INJECT_ADDR')
-    if force_inject_cfg:
-        force_inject_ram_addr = int(force_inject_cfg, 16)
-        inject_addr = (force_inject_ram_addr - base + hdr_sz) & ~1
-        print('forcing injection at RAM address: 0x%08x (file offset: 0x%08x)' % (force_inject_ram_addr, inject_addr))
-        
-        if inject_addr >= len(data):
-            exit('forced injection address is beyond file size')
-        
-        data[inject_addr:inject_addr + payload_len] = payload
-        
-        shellcode = encode_bl(pivot, force_inject_ram_addr | 1)
-        offset = (pivot - base) + hdr_sz
-        data[offset:offset + len(shellcode)] = shellcode
-        
-        print('payload injected at forced address: 0x%08x' % force_inject_ram_addr)
-        
-        with open(args.output, 'wb') as f:
-            f.write(data)
-        
-        print('patched bootloader written to %s!' % args.output)
-        return
+    # We won't go anywhere without a valid base and size, so it's
+    # reasonable to check this before doing any actual work.
+    if not base or not plic or not size or size <= 0:
+        exit('ERROR: Invalid basic required configuration!')
 
-    magic, code_sz = struct.unpack('<II', data[:8])
+    print('Bootloader base: 0x%X' % base)
+    print('Bootloader size: %d bytes' % size)
+    print('Platform init caller: 0x%X' % plic)
 
-    actual_end = find_actual_end(data)
-    if actual_end < len(data) - 0x1000:
-        padding_amount = len(data) - actual_end
-        suggested_size = ((actual_end + 0x1FF) & ~0x1FF)
-        print('trimming excessive padding: %d bytes (%.1f%% of file)' % (padding_amount, (padding_amount / len(data)) * 100))
-        print('actual data ends at: 0x%X, trimming to: 0x%X' % (actual_end, suggested_size))
-        data = data[:suggested_size]
-        size = len(data)
+    # Some devices might use "LK" instead of "lk" for the partition
+    # name, so better safe than sorry.
+    part = lk.partitions.get('lk') or lk.partitions.get('LK')
+    if not part:
+        exit("ERROR: No 'lk' partition found in the image!")
 
-    original_code_sz = code_sz
-    name = data[8:40].decode('utf-8').rstrip('\0')
+    # If this happens, it probably means we're trying to build for
+    # an incompatible LK image, so bail out.
+    assert part.lk_address == base, 'Wrong load address for LK partition!'
 
-    bss_start_pos, bss_start = find_bss_start(data, size, base, hdr_sz)
-    if bss_start is None:
-        exit('unable to find bss start address')
+    payload = open(args.payload, 'rb').read()
+    payload_size = len(payload)
+    print('Payload size: %d bytes' % payload_size)
 
-    original_bss_start = bss_start
-    inject_addr = (bss_start - base + hdr_sz) & ~1
-    bss_start = (bss_start + payload_len + 3) & ~3
+    if args.loader:
+        loader = open(args.loader, 'rb').read()
+        loader_size = len(loader)
+        print('Loader size: %d bytes' % loader_size)
 
-    for i in (bss_start_pos - 4, bss_start_pos):
-        data[i + hdr_sz : i + 4 + hdr_sz] = struct.pack('<I', bss_start)
-    print('bss start: 0x%08x -> 0x%08x' % (original_bss_start, bss_start))
+    # Decide if we should increase the code section to make room for
+    # the payload, or if we should use a fixed address specified by
+    # the configuration file.
+    # 
+    # Extending the code section is generally more reliable, since a
+    # forced address may overlap existing data, which is bad.
+    if config.get('FORCE_INJECT_ADDR'):
+        payload_dest = to_int(config.get('FORCE_INJECT_ADDR'))
+    else:
+        payload_dest = patch_bss(
+            part, payload_size if not args.loader else loader_size
+        )
 
-    code_sz += payload_len
-    data[:8] = struct.pack('<II', magic, code_sz)
+    # Inject the payload into the end of the 'lk' sub-partition. This
+    # can be either stage1 or kaeru as stated before.
+    part.data += payload if not args.loader else loader
 
-    print('code size: %d -> %d' % (original_code_sz, code_sz))
-    print('payload injection point: 0x%08x' % ((base + inject_addr) - hdr_sz))
+    if args.loader:
+        # If the user specified a loader, this means kaeru has to be
+        # stored in a separate sub-partition, so the first stage can
+        # easily load it from storage without corrupting anything.
+        lk.add_partition(
+            name='kaeru',
+            data=payload,
+            memory_address=0,
+            use_extended=True,
+        )
 
-    p1 = data[:inject_addr] + payload
-    rem = len(p1) % alignment
-    pad = 0 if rem == 0 else alignment - rem
+    print('Payload destination: 0x%X' % payload_dest)
 
-    print('payload padding: %d bytes' % pad)
-    p2 = (b'\0' * pad) + data[inject_addr:]
-    out = p1 + p2
+    # Redirect the platform_init caller to jump into our payload.
+    offset = plic - base
+    shellcode = encode_bl(plic, payload_dest)
 
-    tot_len = hdr_sz + code_sz
-    aligned = ((tot_len + alignment - 1) // alignment) * alignment
-    end_pad = aligned - tot_len
+    print('File offset: 0x%X' % offset)
+    part.data[offset : offset + len(shellcode)] = shellcode
 
-    print('partition end padding: %d bytes' % end_pad)
-    if end_pad > 0:
-        out += b'\0' * end_pad
-
-    shellcode = encode_bl(pivot, (base + (inject_addr - hdr_sz)) | 1)
-    offset = (pivot - base) + hdr_sz
-    out[offset : offset + len(shellcode)] = shellcode
-
-    part_end = hdr_sz + code_sz
-    aligned_pos = ((part_end + alignment - 1) // alignment) * alignment
-    fixed = out[:aligned_pos]
-
-    mg_bytes = struct.pack('<I', MAGIC)
-
-    if len(out) > aligned_pos + 4:
-        mg_pos = out.find(mg_bytes, aligned_pos)
-
-        if mg_pos > aligned_pos:
-            pad_size = mg_pos - aligned_pos
-            if all(b == 0 for b in out[aligned_pos:mg_pos]):
-                print('unaligned partition padding: %d bytes' % pad_size)
-                fixed += out[mg_pos:]
-            else:
-                fixed += out[aligned_pos:]
-        else:
-            fixed += out[aligned_pos:]
-
-    next_pos = ((hdr_sz + code_sz + alignment - 1) // alignment) * alignment
-    print('final next partition offset: 0x%x' % next_pos)
-
-    with open(args.output, 'wb') as f:
-        f.write(fixed)
-
-    print('patched bootloader written to %s!' % args.output)
+    lk._rebuild_contents()
+    lk.save(args.output if args.output else ('%s-patched.bin' % device))
 
 
 if __name__ == '__main__':
