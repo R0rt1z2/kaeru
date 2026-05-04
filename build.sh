@@ -14,7 +14,7 @@ if [ $# -ne 2 ]; then
 fi
 
 DEVICE="$1"
-LK_PATH="$2"
+BOOTLOADER="$2"
 
 UTILS_DIR="$SCRIPT_DIR/utils"
 CONFIGS_DIR="$SCRIPT_DIR/configs"
@@ -26,8 +26,8 @@ if [ -z "$CONFIG_PATH" ]; then
     exit 1
 fi
 
-if [ ! -e "$LK_PATH" ]; then
-    echo "LK path $LK_PATH does not exist"
+if [ ! -e "$BOOTLOADER" ]; then
+    echo "$BOOTLOADER not found!"
     exit 1
 fi
 
@@ -38,7 +38,7 @@ make "${DEVICE}_defconfig"
 make -j"$(nproc)"
 
 if grep -q "^CONFIG_STAGE1_SUPPORT=y" "$CONFIG_PATH"; then
-    python3 "$UTILS_DIR/patch.py" "$CONFIG_PATH" "$LK_PATH" kaeru -l stageone
+    python3 "$UTILS_DIR/patch.py" "$CONFIG_PATH" "$BOOTLOADER" kaeru -l stageone
 else
-    python3 "$UTILS_DIR/patch.py" "$CONFIG_PATH" "$LK_PATH" kaeru
+    python3 "$UTILS_DIR/patch.py" "$CONFIG_PATH" "$BOOTLOADER" kaeru
 fi

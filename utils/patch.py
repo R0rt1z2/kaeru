@@ -102,7 +102,7 @@ def main() -> None:
 
     # If this happens, it probably means we're trying to build for
     # an incompatible LK image, so bail out.
-    assert part.lk_address == base, 'Wrong load address for LK partition!'
+    assert part.lk_address == base, 'Wrong load address for LK partition (expected 0x%X, got 0x%X)' % (base, part.lk_address)
 
     payload = open(args.payload, 'rb').read()
     payload_size = len(payload)
