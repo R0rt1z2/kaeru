@@ -15,6 +15,7 @@ fi
 
 DEVICE="$1"
 BOOTLOADER="$2"
+OUTPUT="${DEVICE}-kaeru.bin"
 
 UTILS_DIR="$SCRIPT_DIR/utils"
 CONFIGS_DIR="$SCRIPT_DIR/configs"
@@ -38,7 +39,7 @@ make "${DEVICE}_defconfig"
 make -j"$(nproc)"
 
 if grep -q "^CONFIG_STAGE1_SUPPORT=y" "$CONFIG_PATH"; then
-    python3 "$UTILS_DIR/patch.py" "$CONFIG_PATH" "$BOOTLOADER" kaeru -l stageone
+    python3 "$UTILS_DIR/patch.py" "$CONFIG_PATH" "$BOOTLOADER" kaeru -l stageone -o "$OUTPUT"
 else
-    python3 "$UTILS_DIR/patch.py" "$CONFIG_PATH" "$BOOTLOADER" kaeru
+    python3 "$UTILS_DIR/patch.py" "$CONFIG_PATH" "$BOOTLOADER" kaeru -o "$OUTPUT"
 fi
