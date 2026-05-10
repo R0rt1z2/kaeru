@@ -70,3 +70,4 @@ lib-$(CONFIG_XIAOMI_RUBY) += xiaomi/board-ruby.o
 lib-$(CONFIG_MOTOROLA_ELLIS) += motorola/board-ellis.o
 lib-$(CONFIG_TECNO_LH8N) += tecno/board-lh8n.o
 lib-$(CONFIG_INFINIX_X670) += infinix/board-X670.o
+lib-$(CONFIG_REALME_SPACED) += realme/board-spaced.o

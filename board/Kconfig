@@ -444,4 +444,9 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for NOTE 12
+    config REALME_SPACED
+        bool "Support Realme 8i"
+        default n
+        help
+          Say Y if you want to include support for Realme 8i
 endmenu
