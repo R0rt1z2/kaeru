@@ -1,5 +1,7 @@
 #ifdef CONFIG_MOTOROLA_LAMU
 
+#define DEVICE_MODEL "Motorola Moto G05 / G15 / G15 Power"
+
 #define CMDLINE1_ADDR 0x4C59EC4C
 #define CMDLINE2_ADDR 0x4C59F450
 
@@ -11,6 +13,9 @@
 #endif
 
 #ifdef CONFIG_MOTOROLA_LAMULG
+
+#define DEVICE_MODEL "Motorola Moto E15"
+
 #define CMDLINE1_ADDR 0x4C535C08
 #define CMDLINE2_ADDR 0x4C53640C
 
@@ -22,6 +27,9 @@
 #endif
 
 #ifdef CONFIG_MOTOROLA_LAMUC
+
+#define DEVICE_MODEL "Motorola Moto G17 / G17 Power"
+
 #define CMDLINE1_ADDR 0x4C574C4C
 #define CMDLINE2_ADDR 0x4C575450
 

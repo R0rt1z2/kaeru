@@ -183,7 +183,7 @@ static void spoof_lock_state(void) {
 }
 
 void board_early_init(void) {
-    printf("Entering early init for Motorola E15 / G05 / G15 / G17\n");
+    printf("Entering early init for %s\n", DEVICE_MODEL);
 
     uint32_t addr = 0;
 
@@ -255,7 +255,7 @@ void board_early_init(void) {
 }
 
 void board_late_init(void) {
-    printf("Entering late init for Motorola G15 / G05 / E15\n");
+    printf("Entering late init for %s\n", DEVICE_MODEL);
 
     uint32_t addr = 0;
 
