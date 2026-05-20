@@ -12,36 +12,6 @@
 #include <wdt/mtk_wdt.h>
 #include <usbdl/mtk_usbdl.h>
 
-const char* get_mode_string(unsigned int mode) {
-#ifndef CONFIG_EXCLUDE_BRANDING
-    switch (mode) {
-        case 0x10:
-            return "User Mode (PL0)";
-        case 0x11:
-            return "FIQ Mode";
-        case 0x12:
-            return "IRQ Mode";
-        case 0x13:
-            return "Supervisor Mode (PL1, Kernel/OS)";
-        case 0x16:
-            return "Monitor Mode (PL3, Secure Mode)";
-        case 0x17:
-            return "Abort Mode";
-        case 0x1A:
-            return "Hypervisor Mode (PL2)";
-        case 0x1B:
-            return "Undefined Mode";
-        case 0x1F:
-            return "System Mode";
-        default:
-            return "Unknown Mode";
-    }
-#else
-    (void)mode;
-    return "Unknown Mode";
-#endif
-}
-
 void reboot_emergency(void) {
     mtk_reboot_emergency();
 }
@@ -73,14 +43,11 @@ void cmdline_replace(char *cmdline, const char *param,
 
 void print_kaeru_info(int (*out)(const char *, ...)) {
 #ifndef CONFIG_EXCLUDE_BRANDING
-    unsigned int sp, lr, pe, vbar;
+    unsigned int sp, lr, vbar;
 
     READ_SP(sp);
     READ_LR(lr);
-    READ_CPSR(pe);
     READ_VBAR(vbar);
-
-    pe &= 0x1F;
 
     out(" _                         \n"
         "| | ____ _  ___ _ __ _   _ \n"
@@ -101,7 +68,6 @@ void print_kaeru_info(int (*out)(const char *, ...)) {
     out(" Vector Base  (VBAR): 0x%08x\n", vbar);
     out(" Stack Pointer  (SP): 0x%08x\n", sp);
     out(" Link Register  (LR): 0x%08x\n", lr);
-    out(" Processor Mode (PE): %s\n", get_mode_string(pe));
     out("********************************************************************\n\n");
 #else
     (void)out;

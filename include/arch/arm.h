@@ -15,7 +15,6 @@
 #define ARM_MODE(lr) ((lr)&1 ? "THUMB" : "ARM")
 #define READ_SP(var) asm volatile("mov %0, sp" : "=r"(var))
 #define READ_LR(var) asm volatile("mov %0, lr" : "=r"(var))
-#define READ_CPSR(var) asm volatile("mrs %0, cpsr" : "=r"(var))
 #define READ_VBAR(var) asm volatile("mrc p15, 0, %0, c12, c0, 0" : "=r"(var))
 
 typedef enum { TARGET_THUMB, TARGET_ARM } arm_mode_t;

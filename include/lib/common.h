@@ -77,6 +77,5 @@ void common_early_init(void);
 void mtk_wdt_reset(void);
 bool mtk_detect_key(unsigned short key);
 void cmdline_replace(char *cmdline, const char *param, const char *old, const char *new);
-const char* get_mode_string(unsigned int mode);
 void print_kaeru_info(int (*out)(const char *, ...));
 void reboot_emergency(void);
