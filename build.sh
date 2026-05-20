@@ -8,13 +8,43 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [ $# -ne 2 ]; then
-    echo "Usage: $0 <codename> <bootloader>"
+usage() {
+    echo "Usage: $0 [--debug] <codename> <bootloader>"
     exit 1
+}
+
+POSITIONAL=()
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --debug)
+            KAERU_DEBUG=1
+            shift
+            ;;
+        -h|--help)
+            usage
+            ;;
+        --)
+            shift
+            POSITIONAL+=("$@")
+            break
+            ;;
+        -*)
+            echo "Unknown option: $1"
+            usage
+            ;;
+        *)
+            POSITIONAL+=("$1")
+            shift
+            ;;
+    esac
+done
+
+if [ ${#POSITIONAL[@]} -ne 2 ]; then
+    usage
 fi
 
-DEVICE="$1"
-BOOTLOADER="$2"
+DEVICE="${POSITIONAL[0]}"
+BOOTLOADER="${POSITIONAL[1]}"
 OUTPUT="${DEVICE}-kaeru.bin"
 
 UTILS_DIR="$SCRIPT_DIR/utils"
@@ -31,6 +61,12 @@ if [ ! -e "$BOOTLOADER" ]; then
     echo "$BOOTLOADER not found!"
     exit 1
 fi
+
+if [ "${KAERU_DEBUG:-0}" = "1" ]; then
+    printf '\n\033[1;33m!! Debug mode enabled, verbose logging will be compiled in !!\033[0m\n\n'
+    export KAERU_DEBUG=1
+fi
+
 
 make clean >/dev/null 2>&1 || true
 make distclean >/dev/null 2>&1 || true
