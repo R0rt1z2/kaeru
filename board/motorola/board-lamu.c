@@ -7,6 +7,9 @@
 #include <board_ops.h>
 #include "include/lamu.h"
 
+#define BROM_CMD_DIS_INDEX  6
+#define BROM_CMD_DIS_OFFSET 8
+
 long partition_read(const char* part_name, long long offset, uint8_t* data, size_t size) {
     return ((long (*)(const char*, long long, uint8_t*, size_t))(CONFIG_PARTITION_READ_ADDRESS | 1))(
             part_name, offset, data, size);
@@ -18,6 +21,23 @@ long partition_write(const char* part_name, long long offset, uint8_t* data, siz
         return ((long (*)(const char*, long long, uint8_t*, size_t))(addr | 1))(
             part_name, offset, data, size);
     return -1;
+}
+
+uint32_t get_devinfo_with_index(uint32_t index) {
+    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0xB538, 0x4604, 0x4B0F, 0x447B);
+    if (addr) {
+        printf("Found get_devinfo_with_index at 0x%08X\n", addr);
+        return ((uint32_t (*)(uint32_t))(addr | 1))(index);
+    }
+    return -1;
+}
+
+static int is_brom_cmd_disabled(void) {
+    uint32_t val = get_devinfo_with_index(BROM_CMD_DIS_INDEX);
+    if (val == 0xFFFFFFFF)
+        return -1;
+
+    return (val >> BROM_CMD_DIS_OFFSET) & 1;
 }
 
 static void handle_recovery_boot(void) {
@@ -231,6 +251,7 @@ void board_early_init(void) {
     }
 
     fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 0);
+    fastboot_publish("brom-usbdl-disabled", is_brom_cmd_disabled() == 1 ? "yes" : "no");
 }
 
 void board_late_init(void) {
