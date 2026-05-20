@@ -14,8 +14,10 @@ int is_spoofing_enabled(void) {
 
 int get_lock_state(uint32_t *lock_state) {
     int spoofing = is_spoofing_enabled();
+#if KAERU_DEBUG
     printf("Attempted to get lock state, spoofing is %s\n",
             spoofing ? "enabled" : "disabled");
+#endif
     *lock_state = spoofing ? LKS_LOCK : LKS_UNLOCK;
     return 0;
 }

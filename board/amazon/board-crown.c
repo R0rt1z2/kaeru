@@ -282,7 +282,10 @@ void parse_bootloader_messages(void) {
     uint64_t misc_offset = get_partition_sector("MISC") * BLOCK_SIZE;
 
     dev->read(dev, misc_offset, bootloader_msg, 0x20, USER_PART);
+
+#if KAERU_DEBUG
     printf("Read bootloader_msg: %s\n", bootloader_msg);
+#endif
 
     if (strncmp((char*)bootloader_msg, "boot-amonet", 11) == 0) {
         printf("Found boot-amonet command, forcing fastboot\n");

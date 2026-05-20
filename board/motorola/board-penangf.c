@@ -279,7 +279,9 @@ void parse_bootloader_messages(void) {
         return;
     }
 
+#if KAERU_DEBUG
     printf("Read bootloader command: %s\n", misc_msg.command);
+#endif
 
     if (strncmp(misc_msg.command, "boot-recovery", 13) == 0) {
         printf("Found boot-recovery, forcing recovery\n");

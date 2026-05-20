@@ -235,7 +235,7 @@ void board_late_init(void) {
         NOP(0x46029912, 2);
         NOP(0x4602991A, 2);
 
-#ifdef KAERU_DEBUG
+#if KAERU_DEBUG
         // This patch redirects several dprintf calls to use video_printf instead,
         // allowing messages to be printed directly to the screen rather than to
         // the serial console. This is useful for debugging when UART is not available.
