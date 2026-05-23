@@ -1,6 +1,6 @@
 //
 // SPDX-FileCopyrightText: 2025 Shomy <shomy@shomy.is-a.dev>
-//                         2026 Roger Ortiz <me@r0rt1z2.com>
+//                         2026 Roger Ortiz <roger@r0rt1z2.com>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 

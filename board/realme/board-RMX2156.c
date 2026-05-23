@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: 2025 R0rt1z2 <me@r0rt1z2.com>
+// SPDX-FileCopyrightText: 2025 R0rt1z2 <roger@r0rt1z2.com>
 // SPDX-FileCopyrightText: 2025 antagonizzzt <antagonizzzt@gmail.com>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //

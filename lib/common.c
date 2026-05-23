@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: 2025-2026 Roger Ortiz <me@r0rt1z2.com>
+// SPDX-FileCopyrightText: 2025-2026 Roger Ortiz <roger@r0rt1z2.com>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
@@ -58,7 +58,7 @@ void print_kaeru_info(int (*out)(const char *, ...)) {
     out("********************************************************************\n");
     out(" Copyright (C) 2023-2026 KAERU Labs, S.L.\n");
     out(" SPDX-License-Identifier: AGPL-3.0-or-later\n\n");
-    out(" Developed by Roger Ortiz <me@r0rt1z2.com> and\n");
+    out(" Developed by Roger Ortiz <roger@r0rt1z2.com> and\n");
     out("              Mateo De la Hoz <me@antiengineer.com>\n");
     out("              Shomy <git@itssho.my>\n\n");
     out(" !!! WARNING !!!\n");

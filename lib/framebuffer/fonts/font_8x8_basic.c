@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: 2025 Roger Ortiz <me@r0rt1z2.com>
+// SPDX-FileCopyrightText: 2025 Roger Ortiz <roger@r0rt1z2.com>
 // Font: Public Domain VGA fonts by IBM/Marcel Sondaar/Daniel Hepper
 // Font Source: https://github.com/dhepper/font8x8
 // SPDX-License-Identifier: Unlicense

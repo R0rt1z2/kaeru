@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: 2025 Roger Ortiz <me@r0rt1z2.com>
+// SPDX-FileCopyrightText: 2025 Roger Ortiz <roger@r0rt1z2.com>
 //                         2025 DiabloSat <dev@diablosat.cc>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
