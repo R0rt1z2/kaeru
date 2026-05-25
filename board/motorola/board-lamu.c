@@ -78,6 +78,12 @@ void parse_bootloader_messages(void) {
         memset(&misc_msg, 0, sizeof(misc_msg));
         partition_write("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg));
     }
+    else if (strncmp(misc_msg.command, "bootonce-bootloader", 19) == 0) {
+        printf("Found bootonce-bootloader, forcing fastboot\n");
+        set_bootmode(BOOTMODE_FASTBOOT);
+        memset(&misc_msg, 0, sizeof(misc_msg));
+        partition_write("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg));
+    }
 }
 
 static void spoof_lock_state(void) {
