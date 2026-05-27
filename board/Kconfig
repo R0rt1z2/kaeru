@@ -456,4 +456,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Oukitel WP56
+
+    config INFINIX_X6815D
+        bool "Support Infinix ZERO 5G 2023"
+        default n
+        help
+          Say Y if you want to include support for Infinix ZERO 5G 2023
 endmenu
