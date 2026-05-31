@@ -73,3 +73,4 @@ lib-$(CONFIG_INFINIX_X670) += infinix/board-X670.o
 lib-$(CONFIG_XIAOMI_FIRE) += xiaomi/board-fire.o
 lib-$(CONFIG_OUKITEL_WP56) += oukitel/board-wp56.o
 lib-$(CONFIG_LAVA_T81N) += lava/board-T81N.o
+lib-$(CONFIG_OPPO_CPH2015) += oppo/board-CPH2015.o
