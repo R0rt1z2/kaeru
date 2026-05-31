@@ -456,4 +456,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Oukitel WP56
+
+    config LAVA_T81N
+        bool "Support lava T81N"
+        default n
+        help
+          Say Y if you want to include support for lava T81N
 endmenu
