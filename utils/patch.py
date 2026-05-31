@@ -151,7 +151,7 @@ def main() -> None:
     part.data[offset : offset + len(shellcode)] = shellcode
 
     lk._rebuild_contents()
-    lk.save(args.output if args.output else ('%s-patched.bin' % device))
+    lk.save(args.output if args.output else ('%s-patched.bin' % Path(device).name))
 
 
 if __name__ == '__main__':
