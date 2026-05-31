@@ -468,4 +468,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for oppo A31
+
+    config OPPO_CPH2185
+        bool "Support oppo A15/A15s"
+        default n
+        help
+          Say Y if you want to include support for oppo A15/A15s
 endmenu
