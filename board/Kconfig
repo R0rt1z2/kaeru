@@ -474,4 +474,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for oppo A15/A15s
+
+    config LAVA_LXX503
+        bool "Support Lava Blaze 5G"
+        default n
+        help
+          Say Y if you want to include support for Lava Blaze 5G
 endmenu
