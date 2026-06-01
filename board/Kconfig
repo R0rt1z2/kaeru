@@ -480,4 +480,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Lava Blaze 5G
+
+    config HUAWEI_DURA2
+        bool "Support Huawei Y5p"
+        default n
+        help
+          Say Y if you want to include support for Huawei Y5p
 endmenu
