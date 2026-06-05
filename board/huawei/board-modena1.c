@@ -157,48 +157,48 @@ void board_late_init(void) {
     // not executing the code that shows the warning.
     FORCE_RETURN(0x48083960, 0);
 
-    if (get_bootmode() == BOOTMODE_FASTBOOT) {
-        // Since the only way to enter USBDL mode on this device is by opening it up
-        // and shorting the test point, we add a fastboot command to make it easier
-        // to enter that mode without needing to disassemble the device.
-        //
-        // Once you execute the command, the device will reboot into bootrom mode,
-        // and you'll be able to use tools like mtkclient to flash the device.
-        fastboot_register("oem reboot-emergency", cmd_reboot_emergency, 1);
+    // Since the only way to enter USBDL mode on this device is by opening it up
+    // and shorting the test point, we add a fastboot command to make it easier
+    // to enter that mode without needing to disassemble the device.
+    //
+    // Once you execute the command, the device will reboot into bootrom mode,
+    // and you'll be able to use tools like mtkclient to flash the device.
+    fastboot_register("oem reboot-emergency", cmd_reboot_emergency, 1);
 
-        // There is no easy way to power off the device from fastboot mode.
-        // Holding the power button simply reboots the device, forcing you to
-        // boot into the OS to shut it down properly. This is not ideal, so
-        // we add a fastboot command that allows powering off directly.
-        //
-        // This was shamelessly borrowed from Motorola’s (or Huaqin’s) LK image.
-        // It simply calls mt_power_off().
-        fastboot_register("oem shutdown", cmd_shutdown, 1);
-        fastboot_register("oem poweroff", cmd_shutdown, 1);
+    // There is no easy way to power off the device from fastboot mode.
+    // Holding the power button simply reboots the device, forcing you to
+    // boot into the OS to shut it down properly. This is not ideal, so
+    // we add a fastboot command that allows powering off directly.
+    //
+    // This was shamelessly borrowed from Motorola's (or Huaqin's) LK image.
+    // It simply calls mt_power_off().
+    fastboot_register("oem shutdown", cmd_shutdown, 1);
+    fastboot_register("oem poweroff", cmd_shutdown, 1);
 
-        // Huawei managed to screw up reboot commands in two different ways:
-        //
-        // 1. The command parser has a bug where "reboot-recovery" gets matched
-        //    as just "reboot" (probably some dumb string comparison issue),
-        //    so the device just does a normal reboot instead of going to recovery.
-        //
-        // 2. Even when recovery mode is triggered properly, their implementation
-        //    doesn't write the bootloader message correctly to the misc partition,
-        //    so recovery boot fails anyway.
-        //
-        // We work around both issues by disabling their broken command handlers
-        // and registering our own. The reboot wrapper does a nasty string check
-        // to intercept "recovery" and redirect it to our working implementation.
-        NOP(0x48030BBE, 2); // register fastboot reboot recovery.
-        NOP(0x48030B96, 2); // register fastboot reboot.
+    // Huawei managed to screw up reboot commands in two different ways:
+    //
+    // 1. The command parser has a bug where "reboot-recovery" gets matched
+    //    as just "reboot" (probably some dumb string comparison issue),
+    //    so the device just does a normal reboot instead of going to recovery.
+    //
+    // 2. Even when recovery mode is triggered properly, their implementation
+    //    doesn't write the bootloader message correctly to the misc partition,
+    //    so recovery boot fails anyway.
+    //
+    // We work around both issues by disabling their broken command handlers
+    // and registering our own. Keep this independent from the bootmode value:
+    // some Huawei builds enter fastboot without leaving BOOTMODE_FASTBOOT in
+    // the global bootmode variable.
+    NOP(0x48030BBE, 2); // register fastboot reboot recovery.
+    NOP(0x48030B96, 2); // register fastboot reboot.
 
-        // Register our non-broken reboot command handlers. For the recovery one,
-        // we want to have multiple aliases: "reboot-recovery" matches the standard
-        // behavior expected by fastboot, while "oem reboot-recovery" is something
-        // MTK tends to add on other devices for compatibility.
-        fastboot_register("reboot", cmd_reboot_wrapper, 1);
-        fastboot_register("oem reboot-recovery", cmd_reboot_recovery, 1);
-    }
+    // Register our non-broken reboot command handlers. For the recovery one,
+    // we want to have multiple aliases: "reboot-recovery" matches the standard
+    // behavior expected by fastboot, while "oem reboot-recovery" is something
+    // MTK tends to add on other devices for compatibility.
+    fastboot_register("reboot", cmd_reboot_wrapper, 1);
+    fastboot_register("reboot-recovery", cmd_reboot_recovery, 1);
+    fastboot_register("oem reboot-recovery", cmd_reboot_recovery, 1);
 
     // Show the current boot mode on screen when not performing a normal boot.
     // This is standard behavior in many LK images, but not in this one by default.
