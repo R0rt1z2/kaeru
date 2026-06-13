@@ -7,6 +7,7 @@
 
 #include <arch/cache.h>
 #include <lib/debug.h>
+#include <lib/string.h>
 #include <stdbool.h>
 
 #define KAERU_ENV_BLDR_SPOOF "kaeru_bootloader_spoof_status"
@@ -18,6 +19,11 @@
 
 #define LK_START ((LK_BASE) & ~0xFFF)
 #define LK_END ((LK_START) + LK_SIZE)
+
+#define SEARCH_STRING(lit) \
+    memmem((void*)(uintptr_t)LK_START, \
+           (size_t)((uintptr_t)LK_END - (uintptr_t)LK_START), \
+           (lit), sizeof(lit) - 1)
 
 #define WRITE8(addr, value)                                     \
     do {                                                        \
