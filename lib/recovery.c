@@ -13,6 +13,7 @@ bootmode_t misc_command_to_bootmode(const char* c) {
         return BOOTMODE_NORMAL;
 
     if (!strncmp(c, "boot-recovery",       13)) return BOOTMODE_RECOVERY;
+    if (!strncmp(c, "boot-fastboot",       13)) return BOOTMODE_RECOVERY;
     if (!strncmp(c, "boot-bootloader",     15)) return BOOTMODE_FASTBOOT;
     if (!strncmp(c, "bootonce-bootloader", 19)) return BOOTMODE_FASTBOOT;
     return BOOTMODE_NORMAL;
