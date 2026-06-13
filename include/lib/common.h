@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: 2025 Roger Ortiz <roger@r0rt1z2.com>
+// SPDX-FileCopyrightText: 2025-2026 Roger Ortiz <roger@r0rt1z2.com>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
@@ -82,6 +82,5 @@ void common_early_init(void);
 
 void mtk_wdt_reset(void);
 bool mtk_detect_key(unsigned short key);
-void cmdline_replace(char *cmdline, const char *param, const char *old, const char *new);
 void print_kaeru_info(int (*out)(const char *, ...));
 void reboot_emergency(void);

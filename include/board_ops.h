@@ -7,6 +7,7 @@
 
 #include <arch/arm.h>
 #include <lib/app.h>
+#include <lib/bootargs.h>
 #include <lib/bootimg.h>
 #include <lib/bootmode.h>
 #include <lib/common.h>
