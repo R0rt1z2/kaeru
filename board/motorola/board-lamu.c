@@ -24,6 +24,12 @@ static int is_brom_cmd_disabled(void) {
     return (*(volatile uint32_t *)(0x11CE0060) >> 8) & 1;
 }
 
+static void mt_disp_show_boot_logo(void) {
+    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0x4820, 0x2283, 0x4920, 0xE92D);
+    if (addr)
+        ((void (*)(void))(addr | 1))();
+}
+
 static void handle_recovery_boot(void) {
     if (get_bootmode() != BOOTMODE_RECOVERY || !is_spoofing_enabled())
         return;
@@ -242,6 +248,17 @@ void board_early_init(void) {
         PATCH_CALL(addr, (void*)spoof_lock_state, TARGET_THUMB);
     }
 
+    // Get rid of the stock fastboot mode string that appears on the
+    // screen for less than 2 seconds before the fastboot UI takes over.
+    //
+    // This is useless and will cause confusion with our custom bootmode
+    // handling based on volume key combos, so we remove it entirely.
+    char* s = SEARCH_STRING(" => FASTBOOT mode...\n");
+    if (s) {
+        printf("Found fastboot string at 0x%08X\n", (uint32_t)(uintptr_t)s);
+        s[0] = '\0';
+    }
+
     fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 0);
     fastboot_publish("brom-usbdl-disabled", is_brom_cmd_disabled() == 1 ? "yes" : "no");
 }
@@ -251,11 +268,33 @@ void board_late_init(void) {
 
     uint32_t addr = 0;
 
+    // The stock bootloader has the worst key combo handling I've ever seen.
+    // It works whenever it feels like it, making it a nightmare to enter
+    // recovery or fastboot mode through key combos.
+    //
+    // This patch restores expected behavior:
+    // - Volume Up -> Recovery
+    // - Volume Down -> Fastboot
+    if (mtk_detect_key(VOLUME_UP)) {
+        mt_disp_show_boot_logo();
+        set_bootmode(BOOTMODE_RECOVERY);
+    } else if (mtk_detect_key(VOLUME_DOWN)) {
+        set_bootmode(BOOTMODE_FASTBOOT);
+    }
+
     // The stock bootloader ignores boot commands written to the misc partition,
     // making it impossible to programmatically reboot into fastboot or recovery.
     // We implement our own misc parsing so tools like mtkclient or Penumbra can
     // trigger these modes automatically by writing to misc before rebooting.
     parse_bootloader_messages();
+
+    bootmode_t mode = get_bootmode();
+    if (mode != BOOTMODE_NORMAL
+        && mode != BOOTMODE_POWEROFF_CHARGING &&  !is_unknown_mode(mode)) {
+        // Show the current boot mode on screen when not performing a normal boot.
+        // This is standard behavior in many LK images, but not in this one by default.
+        show_bootmode(mode);
+    }
 
     // On unlocked devices, LK shows an orange state warning during boot
     // that also introduces an unnecessary 5 second delay. Forcing the
