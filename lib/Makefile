@@ -1,5 +1,5 @@
 lib-y += debug.o
-lib-y += common.o bootmode.o fastboot.o
+lib-y += common.o bootmode.o fastboot.o recovery.o
 lib-y += libc/string.o
 
 lib-$(CONFIG_THREAD_SUPPORT) += thread.o

@@ -56,24 +56,15 @@ void parse_bootloader_messages(void) {
     printf("Read bootloader command: %s\n", misc_msg.command);
 #endif
 
-    if (strncmp(misc_msg.command, "boot-recovery", 13) == 0) {
-        printf("Found boot-recovery, forcing recovery\n");
-        set_bootmode(BOOTMODE_RECOVERY);
-        memset(&misc_msg, 0, sizeof(misc_msg));
-        partition_write("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg));
-    }
-    else if (strncmp(misc_msg.command, "boot-bootloader", 15) == 0) {
-        printf("Found boot-bootloader, forcing fastboot\n");
-        set_bootmode(BOOTMODE_FASTBOOT);
-        memset(&misc_msg, 0, sizeof(misc_msg));
-        partition_write("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg));
-    }
-    else if (strncmp(misc_msg.command, "bootonce-bootloader", 19) == 0) {
-        printf("Found bootonce-bootloader, forcing fastboot\n");
-        set_bootmode(BOOTMODE_FASTBOOT);
-        memset(&misc_msg, 0, sizeof(misc_msg));
-        partition_write("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg));
-    }
+    bootmode_t mode = misc_command_to_bootmode(misc_msg.command);
+    if (mode == BOOTMODE_NORMAL)
+        return;
+
+    printf("Found '%s', forcing %s\n", misc_msg.command, bootmode2str(mode));
+    set_bootmode(mode);
+
+    memset(&misc_msg, 0, sizeof(misc_msg));
+    partition_write("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg));
 }
 
 static void spoof_lock_state(void) {

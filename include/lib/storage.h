@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: 2025 Roger Ortiz <roger@r0rt1z2.com>
+// SPDX-FileCopyrightText: 2026 Roger Ortiz <roger@r0rt1z2.com>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
@@ -49,9 +49,3 @@ struct device_t {
 };
 
 #endif
-
-struct misc_message {
-    char command[32];
-    char status[32];
-    char recovery[1024];
-};
