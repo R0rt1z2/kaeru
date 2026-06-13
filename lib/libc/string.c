@@ -269,6 +269,15 @@ size_t strlen(const char* str) {
     return (s - str);
 }
 
+size_t strnlen(char const *s, size_t count)
+{
+	const char *sc;
+
+	for(sc = s; count-- && *sc != '\0'; ++sc)
+		;
+	return sc - s;
+}
+
 unsigned short strtou16(const char* str) {
     unsigned short result = 0;
 

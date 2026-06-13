@@ -46,6 +46,7 @@ void *memmem(const void *haystack, size_t hlen, const void *needle, size_t nlen)
 int strcmp(const char* s1, const char* s2);
 char* strchr(const char* s, int c);
 size_t strlen(const char* str);
+size_t strnlen(char const *s, size_t count);
 int strncmp(const char* s1, const char* s2, size_t n);
 char* strstr(const char* h, const char* n);
 unsigned long strtoul(const char* nptr, char** endptr, register int base);
