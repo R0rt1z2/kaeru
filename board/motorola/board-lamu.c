@@ -259,6 +259,12 @@ void board_late_init(void) {
 
     uint32_t addr = 0;
 
+    // The stock bootloader ignores boot commands written to the misc partition,
+    // making it impossible to programmatically reboot into fastboot or recovery.
+    // We implement our own misc parsing so tools like mtkclient or Penumbra can
+    // trigger these modes automatically by writing to misc before rebooting.
+    parse_bootloader_messages();
+
     // The stock bootloader has the worst key combo handling I've ever seen.
     // It works whenever it feels like it, making it a nightmare to enter
     // recovery or fastboot mode through key combos.
@@ -272,12 +278,6 @@ void board_late_init(void) {
     } else if (mtk_detect_key(VOLUME_DOWN)) {
         set_bootmode(BOOTMODE_FASTBOOT);
     }
-
-    // The stock bootloader ignores boot commands written to the misc partition,
-    // making it impossible to programmatically reboot into fastboot or recovery.
-    // We implement our own misc parsing so tools like mtkclient or Penumbra can
-    // trigger these modes automatically by writing to misc before rebooting.
-    parse_bootloader_messages();
 
     bootmode_t mode = get_bootmode();
     if (mode != BOOTMODE_NORMAL
