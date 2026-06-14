@@ -15,3 +15,6 @@
 void arch_clean_cache_range(uintptr_t start, size_t len);
 void arch_clean_invalidate_cache_range(uintptr_t start, size_t len);
 void arch_sync_cache_range(uintptr_t start, uint32_t size);
+
+void enable_unaligned(void);
+void disable_unaligned(void);

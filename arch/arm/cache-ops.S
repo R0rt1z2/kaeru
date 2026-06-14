@@ -47,4 +47,24 @@ arch_sync_cache_range:
 
     pop     {pc}
 
+.global enable_unaligned
+.thumb_func
+enable_unaligned:
+    mrc     p15, 0, r0, c1, c0, 0
+    bic     r0, r0, #2
+    mcr     p15, 0, r0, c1, c0, 0
+    dsb
+    isb
+    bx      lr
+
+.global disable_unaligned
+.thumb_func
+disable_unaligned:
+    mrc     p15, 0, r0, c1, c0, 0
+    orr     r0, r0, #2
+    mcr     p15, 0, r0, c1, c0, 0
+    dsb
+    isb
+    bx      lr
+
 .section .note.GNU-stack, "", %progbits
