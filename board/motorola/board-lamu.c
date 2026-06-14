@@ -20,6 +20,13 @@ long partition_write(const char* part_name, long long offset, uint8_t* data, siz
     return -1;
 }
 
+bool cmdline_append(const char *append_string) {
+    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x41F0, 0x4676, 0x4C22);
+    if (addr)
+        return ((bool (*)(const char*))(addr | 1))(append_string);
+    return false;
+}
+
 static int is_brom_cmd_disabled(void) {
     return (*(volatile uint32_t *)(0x11CE0060) >> 8) & 1;
 }
@@ -67,8 +74,42 @@ void parse_bootloader_messages(void) {
     partition_write("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg));
 }
 
-static void spoof_lock_state(void) {
+static int is_uart_enabled(void) {
+    const char *val = get_env(KAERU_ENV_UART_ENABLE);
+    return val && strcmp(val, "1") == 0;
+}
+
+static void post_env_process(void) {
     uint32_t addr = 0;
+
+    int uart_enable = is_uart_enabled();
+    if (uart_enable) {
+        printf("UART is enabled, patching out UART disable checks.\n");
+
+        addr = SEARCH_PATTERN(LK_START, LK_END, 0x4A11, 0x4B12, 0x447A, 0x58D3);
+        if (addr) {
+            printf("Found putchar at 0x%08X\n", addr);
+            NOP(addr + 0x0C, 1);
+            NOP(addr + 0x10, 1);
+            NOP(addr + 0x18, 1);
+        }
+
+        char *p = SEARCH_STRING("mtk_printk_ctrl.disable_uart=1");
+        if (p) {
+            printf("Found mtk_printk_ctrl.disable_uart=1 at 0x%08X\n", (uint32_t)p);
+            p[sizeof("mtk_printk_ctrl.disable_uart=1") - 2] = '0';
+            arch_sync_cache_range((uint32_t)p, 4);
+        }
+
+        p = SEARCH_STRING("printk.disable_uart=1");
+        if (p) {
+            printf("Found printk.disable_uart=1 at 0x%08X\n", (uint32_t)p);
+            p[sizeof("printk.disable_uart=1") - 2] = '0';
+            arch_sync_cache_range((uint32_t)p, 4);
+        }
+
+        cmdline_append("console=ttyS0,921600n1");
+    }
 
     // On most MediaTek devices, lock state is fetched by calling
     // seccfg_get_lock_state() directly. Some vendors (e.g. Xiaomi)
@@ -236,7 +277,7 @@ void board_early_init(void) {
     addr = SEARCH_PATTERN(LK_START, LK_END, ENV_INIT_DONE_PATTERN);
     if (addr) {
         printf("Found env_init_done at 0x%08X\n", addr);
-        PATCH_CALL(addr, (void*)spoof_lock_state, TARGET_THUMB);
+        PATCH_CALL(addr, (void*)post_env_process, TARGET_THUMB);
     }
 
     // Get rid of the stock fastboot mode string that appears on the

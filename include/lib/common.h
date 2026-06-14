@@ -11,6 +11,7 @@
 #include <stdbool.h>
 
 #define KAERU_ENV_BLDR_SPOOF "kaeru_bootloader_spoof_status"
+#define KAERU_ENV_UART_ENABLE "kaeru_uart_enable"
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
