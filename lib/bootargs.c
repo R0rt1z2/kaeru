@@ -3,12 +3,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
+#include <arch/cache.h>
 #include <lib/bootargs.h>
 #include <lib/common.h>
 #include <lib/debug.h>
 
-bool cmdline_replace(char *cmdline, const char *param,
-                     const char *old, const char *new) {
+static bool do_cmdline_replace(char *cmdline, const char *param,
+                               const char *old, const char *new) {
     if (!cmdline)
         return false;
 
@@ -40,4 +41,12 @@ bool cmdline_replace(char *cmdline, const char *param,
     memcpy(value, new, new_len);
     printf("Patched %s: %s -> %s\n", param, old, new);
     return true;
+}
+
+bool cmdline_replace(char *cmdline, const char *param,
+                     const char *old, const char *new) {
+    uint32_t prev = enable_unaligned();
+    bool ret = do_cmdline_replace(cmdline, param, old, new);
+    restore_unaligned(prev);
+    return ret;
 }
