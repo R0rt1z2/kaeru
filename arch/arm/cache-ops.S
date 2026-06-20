@@ -50,19 +50,21 @@ arch_sync_cache_range:
 .global enable_unaligned
 .thumb_func
 enable_unaligned:
-    mrc     p15, 0, r0, c1, c0, 0
-    bic     r0, r0, #2
-    mcr     p15, 0, r0, c1, c0, 0
+    mrc     p15, 0, r1, c1, c0, 0
+    and     r0, r1, #2
+    bic     r1, r1, #2
+    mcr     p15, 0, r1, c1, c0, 0
     dsb
     isb
     bx      lr
 
-.global disable_unaligned
+.global restore_unaligned
 .thumb_func
-disable_unaligned:
-    mrc     p15, 0, r0, c1, c0, 0
-    orr     r0, r0, #2
-    mcr     p15, 0, r0, c1, c0, 0
+restore_unaligned:
+    mrc     p15, 0, r1, c1, c0, 0
+    bic     r1, r1, #2
+    orr     r1, r1, r0
+    mcr     p15, 0, r1, c1, c0, 0
     dsb
     isb
     bx      lr
