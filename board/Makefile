@@ -77,3 +77,4 @@ lib-$(CONFIG_OPPO_CPH2015) += oppo/board-CPH2015.o
 lib-$(CONFIG_OPPO_CPH2185) += oppo/board-CPH2185.o
 lib-$(CONFIG_LAVA_LXX503) += lava/board-LXX503.o
 lib-$(CONFIG_HUAWEI_DURA2) += huawei/board-dura2.o
+lib-$(CONFIG_NUU_N5004LA) += nuu/board-N5004LA.o
