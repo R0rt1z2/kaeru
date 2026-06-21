@@ -7,6 +7,16 @@
 # expect to learn how to build the kernel reading this file.
 
 KAERU_VERSION ?= 2.0.0
+
+ifeq ($(origin KAERU_GIT_SHA), undefined)
+KAERU_GIT_SHA := $(shell git rev-parse --short HEAD 2>/dev/null)
+ifneq ($(KAERU_GIT_SHA),)
+KAERU_GIT_SHA := $(KAERU_GIT_SHA)$(shell git diff --quiet 2>/dev/null || echo -dirty)
+endif
+endif
+ifneq ($(KAERU_GIT_SHA),)
+KAERU_VERSION := $(KAERU_VERSION)-g$(KAERU_GIT_SHA)
+endif
 export KAERU_VERSION
 
 KAERU_DEBUG ?= 0

@@ -14,6 +14,8 @@ RUN apt-get update || true && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+RUN git config --global --add safe.directory '*'
+
 RUN ln -s /usr/bin/python3 /usr/bin/python
 COPY utils/requirements.txt /tmp/requirements.txt
 RUN pip install --break-system-packages -r /tmp/requirements.txt

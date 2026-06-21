@@ -90,7 +90,7 @@ void switch_spoof_status(void) {
 static void fastboot_ui_info(void) {
     const char* title = "FASTBOOT MODE (kaeru)";
 
-    static char kaeru_version[32];
+    static char kaeru_version[64];
     static char spoofing_status[32];
 
     npf_snprintf(kaeru_version, sizeof(kaeru_version), "Kaeru version: %s", KAERU_VERSION);
