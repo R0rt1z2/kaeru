@@ -37,7 +37,8 @@ def encode_bl(src, dst):
 
 def patch_bss(partition: LkPartition, payload_size: int) -> None:
     bss_start = partition.header.data_size + partition.lk_address
-    position = partition.data.find(struct.pack('<I', bss_start))
+    data = bytearray(partition.data)
+    position = data.find(struct.pack('<I', bss_start))
     dest_addr = (bss_start + payload_size + 3) & ~3
 
     # This should be fatal regardless of the injection method, because we
@@ -46,9 +47,10 @@ def patch_bss(partition: LkPartition, payload_size: int) -> None:
         exit('ERROR: Unable to find BSS markers!')
 
     while position > 0:
-        partition.data[position : position + 4] = struct.pack('<I', dest_addr)
-        position = partition.data.find(struct.pack('<I', bss_start))
+        data[position : position + 4] = struct.pack('<I', dest_addr)
+        position = data.find(struct.pack('<I', bss_start))
 
+    partition.data = bytes(data)
     return bss_start
 
 
@@ -148,7 +150,9 @@ def main() -> None:
     shellcode = encode_bl(plic, payload_dest)
 
     print('File offset: 0x%X' % offset)
-    part.data[offset : offset + len(shellcode)] = shellcode
+    data = bytearray(part.data)
+    data[offset : offset + len(shellcode)] = shellcode
+    part.data = bytes(data)
 
     lk._rebuild_contents()
     lk.save(args.output if args.output else ('%s-patched.bin' % device))
