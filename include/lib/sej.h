@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-extern uintptr_t hacc_base;
+extern volatile uintptr_t hacc_base;
 
 static inline volatile uint32_t* SEJ_REG(uint32_t offset) {
     return (volatile uint32_t*)(hacc_base + offset);
@@ -177,10 +177,10 @@ typedef struct {
 #define MASKREG32(x, y, z)  OUTREG32(x, (INREG32(x)&~(y))|(z))
 
 extern sej_ctx_t g_sej_ctx;
-extern const unsigned int g_HACC_CFG_1[8];
-extern const unsigned int g_HACC_CFG_2[8];
-extern const unsigned int g_HACC_CFG_3[8];
-extern const uint32_t G_CFG_RANDOM_PATTERN[12];
+extern const uint32_t g_HACC_CFG_1[8];
+extern const uint32_t g_HACC_CFG_2[8];
+extern const uint32_t g_HACC_CFG_3[8];
+extern const uint32_t G_CFG_RANDOM_PATTERN[3][4];
 extern const uint8_t DEFAULT_IV[16];
 extern const uint8_t DEFAULT_KEY[32];
 

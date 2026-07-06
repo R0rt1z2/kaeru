@@ -12,23 +12,23 @@ uint32_t g_UnqKey_IV[8] = {0x6786CFBD, 0x44B7F1E0, 0x1544B07B, 0x53A28EB3, 0xD7A
 
 sej_ctx_t g_sej_ctx;
 
-const uint32_t G_CFG_RANDOM_PATTERN[12] = {
-    0x2D44BB70, 0xA744D227, 0xD0A9864B, 0x83FFC244,
-    0x7EC8266B, 0x43E80FB2, 0x01A6348A, 0x2067F9A0,
-    0x54536405, 0xD546A6B1, 0x1CC3EC3A, 0xDE377A83
+const uint32_t G_CFG_RANDOM_PATTERN[3][4] = {
+    { 0x2D44BB70, 0xA744D227, 0xD0A9864B, 0x83FFC244 },
+    { 0x7EC8266B, 0x43E80FB2, 0x01A6348A, 0x2067F9A0 },
+    { 0x54536405, 0xD546A6B1, 0x1CC3EC3A, 0xDE377A83 }
 };
 
-const unsigned int g_HACC_CFG_1[8] = {
+const uint32_t g_HACC_CFG_1[8] = {
 	0x9ED40400, 0x00E884A1, 0xE3F083BD, 0x2F4E6D8A,
 	0xFF838E5C, 0xE940A0E3, 0x8D4DECC6, 0x45FC0989
 };
 
-const unsigned int g_HACC_CFG_2[8] = {
+const uint32_t g_HACC_CFG_2[8] = {
 	0xAA542CDA, 0x55522114, 0xE3F083BD, 0x55522114,
 	0xAA542CDA, 0xAA542CDA, 0x55522114, 0xAA542CDA
 };
 
-const unsigned int g_HACC_CFG_3[8] = {
+const uint32_t g_HACC_CFG_3[8] = {
 	0x2684B690, 0xEB67A8BE, 0xA113144C, 0x177B1215,
 	0x168BEE66, 0x1284B684, 0xDF3BCE3A, 0x217F6FA2
 };
@@ -48,25 +48,27 @@ const uint8_t DEFAULT_KEY[32] = {
 };
 
 
-uintptr_t hacc_base = 0x1000A000;
+volatile uintptr_t hacc_base = 0x1000A000;
 
 int32_t toSigned32(uint32_t n){
     n = n & 0xffffffff;
     return n | (-(n & 0x80000000));
 }
 
-static uint32_t get_world_clock_value(void){
-    return INREG32(0x10017008);
-}
-
-int32_t check_timeout(const uint32_t clockvalue, int32_t timeout){
-    uint32_t tmp = -clockvalue;
-    const uint32_t curtime = get_world_clock_value();
-    if (curtime < clockvalue){
-        tmp = ~clockvalue;
-    }
-    return tmp + get_world_clock_value() >= ((uint32_t)timeout)*1000*13;
-}
+#define readl_poll_timeout(addr, val, cond, timeout_us) \
+({ \
+    uint64_t __timeout = (timeout_us); \
+    int __ret = -1; \
+    for (uint64_t __i = 0; __i < __timeout; __i++) { \
+        (val) = *(volatile uint32_t *)(addr); \
+        if (cond) { \
+            __ret = 0; \
+            break; \
+        } \
+        for (volatile int __d = 0; __d < 100; __d++); \
+    } \
+    __ret; \
+})
 
 #define NULL 0
 
@@ -100,7 +102,7 @@ void SEJ_V3_init(bool encrypt, const uint32_t* iv, bool legacy) {
         val = INREG32(SEJ_ACON2) | 0x40000000;
         OUTREG32(SEJ_ACON2, val);
 
-        while(!(INREG32(SEJ_ACON2) > 0x80000000));
+        readl_poll_timeout(SEJ_ACON2, val, (val & 0x80000000), 80000);
 
         val = INREG32(SEJ_UNK) & 0xFFFFFFFE;
         OUTREG32(SEJ_UNK, val);
@@ -112,13 +114,11 @@ void SEJ_V3_init(bool encrypt, const uint32_t* iv, bool legacy) {
         // OUTREG32(SEJ_UNK, 1);
 
         // Derives a patterns based from HUID
-        for (int i = 0; i < 3; i++) {
-            const uint32_t* pattern_block = &G_CFG_RANDOM_PATTERN[i * 4];
-
-            OUTREG32(SEJ_ASRC0, pattern_block[0]);
-            OUTREG32(SEJ_ASRC1, pattern_block[1]);
-            OUTREG32(SEJ_ASRC2, pattern_block[2]);
-            OUTREG32(SEJ_ASRC3, pattern_block[3]);
+        for (uint32_t i = 0; i < 3; i++) {
+            OUTREG32(SEJ_ASRC0, G_CFG_RANDOM_PATTERN[i][0]);
+            OUTREG32(SEJ_ASRC1, G_CFG_RANDOM_PATTERN[i][1]);
+            OUTREG32(SEJ_ASRC2, G_CFG_RANDOM_PATTERN[i][2]);
+            OUTREG32(SEJ_ASRC3, G_CFG_RANDOM_PATTERN[i][3]);
 
             OUTREG32(SEJ_ACON2, SEJ_AES_START);
             while(!(INREG32(SEJ_ACON2) & SEJ_AES_RDY));
