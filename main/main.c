@@ -8,7 +8,6 @@
 #include <main/main.h>
 
 void kaeru_late_init(void) {
-    OPTIONAL_INIT(sej_init);
     OPTIONAL_INIT(framebuffer_init);
 
     board_late_init();
@@ -26,6 +25,8 @@ void kaeru_late_init(void) {
 // the rodata section of the bootloader to point to our late init
 // function, so that we can take control before mt_boot_init() runs.
 void kaeru_early_init(void) {
+    OPTIONAL_INIT(sej_init);
+
     uint32_t search_val = CONFIG_APP_ADDRESS | 1;
     uint32_t start = CONFIG_BOOTLOADER_BASE;
     uint32_t end = CONFIG_BOOTLOADER_BASE + CONFIG_BOOTLOADER_SIZE;

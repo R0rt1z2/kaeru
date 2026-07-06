@@ -20,6 +20,33 @@ long partition_write(const char* part_name, long long offset, uint8_t* data, siz
     return -1;
 }
 
+static void seccfg_unlock(void) {
+    static SecCfgV4 cfg __attribute__((aligned(16)));
+
+    if (partition_read("seccfg", 0, (uint8_t*)&cfg, sizeof(cfg)) < 0) {
+        printf("Unable to read seccfg partition, skipping unlock\n");
+        return;
+    }
+
+    int ret = seccfg_apply_unlock(&cfg);
+    if (ret < 0) {
+        printf("Invalid seccfg partition, magic: 0x%08X, end_magic: 0x%08X\n",
+               cfg.magic, cfg.end_magic);
+        return;
+    }
+    if (ret == 0) {
+        printf("Device is already unlocked, skipping seccfg write\n");
+        return;
+    }
+
+    if (partition_write("seccfg", 0, (uint8_t*)&cfg, sizeof(cfg)) < 0) {
+        printf("Failed to write seccfg partition, device may not be unlocked\n");
+        return;
+    }
+
+    printf("Successfully unlocked device via seccfg\n");
+}
+
 bool cmdline_append(const char *append_string) {
     uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x41F0, 0x4676, 0x4C22);
     if (addr)
@@ -216,6 +243,11 @@ void board_early_init(void) {
     printf("Entering early init for %s\n", DEVICE_MODEL);
 
     uint32_t addr = 0;
+
+    // Reaching this point via the cert bypass only means our LK booted, the
+    // device itself can still be locked as far as seccfg is concerned. Flip
+    // it to unlocked here so the state actually sticks across reboots.
+    seccfg_unlock();
 
     // Regardless of whether spoofing is enabled, we always need to
     // disable image authentication. The user may just be using this
