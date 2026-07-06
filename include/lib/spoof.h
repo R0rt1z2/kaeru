@@ -7,7 +7,7 @@
 
 #include <lib/string.h>
 #include <lib/environment.h>
-#include <lib/lock_state.h>
+#include <lib/security/seccfg.h>
 #include <lib/fastboot.h>
 
 int is_spoofing_enabled(void);

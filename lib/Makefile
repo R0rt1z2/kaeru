@@ -13,3 +13,4 @@ lib-$(CONFIG_FONT_8X8_COMIC_FANS) += framebuffer/fonts/font_8x8_comic_fans.o
 
 lib-$(CONFIG_SEJ_SUPPORT) += crypto/xor.o crypto/sha256.o
 lib-$(CONFIG_SEJ_SUPPORT) += security/sej/sej.o security/sej/sej_hk.o security/sej/sej_sk.o
+lib-$(CONFIG_SEJ_SUPPORT) += security/seccfg.o
