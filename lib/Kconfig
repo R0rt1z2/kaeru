@@ -250,7 +250,7 @@ menu "Logging Options"
 endmenu
 
 menu "Third party libraries"
-    config LIBSEJ_SUPPORT
+    config SEJ_SUPPORT
         bool "Enable libsej support"
         default n
         help

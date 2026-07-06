@@ -27,7 +27,7 @@
 #include <lib/framebuffer.h>
 #endif
 
-#ifdef CONFIG_LIBSEJ_SUPPORT
+#ifdef CONFIG_SEJ_SUPPORT
 #include <lib/sej.h>
 #endif
 
