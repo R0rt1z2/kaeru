@@ -257,3 +257,16 @@ menu "Third party libraries"
           Say Y to enable libsej support, allowing to interact with
           the device crypto engine.
 endmenu
+
+menu "Image Patching"
+    config CERT_BYPASS
+        bool "Enable certificate bypass"
+        default n
+        help
+          Say Y to re-sign the partitions modified during injection so the
+          patched image passes the bootloader's certificate verification on
+          SBC enabled devices.
+
+          This has no effect on images that don't carry a cert2, so it is
+          safe to leave enabled.
+endmenu

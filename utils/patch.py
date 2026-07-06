@@ -10,6 +10,7 @@ from pathlib import Path
 
 from liblk import LkImage
 from liblk.structures import LkPartition
+from liblk.structures.certificate import Certificate
 
 
 class DeviceConfig:
@@ -52,6 +53,51 @@ def patch_bss(partition: LkPartition, payload_size: int) -> None:
 
     partition.data = bytes(data)
     return bss_start
+
+
+# https://github.com/R0rt1z2/lkpatcher/blob/master/lkpatcher/cert_bypass.py
+def build_bypass_cert2(
+    original_cert2: bytes, header_hash: bytes, image_hash: bytes
+) -> bytes:
+    cert = Certificate.from_bytes(original_cert2)
+    override = cert.build_hash_override_block(header_hash, image_hash)
+    return override + bytes(original_cert2)
+
+
+def apply_cert_bypass(image: LkImage) -> list:
+    # Re-sign every partition whose contents no longer match its cert2.
+    signed = []
+
+    for name, partition in image.partitions.items():
+        if partition.cert2 is None:
+            continue
+
+        status = partition.matches_cert2()
+
+        # An unparseable cert2 usually means the bypass was already applied,
+        # so there's nothing left for us to do here.
+        if status is None:
+            print(
+                "Warning: partition '%s' has an unparseable cert2 "
+                '(already bypassed?), skipping' % name
+            )
+            continue
+
+        # The certificate still matches, meaning the partition wasn't
+        # modified. Leave its signature intact.
+        if status:
+            continue
+
+        header_hash, image_hash = partition.compute_hashes()
+        original = bytes(partition.cert2.data)
+        partition.cert2.data = build_bypass_cert2(
+            original, header_hash, image_hash
+        )
+
+        print("Re-signed modified partition '%s'" % name)
+        signed.append(name)
+
+    return signed
 
 
 def main() -> None:
@@ -153,6 +199,14 @@ def main() -> None:
     data = bytearray(part.data)
     data[offset : offset + len(shellcode)] = shellcode
     part.data = bytes(data)
+
+    # Now that every modification is in place, forge new certificates for the
+    # partitions we touched so the image survives verification on SBC enabled
+    # devices.
+    if config.get('CERT_BYPASS') == 'y':
+        signed = apply_cert_bypass(lk)
+        if not signed:
+            print('No partitions required re-signing (no cert2 present?)')
 
     lk._rebuild_contents()
     lk.save(args.output if args.output else ('%s-patched.bin' % device))
