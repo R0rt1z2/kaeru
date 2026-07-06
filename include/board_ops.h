@@ -27,10 +27,6 @@
 #include <lib/framebuffer.h>
 #endif
 
-#ifdef CONFIG_SEJ_SUPPORT
-#include <lib/sej.h>
-#endif
-
 #ifdef CONFIG_SPOOF_SUPPORT
 #include <lib/spoof.h>
 #endif

@@ -1,9 +1,11 @@
-// Copyright 2024 (c) B.Kerler
-// Copyright 2025 (c) Shomy
-// Use of this source code is governed by a GPLv3 license, see LICENSE.txt.
+//
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2025-2026 Shomy
+//
 
 #ifndef SEJ_H
 #define SEJ_H
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -18,11 +20,6 @@ static inline volatile uint32_t* SEJ_REG(uint32_t offset) {
 #define HACC_AES_TEST_SRC            (0x02000000)
 #define HACC_AES_TEST_TMP            (0x02100000)
 #define HACC_AES_TEST_DST            (0x02200000)
-
-#define HACC_CFG_0                    (0x5a5a3257)	/* CHECKME */
-#define HACC_CFG_1                    (0x66975412)	/* CHECKME */
-#define HACC_CFG_2                    (0x66975412)	/* CHECKME */
-#define HACC_CFG_3                    (0x5a5a3257)	/* CHECKME */
 
 #define SEJ_CON                     SEJ_REG(0x0000)
 #define SEJ_ACON                    SEJ_REG(0x0004)
@@ -60,7 +57,17 @@ static inline volatile uint32_t* SEJ_REG(uint32_t offset) {
 #define SEJ_SECINIT1                SEJ_REG(0x0084)
 #define SEJ_SECINIT2                SEJ_REG(0x0088)
 #define SEJ_MKJ                     SEJ_REG(0x00a0)
-#define SEJ_UNK                     SEJ_REG(0x00bc)
+#define SEJ_ACONK2                  SEJ_REG(0x00bc)
+#define SEJ_RCON                    SEJ_REG(0x0100)
+#define SEJ_RCON2                   SEJ_REG(0x0104)
+#define SEJ_RNG_IV0                 SEJ_REG(0x0110)
+#define SEJ_RNG_IV1                 SEJ_REG(0x0114)
+#define SEJ_RNG_IV2                 SEJ_REG(0x0118)
+#define SEJ_RNG_IV3                 SEJ_REG(0x011c)
+#define SEJ_RNG_OUT0                SEJ_REG(0x0120)
+#define SEJ_RNG_OUT1                SEJ_REG(0x0124)
+#define SEJ_RNG_OUT2                SEJ_REG(0x0128)
+#define SEJ_RNG_OUT3                SEJ_REG(0x012c)
 
 /* AES */
 #define SEJ_AES_DEC                 0x00000000
@@ -78,75 +85,75 @@ static inline volatile uint32_t* SEJ_REG(uint32_t offset) {
 #define SEJ_AES_START               0x00000001
 #define SEJ_AES_CLR                 0x00000002
 #define SEJ_AES_RDY                 0x00008000
+#define SEJ_AES_KDF_START           0x40000000
+#define SEJ_KDF_RDY                 0x80000000
 
 /* AES key relevant */
 #define SEJ_AES_BK2C                0x00000010
 #define SEJ_AES_R2K                 0x00000100
+#define SEJ_AES_OLD_BK2C            0x00000001
+#define SEJ_HRK_EN                  0x00000002
+#define SEJ_HRK_DIS                 0x00000000
 
 /* SECINIT magic */
 #define SEJ_SECINIT0_MAGIC          0xAE0ACBEA
 #define SEJ_SECINIT1_MAGIC          0xCD957018
 #define SEJ_SECINIT2_MAGIC          0x46293911
 
+/* RNG */
+#define SEJ_RNG_SRC_EN              0x00000001
+#define SEJ_RNG_SRC_IV              0x00000004
+#define SEJ_RNG_MOD_DIS             0x00000000
+#define SEJ_RNG_MOD_EN              0x00000002
+#define SEJ_RNG_START               0x00000001
+#define SEJ_RNG_RDY                 0x00008000
 
-/******************************************************************************
- * CONSTANT DEFINITIONS
- ******************************************************************************/
 #define SEJ_AES_MAX_KEY_SZ          (32)
-#define AES_CFG_SZ                   (16)
+#define AES_CFG_SZ                  (16)
 #define AES_BLK_SZ                  (16)
 #define SEJ_HW_KEY_SZ               (16)
-#define _CRYPTO_SEED_LEN            (16)
 
 /******************************************************************************
  * TYPE DEFINITIONS
  ******************************************************************************/
 typedef enum {
-	AES_ECB_MODE,
-	AES_CBC_MODE
-} AES_MODE;
+    AES_ECB_MODE,
+    AES_CBC_MODE
+} __attribute__((packed)) AES_MODE;
 
 typedef enum {
-	AES_DEC,
-	AES_ENC
-} AES_OPS;
+    AES_DEC,
+    AES_ENC
+} __attribute__((packed)) AES_OPS;
 
 typedef enum {
-	AES_KEY_128 = 16,
-	AES_KEY_192 = 24,
-	AES_KEY_256 = 32
-} AES_KEY_SZ;
+    AES_KEY_128 = 0,
+    AES_KEY_192 = 1,
+    AES_KEY_256 = 2,
+} __attribute__((packed)) AES_KEY_SZ;
 
 typedef enum {
-	AES_SW_KEY,
-	AES_HW_KEY,
-	AES_HW_WRAP_KEY,
-	AES_RID_KEY,
-	AES_CUSTOM_KEY
-} AES_KEY_ID;
+    AES_SW_KEY,
+    AES_HW_KEY,
+    AES_HW_WRAP_KEY,
+    AES_RID_KEY,
+    AES_CUSTOM_KEY
+} __attribute__((packed)) AES_KEY_ID;
 
 typedef struct {
-	unsigned char config[AES_CFG_SZ];
+    unsigned char config[AES_CFG_SZ];
 } AES_CFG;
 
 typedef struct {
-	unsigned int size;
-	unsigned char seed[SEJ_AES_MAX_KEY_SZ];
+    unsigned int size;
+    unsigned char seed[SEJ_AES_MAX_KEY_SZ];
 } AES_KEY_SEED;
 
 enum cryptmode_t {
-    SW_ENCRYPTED = 0,
-    HW_ENCRYPTED = 1,
+    SW_ENCRYPTED    = 0,
+    HW_ENCRYPTED    = 1,
     HW_ENCRYPTED_5G = 2,
-    UNLOCK = 3
-};
-
-struct SymKey {
-    uint32_t* key;
-    uint8_t key_len;
-    uint8_t mode;
-    uint32_t* iv;
-    uint8_t iv_len;
+    UNLOCK          = 3
 };
 
 typedef struct {
@@ -162,45 +169,56 @@ typedef struct {
     uint8_t rid_key[SEJ_AES_MAX_KEY_SZ];
     uint8_t custom_key[SEJ_AES_MAX_KEY_SZ];
     uint8_t use_custom_iv;
+    bool legacy;
 } sej_ctx_t;
 
-#define READ_REGISTER_UINT32(reg) \
-	(*(volatile unsigned int * const)(reg))
+typedef struct {
+    uint32_t length;
 
-#define WRITE_REGISTER_UINT32(reg, val) \
-	((*(volatile unsigned int * const)(reg)) = (val))
+    AES_OPS encrypt;
+    bool anti_clone;
+    bool xor_en;
+    bool legacy;
 
-#define INREG32(x)          READ_REGISTER_UINT32((unsigned int *)((void *)(x)))
-#define OUTREG32(x, y)      WRITE_REGISTER_UINT32((unsigned int *)((void *)(x)), (unsigned int)(y))
-#define SETREG32(x, y)      OUTREG32(x, INREG32(x)|(y))
-#define CLRREG32(x, y)      OUTREG32(x, INREG32(x)&~(y))
-#define MASKREG32(x, y, z)  OUTREG32(x, (INREG32(x)&~(y))|(z))
+    AES_MODE mode;
+    AES_KEY_ID key_id;
+    AES_KEY_SZ key_sz;
+    uint8_t reserved;
+} sej_param_t;
 
 extern sej_ctx_t g_sej_ctx;
-extern const uint32_t g_HACC_CFG_1[8];
-extern const uint32_t g_HACC_CFG_2[8];
-extern const uint32_t g_HACC_CFG_3[8];
-extern const uint32_t G_CFG_RANDOM_PATTERN[3][4];
+extern const uint32_t g_AC_FIXED_PATTERN[3][4];
+extern const uint32_t g_AC_BOOTROM_IV[8];
 extern const uint8_t DEFAULT_IV[16];
 extern const uint8_t DEFAULT_KEY[32];
 
-
-void SEJ_V3_init(bool encrypt, const uint32_t* iv, bool legacy);
+void SEJ_V3_init(AES_OPS encrypt, const uint32_t* iv);
 void SEJ_V3_Run(volatile uint32_t* p_src, uint32_t length, volatile uint32_t* p_dst);
 void SEJ_V3_Terminate(void);
+void sej_aes_kdf(bool hrk256);
+void sej_aes_old_bk2c_key(void);
 
-int32_t sej_set_otp(uint32_t* otp);
+uint32_t sej_set_otp(uint32_t* otp);
+void sej_clear_otp(void);
 uint32_t sej_set_iv(AES_IV* iv);
-uint32_t sej_set_custom_key(uint8_t* key, uint32_t size);
 uint32_t sej_set_custom_iv(AES_IV* iv, uint32_t size);
+void sej_clear_custom_iv(void);
 uint32_t sej_set_custom_key(uint8_t* key, uint32_t size);
+void sej_clear_custom_key(void);
 
-int sej_set_key(AES_KEY_ID id,AES_KEY_SZ key);
 int sej_do_aes(AES_OPS ops, uint8_t* src, uint8_t* dst, uint32_t size);
+int sej_set_key(AES_KEY_ID id, AES_KEY_SZ key);
 uint32_t sej_set_mode(AES_MODE mode);
-int sp_sej_enc(uint8_t* buf, uint8_t* out, uint32_t size, bool anti_clone, bool legacy);
-int sp_sej_dec(uint8_t* buf, uint8_t* out, uint32_t size, bool anti_clone, bool legacy);
-void init_sej_ctx(void);
+void sej_secinit_set_magic(void);
+
+void sej_get_bootmode(uint32_t* bootmode);
+
+int sp_sej_enc(uint8_t* buf, uint8_t* out, sej_param_t desc);
+int sp_sej_dec(uint8_t* buf, uint8_t* out, sej_param_t desc);
+
+uint32_t sej_prng(uint32_t* iv, uint32_t* out);
+
+void sej_init(void);
 void set_sej_base(uintptr_t base_addr);
 uintptr_t get_sej_base(void);
 
