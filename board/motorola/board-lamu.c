@@ -37,6 +37,45 @@ static void mt_disp_show_boot_logo(void) {
         ((void (*)(void))(addr | 1))();
 }
 
+static int seccfg_get_lock_state(uint32_t *lock_state) {
+    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0xB1D0, 0xB510, 0x4604, 0xF7FF, 0xFFDD);
+    if (addr)
+        return ((int (*)(uint32_t*))(addr | 1))(lock_state);
+    return -1;
+}
+
+static int seccfg_set_lock_state(uint32_t lock_state) {
+    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0xB538, 0x4605, 0xF7FF, 0xFFAE);
+    if (addr)
+        return ((int (*)(uint32_t))(addr | 1))(lock_state);
+    return -1;
+}
+
+static void seccfg_unlock(void) {
+    uint32_t lock_state = 0;
+
+    int ret = seccfg_get_lock_state(&lock_state);
+    if (ret != 0) {
+        printf("Unable to read seccfg lock state, skipping unlock\n");
+        return;
+    }
+
+    printf("Current seccfg lock state: %d\n", (int)lock_state);
+
+    if (lock_state != LKS_LOCK) {
+        printf("Device is already unlocked, skipping seccfg write\n");
+        return;
+    }
+
+    ret = seccfg_set_lock_state(LKS_UNLOCK);
+    if (ret != 0) {
+        printf("Failed to write seccfg lock state, device may not be unlocked\n");
+        return;
+    }
+
+    printf("Successfully unlocked device (%d -> %d)\n", (int)lock_state, LKS_UNLOCK);
+}
+
 static void handle_recovery_boot(void) {
     if (get_bootmode() != BOOTMODE_RECOVERY || !is_spoofing_enabled())
         return;
@@ -216,6 +255,11 @@ void board_early_init(void) {
     printf("Entering early init for %s\n", DEVICE_MODEL);
 
     uint32_t addr = 0;
+
+    // Reaching this point via the cert bypass only means our LK booted, the
+    // device itself can still be locked as far as seccfg is concerned. Flip
+    // it to unlocked here so the state actually sticks across reboots.
+    seccfg_unlock();
 
     // Regardless of whether spoofing is enabled, we always need to
     // disable image authentication. The user may just be using this
