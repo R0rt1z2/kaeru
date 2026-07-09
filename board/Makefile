@@ -80,3 +80,4 @@ lib-$(CONFIG_HUAWEI_DURA2) += huawei/board-dura2.o
 lib-$(CONFIG_NUU_N5004LA) += nuu/board-N5004LA.o
 lib-$(CONFIG_XIAOMI_LANCELOT) += xiaomi/board-lancelot.o
 lib-$(CONFIG_XIAOMI_MERLIN) += xiaomi/board-merlin.o
+lib-$(CONFIG_XIAOMI_BEGONIA) += xiaomi/board-begonia.o
