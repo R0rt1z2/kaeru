@@ -5,8 +5,71 @@
 
 #include <board_ops.h>
 
+#define DEVICE_MODEL "Motorola Moto G06"
+
 #define CMDLINE1_ADDR 0x4C580DCC
 #define CMDLINE2_ADDR 0x4C5817D0
+
+#define VOLUME_UP 0
+#define VOLUME_DOWN 17
+
+long partition_read(const char* part_name, long long offset, uint8_t* data, size_t size) {
+    return ((long (*)(const char*, long long, uint8_t*, size_t))(CONFIG_PARTITION_READ_ADDRESS | 1))(
+            part_name, offset, data, size);
+}
+
+long partition_write(const char* part_name, long long offset, uint8_t* data, size_t size) {
+    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END,
+        0xE92D, 0x4FF0, 0xB085, 0x461F, 0x4616, 0x9003, 0x9D0F, 0xF7FE, 0xFDAF);
+    if (addr)
+        return ((long (*)(const char*, long long, uint8_t*, size_t))(addr | 1))(
+            part_name, offset, data, size);
+    return -1;
+}
+
+static void seccfg_unlock(void) {
+    static SecCfgV4 cfg __attribute__((aligned(16)));
+
+    if (partition_read("seccfg", 0, (uint8_t*)&cfg, sizeof(cfg)) < 0) {
+        printf("Unable to read seccfg partition, skipping unlock\n");
+        return;
+    }
+
+    int ret = seccfg_apply_unlock(&cfg);
+    if (ret < 0) {
+        printf("Invalid seccfg partition, magic: 0x%08X, end_magic: 0x%08X\n",
+               cfg.magic, cfg.end_magic);
+        return;
+    }
+    if (ret == 0) {
+        printf("Device is already unlocked, skipping seccfg write\n");
+        return;
+    }
+
+    if (partition_write("seccfg", 0, (uint8_t*)&cfg, sizeof(cfg)) < 0) {
+        printf("Failed to write seccfg partition, device may not be unlocked\n");
+        return;
+    }
+
+    printf("Successfully unlocked device via seccfg\n");
+}
+
+bool cmdline_append(const char *append_string) {
+    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x41F0, 0x4676, 0x4C22);
+    if (addr)
+        return ((bool (*)(const char*))(addr | 1))(append_string);
+    return false;
+}
+
+static int is_brom_cmd_disabled(void) {
+    return (*(volatile uint32_t *)(0x11CE0060) >> 8) & 1;
+}
+
+static void mt_disp_show_boot_logo(void) {
+    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0x4832, 0x2286, 0x4932, 0xE92D);
+    if (addr)
+        ((void (*)(void))(addr | 1))();
+}
 
 static void handle_recovery_boot(void) {
     if (get_bootmode() != BOOTMODE_RECOVERY || !is_spoofing_enabled())
@@ -18,12 +81,69 @@ static void handle_recovery_boot(void) {
     for (int i = 0; i < ARRAY_SIZE(cmdline_addrs); i++) {
         printf("Patching cmdline at 0x%08X\n", cmdline_addrs[i]);
         cmdline_replace((char *)cmdline_addrs[i],
-            "androidboot.verifiedbootstate=", "green", "orange");    
+            "androidboot.verifiedbootstate=", "green", "orange");
     }
 }
 
-void spoof_lock_state(void) {
+void parse_bootloader_messages(void) {
+    struct misc_message misc_msg = {0};
+
+    if (partition_read("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg)) < 0) {
+        printf("Failed to read misc partition\n");
+        return;
+    }
+
+#if KAERU_DEBUG
+    printf("Read bootloader command: %s\n", misc_msg.command);
+#endif
+
+    bootmode_t mode = misc_command_to_bootmode(misc_msg.command);
+    if (mode == BOOTMODE_NORMAL)
+        return;
+
+    printf("Found '%s', forcing %s\n", misc_msg.command, bootmode2str(mode));
+    set_bootmode(mode);
+
+    memset(&misc_msg, 0, sizeof(misc_msg));
+    partition_write("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg));
+}
+
+static int is_uart_enabled(void) {
+    const char *val = get_env(KAERU_ENV_UART_ENABLE);
+    return val && strcmp(val, "1") == 0;
+}
+
+static void post_env_process(void) {
     uint32_t addr = 0;
+
+    int uart_enable = is_uart_enabled();
+    if (uart_enable) {
+        printf("UART is enabled, patching out UART disable checks.\n");
+
+        addr = SEARCH_PATTERN(LK_START, LK_END, 0x4A11, 0x4B12, 0x447A, 0x58D3);
+        if (addr) {
+            printf("Found putchar at 0x%08X\n", addr);
+            NOP(addr + 0x0C, 1);
+            NOP(addr + 0x10, 1);
+            NOP(addr + 0x18, 1);
+        }
+
+        char *p = SEARCH_STRING("mtk_printk_ctrl.disable_uart=1");
+        if (p) {
+            printf("Found mtk_printk_ctrl.disable_uart=1 at 0x%08X\n", (uint32_t)p);
+            p[sizeof("mtk_printk_ctrl.disable_uart=1") - 2] = '0';
+            arch_sync_cache_range((uint32_t)p, 4);
+        }
+
+        p = SEARCH_STRING("printk.disable_uart=1");
+        if (p) {
+            printf("Found printk.disable_uart=1 at 0x%08X\n", (uint32_t)p);
+            p[sizeof("printk.disable_uart=1") - 2] = '0';
+            arch_sync_cache_range((uint32_t)p, 4);
+        }
+
+        cmdline_append("console=ttyS0,921600n1");
+    }
 
     // On most MediaTek devices, lock state is fetched by calling
     // seccfg_get_lock_state() directly. Some vendors (e.g. Xiaomi)
@@ -53,13 +173,13 @@ void spoof_lock_state(void) {
     addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x4880, 0xB087, 0x4D5A);
     if (addr) {
         printf("Found fastboot command processor at 0x%08X\n", addr);
-        
+
         // "not support on security" call
         NOP(addr + 0x15A, 2);
 
         // "not allowed in locked state" call
         NOP(addr + 0x166, 2);
-        
+
         // Jump directly to command handler
         PATCH_MEM(addr + 0xF0, 0xE006);
     }
@@ -81,7 +201,7 @@ void spoof_lock_state(void) {
     addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x4FF0, 0x4691, 0xF102);
     if (addr) {
         printf("Found AVB cmdline function at 0x%08X\n", addr);
-        
+
         // NOP out the code that checks the actual device state,
         // forcing libavb to always use the "locked" string.
         NOP(addr + 0x9C, 4);
@@ -127,9 +247,14 @@ void spoof_lock_state(void) {
 }
 
 void board_early_init(void) {
-    printf("Entering early init for Motorola G06\n");
+    printf("Entering early init for %s\n", DEVICE_MODEL);
 
     uint32_t addr = 0;
+
+    // Reaching this point only means our LK booted, the device itself
+    // can still be locked as far as seccfg is concerned. Flip it to
+    // unlocked here so the state actually sticks across reboots.
+    seccfg_unlock();
 
     // Regardless of whether spoofing is enabled, we always need to
     // disable image authentication. The user may just be using this
@@ -158,6 +283,18 @@ void board_early_init(void) {
         FORCE_RETURN(addr, 0);
     }
 
+    // This function determines whether the device is in a secure state.
+    // When it returns true, fastboot operations such as flash, erase, and
+    // lock/unlock are blocked with "[secure] not allow".
+    //
+    // We patch it to always return false so that all fastboot commands
+    // remain accessible regardless of the device's actual secure state.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB508, 0xF7FF, 0xFFF9, 0xB908);
+    if (addr) {
+        printf("Found secure_state_check at 0x%08X\n", addr);
+        FORCE_RETURN(addr, 0);
+    }
+
     // When the bootloader is unlocked, LK automatically enables
     // factory mode on every boot. This causes an intrusive
     // watermark to be displayed on screen once the OS boots.
@@ -179,17 +316,56 @@ void board_early_init(void) {
     addr = SEARCH_PATTERN(LK_START, LK_END, 0xF03F, 0xFC3A, 0x6823, 0x2000);
     if (addr) {
         printf("Found env_init_done at 0x%08X\n", addr);
-        PATCH_CALL(addr, (void*)spoof_lock_state, TARGET_THUMB);
+        PATCH_CALL(addr, (void*)post_env_process, TARGET_THUMB);
     }
 
-    // Register our custom fastboot commands.
+    // Get rid of the stock fastboot mode string that appears on the
+    // screen for less than 2 seconds before the fastboot UI takes over.
+    //
+    // This is useless and will cause confusion with our custom bootmode
+    // handling based on volume key combos, so we remove it entirely.
+    char* s = SEARCH_STRING(" => FASTBOOT mode...\n");
+    if (s) {
+        printf("Found fastboot string at 0x%08X\n", (uint32_t)(uintptr_t)s);
+        s[0] = '\0';
+    }
+
     fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
+    fastboot_publish("brom-usbdl-disabled", is_brom_cmd_disabled() == 1 ? "yes" : "no");
 }
 
 void board_late_init(void) {
-    printf("Entering late init for Motorola G06\n");
+    printf("Entering late init for %s\n", DEVICE_MODEL);
 
     uint32_t addr = 0;
+
+    // The stock bootloader ignores boot commands written to the misc partition,
+    // making it impossible to programmatically reboot into fastboot or recovery.
+    // We implement our own misc parsing so tools like mtkclient or Penumbra can
+    // trigger these modes automatically by writing to misc before rebooting.
+    parse_bootloader_messages();
+
+    // The stock bootloader has the worst key combo handling I've ever seen.
+    // It works whenever it feels like it, making it a nightmare to enter
+    // recovery or fastboot mode through key combos.
+    //
+    // This patch restores expected behavior:
+    // - Volume Up -> Recovery
+    // - Volume Down -> Fastboot
+    if (mtk_detect_key(VOLUME_UP)) {
+        mt_disp_show_boot_logo();
+        set_bootmode(BOOTMODE_RECOVERY);
+    } else if (mtk_detect_key(VOLUME_DOWN)) {
+        set_bootmode(BOOTMODE_FASTBOOT);
+    }
+
+    bootmode_t mode = get_bootmode();
+    if (mode != BOOTMODE_NORMAL
+        && mode != BOOTMODE_POWEROFF_CHARGING &&  !is_unknown_mode(mode)) {
+        // Show the current boot mode on screen when not performing a normal boot.
+        // This is standard behavior in many LK images, but not in this one by default.
+        show_bootmode(mode);
+    }
 
     // On unlocked devices, LK shows an orange state warning during boot
     // that also introduces an unnecessary 5 second delay. Forcing the
