@@ -11,6 +11,8 @@ from pathlib import Path
 from liblk import LkImage
 from liblk.structures import LkPartition
 from liblk.structures.certificate import Certificate
+from pyasn1.codec.der.encoder import encode as der_encode
+from pyasn1.type.univ import BitString
 
 
 class DeviceConfig:
@@ -56,16 +58,54 @@ def patch_bss(partition: LkPartition, payload_size: int) -> None:
 
 
 # https://github.com/R0rt1z2/lkpatcher/blob/master/lkpatcher/cert_bypass.py
-def build_bypass_cert2(
+def build_bypass_cert2_override(
     original_cert2: bytes, header_hash: bytes, image_hash: bytes
 ) -> bytes:
+    # The 2026 exploit variant: prepend a [0] hash-override block in front
+    # of the untouched, validly signed cert.
     cert = Certificate.from_bytes(original_cert2)
     override = cert.build_hash_override_block(header_hash, image_hash)
     return override + bytes(original_cert2)
 
 
-def apply_cert_bypass(image: LkImage) -> list:
+def build_bypass_cert2_wrap(
+    original_cert2: bytes, header_hash: bytes, image_hash: bytes
+) -> bytes:
+    # The 2023 exploit variant: wrap the signed cert in a BIT STRING and
+    # append a copy carrying the new hashes. Needed on older devices whose
+    # bootloader rejects the override block.
+    cert = Certificate.from_bytes(original_cert2)
+    verified_copy = der_encode(BitString(hexValue=bytes(original_cert2).hex()))
+    forged_copy = cert.encode_with_hashes(header_hash, image_hash)
+    return verified_copy + forged_copy
+
+
+CERT_BYPASS_BUILDERS = {
+    'override': build_bypass_cert2_override,
+    'wrap': build_bypass_cert2_wrap,
+}
+
+
+def resolve_cert_bypass_mode(config) -> str:
+    # Default to the override strategy so devices that don't care about the
+    # variant don't have to spell it out in their defconfig.
+    mode = config.get('CERT_BYPASS_MODE')
+    if mode is None:
+        return 'override'
+
+    mode = mode.strip().strip('"').lower()
+    if mode not in CERT_BYPASS_BUILDERS:
+        exit(
+            "ERROR: Unknown cert bypass mode '%s' "
+            "(expected 'override' or 'wrap')" % mode
+        )
+
+    return mode
+
+
+def apply_cert_bypass(image: LkImage, mode: str = 'override') -> list:
     # Re-sign every partition whose contents no longer match its cert2.
+    build = CERT_BYPASS_BUILDERS[mode]
     signed = []
 
     for name, partition in image.partitions.items():
@@ -90,11 +130,9 @@ def apply_cert_bypass(image: LkImage) -> list:
 
         header_hash, image_hash = partition.compute_hashes()
         original = bytes(partition.cert2.data)
-        partition.cert2.data = build_bypass_cert2(
-            original, header_hash, image_hash
-        )
+        partition.cert2.data = build(original, header_hash, image_hash)
 
-        print("Re-signed modified partition '%s'" % name)
+        print("Re-signed modified partition '%s' (%s)" % (name, mode))
         signed.append(name)
 
     return signed
@@ -204,7 +242,8 @@ def main() -> None:
     # partitions we touched so the image survives verification on SBC enabled
     # devices.
     if config.get('CERT_BYPASS') == 'y':
-        signed = apply_cert_bypass(lk)
+        mode = resolve_cert_bypass_mode(config)
+        signed = apply_cert_bypass(lk, mode)
         if not signed:
             print('No partitions required re-signing (no cert2 present?)')
 

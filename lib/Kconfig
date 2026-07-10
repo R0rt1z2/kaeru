@@ -269,4 +269,12 @@ menu "Image Patching"
 
           This has no effect on images that don't carry a cert2, so it is
           safe to leave enabled.
+
+    config CERT_BYPASS_MODE
+        string "Certificate bypass strategy"
+        depends on CERT_BYPASS
+        default "override"
+        help
+          Forging strategy for the cert2: "override" (2026 variant) or
+          "wrap" (2023 variant). Older devices may need "wrap".
 endmenu
