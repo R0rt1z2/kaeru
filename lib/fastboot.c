@@ -69,18 +69,34 @@ void fastboot_publish(const char* name, const char* value) {
 static void (*const _send_response)(const char* status, const char* fmt, ...) =
         (void*)(CONFIG_FASTBOOT_SEND_RESPONSE_ADDRESS | 1);
 
+#if CONFIG_FASTBOOT_SETUP_ADDRESS != 0
+static void (*const _setup_response)(int arg) =
+        (void*)(CONFIG_FASTBOOT_SETUP_ADDRESS | 1);
+#endif
+
 void fastboot_okay(const char* reason) {
-    // Use the dedicated okay wrapper (e.g. 0x4C42C99C) that hardcodes
-    // "OKAY" as the type and calls send_response internally. This takes
-    // (msg) as arg, not (type, msg) — avoids send_response type handling.
+    // Some LK builds need the response state reset before each call.
+    // This mirrors fastboot_continue's pattern of calling a setup
+    // function between response sends.
+#if CONFIG_FASTBOOT_SETUP_ADDRESS != 0
+    _setup_response(1);
+#endif
+    // Use the dedicated okay wrapper that hardcodes "OKAY" as the
+    // type and calls send_response internally.
     ((void (*)(const char*))(CONFIG_FASTBOOT_OKAY_ADDRESS | 1))(reason);
 }
 
 void fastboot_fail(const char* reason) {
+#if CONFIG_FASTBOOT_SETUP_ADDRESS != 0
+    _setup_response(1);
+#endif
     _send_response("FAIL", reason);
 }
 
 void fastboot_info(const char* reason) {
+#if CONFIG_FASTBOOT_SETUP_ADDRESS != 0
+    _setup_response(1);
+#endif
     _send_response("INFO", reason);
 }
 

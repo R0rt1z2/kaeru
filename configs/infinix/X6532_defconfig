@@ -33,6 +33,12 @@ CONFIG_FASTBOOT_SEND_RESPONSE_ADDRESS=0x4C42C058
 # This is the correct entry point for fastboot_okay.
 CONFIG_FASTBOOT_OKAY_ADDRESS=0x4C42C99C
 
+# 0x4C42DA2C resets the USB response state machine between calls.
+# Mirrors fastboot_continue's pattern of calling this before each
+# response send. Without it, the second response call (okay after
+# info) would see a busy state and return without sending.
+CONFIG_FASTBOOT_SETUP_ADDRESS=0x4C42DA2C
+
 CONFIG_FASTBOOT_REGISTER_ADDRESS=0x4C42BD38
 CONFIG_FASTBOOT_PUBLISH_ADDRESS=0x4C42BD74
 

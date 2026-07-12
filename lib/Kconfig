@@ -171,6 +171,14 @@ menu "Fastboot Support"
                   Wrapper function that takes (msg), hardcodes "OKAY" as type,
                   and calls send_response. Used for fastboot_okay.
 
+            config FASTBOOT_SETUP_ADDRESS
+                hex "Response setup/reset address"
+                default 0
+                help
+                  Some LK builds need the response state reset between calls.
+                  If non-zero, called before each response to reset the USB
+                  response state machine. Set to 0 to disable.
+
             config FASTBOOT_REGISTER_ADDRESS
                 hex "fastboot_register() address"
 
