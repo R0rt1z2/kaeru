@@ -25,7 +25,7 @@ CONFIG_VIDEO_PRINTF_ADDRESS=0x4C43997C
 CONFIG_FASTBOOT_STYLE_HYBRID=y
 # 0x4C42C058 is the combined send_response(type, msg) — saves r0 (type
 # string) to r6 and r1 (message) to r5, then calls the USB send chain.
-# Used for fastboot_fail and fastboot_info.
+# Used for fastboot_fail.
 CONFIG_FASTBOOT_SEND_RESPONSE_ADDRESS=0x4C42C058
 
 # 0x4C42C99C is a wrapper that hardcodes "OKAY" as type and calls
@@ -33,10 +33,13 @@ CONFIG_FASTBOOT_SEND_RESPONSE_ADDRESS=0x4C42C058
 # This is the correct entry point for fastboot_okay.
 CONFIG_FASTBOOT_OKAY_ADDRESS=0x4C42C99C
 
-# 0x4C42DA2C resets the USB response state machine between calls.
-# Mirrors fastboot_continue's pattern of calling this before each
-# response send. Without it, the second response call (okay after
-# info) would see a busy state and return without sending.
+# 0x4C42C0E8 is the original LK fastboot_info function. It uses a
+# separate state struct from send_response, so calling it before
+# fastboot_okay avoids the state machine conflict.
+CONFIG_FASTBOOT_INFO_ADDRESS=0x4C42C0E8
+
+# 0x4C42DA2C enables UART debug. Only used for "printk" message.
+# If you don't want this, set to 0.
 CONFIG_FASTBOOT_SETUP_ADDRESS=0x4C42DA2C
 
 CONFIG_FASTBOOT_REGISTER_ADDRESS=0x4C42BD38

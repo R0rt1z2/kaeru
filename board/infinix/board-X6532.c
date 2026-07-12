@@ -25,6 +25,10 @@ char *get_env(char *name) {
     return NULL;
 }
 
+// ── Direct LK fastboot_info for displaying text (uses separate state struct) ──
+#define LK_INFO(msg) \
+    ((void (*)(const char*))(CONFIG_FASTBOOT_INFO_ADDRESS | 1))(msg)
+
 // ── Bootloader lock spoofing command ──
 
 static void cmd_spoof_bootloader_lock(const char* arg, void* data, unsigned sz) {
@@ -38,10 +42,11 @@ static void cmd_spoof_bootloader_lock(const char* arg, void* data, unsigned sz) 
             if (status) {
                 set_env(KAERU_ENV_BLDR_SPOOF, "0");
                 fastboot_publish("is-spoofing", "0");
-                fastboot_okay("Spoofing disabled. Factory reset may be required.");
+                LK_INFO("Bootloader spoofing disabled.");
             } else {
-                fastboot_okay("Spoofing was already disabled.");
+                LK_INFO("Bootloader spoofing is already disabled.");
             }
+            fastboot_okay("Done");
             return;
         }
 
@@ -49,22 +54,28 @@ static void cmd_spoof_bootloader_lock(const char* arg, void* data, unsigned sz) 
             if (!status) {
                 set_env(KAERU_ENV_BLDR_SPOOF, "1");
                 fastboot_publish("is-spoofing", "1");
-                fastboot_okay("Spoofing enabled. Factory reset may be required.");
+                LK_INFO("Bootloader spoofing enabled.");
             } else {
-                fastboot_okay("Spoofing was already enabled.");
+                LK_INFO("Bootloader spoofing is already enabled.");
             }
+            fastboot_okay("Done");
             return;
         }
 
         if (!strcmp(option, "status")) {
-            fastboot_okay(status ?
-                "Spoofing enabled - device reports as locked." :
-                "Spoofing disabled - device reports as unlocked.");
+            LK_INFO(status ?
+                "Bootloader spoofing is currently enabled." :
+                "Bootloader spoofing is currently disabled.");
+            LK_INFO(status ?
+                "Device is currently spoofed as bootloader locked." :
+                "Device is not being spoofed as bootloader locked.");
+            fastboot_okay("Done");
             return;
         }
     }
 
-    fastboot_okay("Usage: fastboot oem bldr_spoof <on|off|status>.");
+    LK_INFO("Commands: on|off|status");
+    fastboot_fail("Usage: fastboot oem bldr_spoof <on|off|status>");
 }
 
 // NOTE: Warning suppression patches are in board_early_init(), NOT
