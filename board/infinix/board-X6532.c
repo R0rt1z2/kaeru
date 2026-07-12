@@ -263,6 +263,24 @@ void board_early_init(void) {
         );
     }
 
+    // Forces get_sboot_state to store ATTR_SBOOT_ENABLE (0x11) in the
+    // output parameter and return 0. This controls whether secure boot
+    // verification is enabled and is checked by 0x4C46B20C (the sboot
+    // state gate we bypassed above). Setting it to 0x11 indicates secure
+    // boot is properly enabled, which other code paths may check.
+    //
+    // Verified pattern at 0x4C46B85C: B510 4604 2001 F7FF
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB510, 0x4604, 0x2001, 0xF7FF);
+    if (addr) {
+        printf("Found get_sboot_state at 0x%08X\n", addr);
+        PATCH_MEM(addr,
+            0x2311,  // movs r3, #0x11   - ATTR_SBOOT_ENABLE
+            0x6003,  // str r3, [r0, #0]  - store to *param_1
+            0x2000,  // movs r0, #0       - return 0
+            0x4770   // bx lr             - return
+        );
+    }
+
     // Register fastboot OEM commands.
     fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
     fastboot_register("oem env", cmd_env, 1);
