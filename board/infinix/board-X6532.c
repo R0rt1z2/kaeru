@@ -217,6 +217,14 @@ void board_early_init(void) {
         FORCE_RETURN(addr, 0);
     }
 
+    // Forces ccci_ld_md_sec to return 0 ("modem loading allowed").
+    // Verified pattern at 0x4C452AC0: E92D 41F0 460A 4604
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x41F0, 0x460A, 0x4604);
+    if (addr) {
+        printf("Found ccci_ld_md_sec at 0x%08X\n", addr);
+        FORCE_RETURN(addr, 0);
+    }
+
     // Register fastboot OEM commands.
     fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
     fastboot_register("oem env", cmd_env, 1);
