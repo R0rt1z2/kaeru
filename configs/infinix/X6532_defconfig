@@ -38,9 +38,8 @@ CONFIG_FASTBOOT_OKAY_ADDRESS=0x4C42C99C
 # fastboot_okay avoids the state machine conflict.
 CONFIG_FASTBOOT_INFO_ADDRESS=0x4C42C0E8
 
-# 0x4C42DA2C enables UART debug. Only used for "printk" message.
-# If you don't want this, set to 0.
-CONFIG_FASTBOOT_SETUP_ADDRESS=0x4C42DA2C
+# Set to 0 to silence the "printk to uart is on!" message from UART init.
+CONFIG_FASTBOOT_SETUP_ADDRESS=0
 
 CONFIG_FASTBOOT_REGISTER_ADDRESS=0x4C42BD38
 CONFIG_FASTBOOT_PUBLISH_ADDRESS=0x4C42BD74

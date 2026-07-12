@@ -29,6 +29,103 @@ char *get_env(char *name) {
 #define LK_INFO(msg) \
     ((void (*)(const char*))(CONFIG_FASTBOOT_INFO_ADDRESS | 1))(msg)
 
+#define ENV_KEY_MAX_LEN 64
+#define ENV_VAL_MAX_LEN 256
+#define ENV_MSG_MAX_LEN (ENV_KEY_MAX_LEN + ENV_VAL_MAX_LEN + 16)
+
+// ── Environment command (fastboot oem env get/set) ──
+
+static int parse_env_args(const char *arg, char *key, size_t key_sz,
+                          char *val, size_t val_sz) {
+    int count = 0;
+    while (*arg == ' ') arg++;
+    if (*arg == '\0') return 0;
+    size_t i = 0;
+    while (*arg && *arg != ' ' && i < key_sz - 1) key[i++] = *arg++;
+    key[i] = '\0'; count = 1;
+    while (*arg == ' ') arg++;
+    if (*arg == '\0') return count;
+    i = 0;
+    while (*arg && i < val_sz - 1) val[i++] = *arg++;
+    val[i] = '\0'; count = 2;
+    return count;
+}
+
+static int is_env_key_valid(const char *key) {
+    if (!key || *key == '\0') return 0;
+    for (const char *p = key; *p; p++) {
+        char c = *p;
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+            (c >= '0' && c <= '9') || c == '_' || c == '.' || c == '-')
+            continue;
+        return 0;
+    }
+    return 1;
+}
+
+static int match_subcmd(const char *arg, const char *cmd, int len) {
+    return !strncmp(arg, cmd, len) && (arg[len] == ' ' || arg[len] == '\0');
+}
+
+static void cmd_env(const char *arg, void *data, unsigned sz) {
+    char key[ENV_KEY_MAX_LEN] = {0};
+    char val[ENV_VAL_MAX_LEN] = {0};
+    char msg[ENV_MSG_MAX_LEN] = {0};
+    (void)data; (void)sz;
+
+    while (*arg == ' ') arg++;
+    if (strlen(arg) > ENV_MSG_MAX_LEN) {
+        fastboot_fail("Argument too long");
+        return;
+    }
+
+    if (match_subcmd(arg, "get", 3)) {
+        arg += 3;
+        if (parse_env_args(arg, key, sizeof(key), val, sizeof(val)) < 1) {
+            fastboot_fail("Usage: fastboot oem env get <key>");
+            return;
+        }
+        if (!is_env_key_valid(key)) {
+            fastboot_fail("Invalid key name");
+            return;
+        }
+        char *result = get_env(key);
+        if (!result) {
+            npf_snprintf(msg, sizeof(msg), "'%s' not found", key);
+            fastboot_fail(msg);
+            return;
+        }
+        npf_snprintf(msg, sizeof(msg), "%s=%s", key, result);
+        LK_INFO(msg);
+        fastboot_okay("Done");
+        return;
+    }
+
+    if (match_subcmd(arg, "set", 3)) {
+        arg += 3;
+        if (parse_env_args(arg, key, sizeof(key), val, sizeof(val)) < 2) {
+            fastboot_fail("Usage: fastboot oem env set <key> <value>");
+            return;
+        }
+        if (!is_env_key_valid(key)) {
+            fastboot_fail("Invalid key name");
+            return;
+        }
+        if (set_env(key, val) < 0) {
+            npf_snprintf(msg, sizeof(msg), "Failed to set '%s'", key);
+            fastboot_fail(msg);
+            return;
+        }
+        npf_snprintf(msg, sizeof(msg), "%s=%s", key, val);
+        LK_INFO(msg);
+        fastboot_okay("Done");
+        return;
+    }
+
+    LK_INFO("Subcommands: get <key>, set <key> <value>");
+    fastboot_fail("Usage: fastboot oem env <get|set>");
+}
+
 // ── Bootloader lock spoofing command ──
 
 static void cmd_spoof_bootloader_lock(const char* arg, void* data, unsigned sz) {
@@ -104,8 +201,9 @@ void board_early_init(void) {
         FORCE_RETURN(addr, 0);
     }
 
-    // Register bootloader lock spoofing command.
+    // Register fastboot OEM commands.
     fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
+    fastboot_register("oem env", cmd_env, 1);
 
     // Publish kaeru version info.
     fastboot_publish("kaeru-version", "kaeru v2.0.0");
