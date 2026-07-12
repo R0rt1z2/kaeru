@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: 2026 Your name <your.email@example.com>
+// SPDX-FileCopyrightText: 2026 XTENSEI <xtensei.is.not.in.the.sudoers.file@protonmail.com>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
@@ -21,7 +21,7 @@ void board_late_init(void) {
     // This patch gets rid of the delay and the warning by forcing the
     // function that holds the logic to always return 0 and therefore
     // not executing the code that shows the warning.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB508, 0x4B0E, 0x447B);
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB508, 0x4B0E, 0x447B, 0x681B, 0x681B);
     if (addr) {
         printf("Found orange_state_warning at 0x%08X\n", addr);
         FORCE_RETURN(addr, 0);
