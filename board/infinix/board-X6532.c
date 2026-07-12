@@ -5,37 +5,11 @@
 
 #include <board_ops.h>
 
+// ── Direct LK fastboot_info for displaying text (uses separate state struct) ──
+#define LK_INFO(msg) \
+    ((void (*)(const char*))(CONFIG_FASTBOOT_INFO_ADDRESS | 1))(msg)
+
 // ── Environment helpers (runtime SEARCH_PATTERN) ──
-
-// Forward declarations for the spoofing helpers below (board-local
-// versions — we don't use the library because it sends empty OKAY
-// messages that hang this LK build).
-char *get_env(char *name);
-int set_env(char *name, char *value);
-
-int is_spoofing_enabled(void) {
-    const char *val = get_env(KAERU_ENV_BLDR_SPOOF);
-    return val && strcmp(val, "1") == 0;
-}
-
-// ── Security stub functions ──
-// These replace the original LK security checks via PATCH_CALL.
-// The originals are in the LK and check hardware state; our stubs
-// always return the "disabled/unlocked" value so fastboot commands
-// work regardless of the actual hardware state.
-
-int sec_usbdl_enabled(void) {
-    return 0;
-}
-
-unsigned int seclib_sec_boot_enabled(unsigned int arg) {
-    (void)arg;
-    return 0;
-}
-
-unsigned get_unlocked_status(void) {
-    return 1;
-}
 
 int set_env(char *name, char *value) {
     uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0x2200, 0xF7FF, 0xBF0D, 0xBF00);
@@ -54,10 +28,6 @@ char *get_env(char *name) {
     }
     return NULL;
 }
-
-// ── Direct LK fastboot_info for displaying text (uses separate state struct) ──
-#define LK_INFO(msg) \
-    ((void (*)(const char*))(CONFIG_FASTBOOT_INFO_ADDRESS | 1))(msg)
 
 #define ENV_KEY_MAX_LEN 64
 #define ENV_VAL_MAX_LEN 256
@@ -215,23 +185,52 @@ void board_early_init(void) {
 
     uint32_t addr = 0;
 
-    // Suppresses the bootloader unlock warning shown during boot on
-    // unlocked devices. In addition to the visual warning, it also
-    // introduces an unnecessary 5-second delay.
+    // ── Verified pattern: image authentication bypass ──
+    // Forces get_vfy_policy to return 0, skipping certificate verification
+    // for all partitions and firmware images. Pattern confirmed at 0x4C417F0C
+    // via disassembly analysis.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB508, 0xF7FF, 0xFF63, 0xF3C0);
+    if (addr) {
+        printf("Found get_vfy_policy at 0x%08X\n", addr);
+        FORCE_RETURN(addr, 0);
+    }
+
+    // ── Verified pattern: download policy bypass ──
+    // Forces get_dl_policy to return 0, ensuring no partition is marked
+    // as download-forbidden. Pattern confirmed at 0x4C417F18 via disasm.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB508, 0xF7FF, 0xFF5D, 0xF000);
+    if (addr) {
+        printf("Found get_dl_policy at 0x%08X\n", addr);
+        FORCE_RETURN(addr, 0);
+    }
+
+    // ── Verified pattern: modem verification bypass ──
+    // Forces ccci_ld_md_sec_ptr_hdr_verify to return 0 so modem images
+    // (md1rom, md3rom, etc.) can be loaded without signature verification.
+    // Pattern confirmed at 0x4C452AC0 via disasm.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x41F0, 0x460A, 0x4604);
+    if (addr) {
+        printf("Found ccci_ld_md_sec_ptr_hdr_verify at 0x%08X\n", addr);
+        FORCE_RETURN(addr, 0);
+    }
+
+    // ── Verified pattern: orange state warning suppression ──
+    // Suppresses the bootloader unlock warning + 5-second delay during boot.
     addr = SEARCH_PATTERN(LK_START, LK_END, 0xB508, 0x4B0E, 0x447B, 0x681B, 0x681B);
     if (addr) {
         printf("Found orange_state_warning at 0x%08X\n", addr);
         FORCE_RETURN(addr, 0);
     }
 
-    // Disables the dm-verity corruption warning during boot.
+    // ── Verified pattern: dm-verity corruption warning suppression ──
+    // Disables the "Your device is corrupt" screen during boot.
     addr = SEARCH_PATTERN(LK_START, LK_END, 0xB530, 0xB083, 0xAB02, 0x2200);
     if (addr) {
         printf("Found dm_verity_corruption at 0x%08X\n", addr);
         FORCE_RETURN(addr, 0);
     }
 
-    // Register fastboot OEM commands.
+    // ── Fastboot command registration ──
     fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
     fastboot_register("oem env", cmd_env, 1);
 
