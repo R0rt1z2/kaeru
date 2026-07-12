@@ -64,6 +64,35 @@ void fastboot_publish(const char* name, const char* value) {
     ((void (*)(const char*, const char*))(CONFIG_FASTBOOT_PUBLISH_ADDRESS | 1))(name, value);
 }
 
+#elif defined(CONFIG_FASTBOOT_STYLE_HYBRID)
+
+static void (*const _send_response)(const char* status, const char* fmt, ...) =
+        (void*)(CONFIG_FASTBOOT_SEND_RESPONSE_ADDRESS | 1);
+
+void fastboot_okay(const char* reason) {
+    _send_response("OKAY", reason);
+}
+
+void fastboot_fail(const char* reason) {
+    _send_response("FAIL", reason);
+}
+
+void fastboot_info(const char* reason) {
+    _send_response("INFO", reason);
+}
+
+void fastboot_register(const char* prefix,
+                       void (*handle)(const char* arg, void* data, unsigned sz),
+                       unsigned char security_enabled) {
+    ((void (*)(const char*, void (*)(const char*, void*, unsigned),
+               unsigned char))(CONFIG_FASTBOOT_REGISTER_ADDRESS | 1))(
+            prefix, handle, security_enabled);
+}
+
+void fastboot_publish(const char* name, const char* value) {
+    ((void (*)(const char*, const char*))(CONFIG_FASTBOOT_PUBLISH_ADDRESS | 1))(name, value);
+}
+
 #else
 #error "No fastboot response style selected."
 #endif

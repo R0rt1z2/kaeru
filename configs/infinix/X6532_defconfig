@@ -5,9 +5,6 @@ CONFIG_BOOTLOADER_SIZE=0x12421C
 # ── Verified addresses (parse.py + manual verification) ──
 CONFIG_APP_ADDRESS=0x4C42CBB0
 CONFIG_DPRINTF_ADDRESS=0x4C439D9C
-CONFIG_FASTBOOT_INFO_ADDRESS=0x4C42C0E8
-CONFIG_FASTBOOT_PUBLISH_ADDRESS=0x4C42BD74
-CONFIG_FASTBOOT_REGISTER_ADDRESS=0x4C42BD38
 CONFIG_FREE_ADDRESS=0x4C43A1CC
 CONFIG_INIT_STORAGE_ADDRESS=0x4C40383C
 CONFIG_INIT_STORAGE_CALLER=0x4C403A5C
@@ -20,11 +17,18 @@ CONFIG_THREAD_CREATE_ADDRESS=0x4C427D64
 CONFIG_THREAD_RESUME_ADDRESS=0x4C427F78
 CONFIG_VIDEO_PRINTF_ADDRESS=0x4C43997C
 
-# ── Fallback addresses (functions inlined, not found) ──
-# fastboot_okay/fail: inlined in this LK build. Points to fastboot_info
-# as safe fallback. fastboot OEM commands will hang — use EXCLUDE_BRANDING.
-CONFIG_FASTBOOT_FAIL_ADDRESS=0x4C42C0E8
-CONFIG_FASTBOOT_OKAY_ADDRESS=0x4C42C0E8
+# ── Hybrid fastboot: combined response, standard register/publish ──
+# send_response at 0x4C42C0E8 takes (type, msg) args. If this is the
+# combined-style function, OKAY/FAIL/INFO responses will work correctly.
+# If it behaves like standard fastboot_info (ignoring type), the behavior
+# is identical to the old fallback (info-type only).
+CONFIG_FASTBOOT_STYLE_HYBRID=y
+CONFIG_FASTBOOT_SEND_RESPONSE_ADDRESS=0x4C42C0E8
+CONFIG_FASTBOOT_REGISTER_ADDRESS=0x4C42BD38
+CONFIG_FASTBOOT_PUBLISH_ADDRESS=0x4C42BD74
+
+# ── Warning suppression patches (board_early_init via SEARCH_PATTERN) ──
+# orange_state_warning at 0x4C44E9A4, dm_verity_corruption at 0x4C4639B8
 
 # ── Unverified (dead code for this board — will crash if called) ──
 CONFIG_BOOTMODE_ADDRESS=0x0
@@ -33,12 +37,3 @@ CONFIG_MTK_DETECT_KEY_ADDRESS=0x0
 # ── Board & SoC selection ──
 CONFIG_INFINIX_X6532=y
 CONFIG_MEDIATEK_MT6769=y
-
-# ── fastboot_okay/fail: inlined in this LK build, can't be found ──
-# FASTBOOT_OKAY/FAIL_ADDRESS point to fastboot_info as a safe fallback.
-# OEM commands will respond but FAIL at the end because the host gets
-# "INFO" instead of "OKAY"/"FAIL". The version info IS displayed.
-#
-# Unverified placeholders (dead code, not called during boot):
-#   BOOTMODE_ADDRESS=0x0
-#   MTK_DETECT_KEY_ADDRESS=0x0
