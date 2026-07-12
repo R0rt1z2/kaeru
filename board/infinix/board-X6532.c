@@ -237,6 +237,32 @@ void board_early_init(void) {
         FORCE_RETURN(addr, 1);
     }
 
+    // Makes seccfg_get_lock_state always report LKS_LOCK (lock_state=1) and
+    // return 0 (success). This function is called via a tail-call from
+    // 0x4C4264D4, which is called from 0x4C46EB00 at +0x15A in the fastboot
+    // command processor.
+    //
+    // IMPORTANT: We return r0=0, NOT r0=2. The caller (0x4C46EB00) checks
+    // 'cbnz r0, #error' — any non-zero return triggers an error log path!
+    // Returning 0 avoids that path entirely.
+    //
+    // PATCH_MEM at addr+6 overwrites the body after the prologue (cbz, push,
+    // mov r4, r0):
+    //   0x2301 = movs r3, #1      -- lock_state = LKS_LOCK
+    //   0x6023 = str r3, [r4, #0]  -- *arg = lock_state
+    //   0x2000 = movs r0, #0       -- return 0 (NOT 2!)
+    //   0xBD10 = pop {r4, pc}      -- return
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB1D0, 0xB510, 0x4604, 0xF7FF, 0xFFDD);
+    if (addr) {
+        printf("Found seccfg_get_lock_state at 0x%08X\n", addr);
+        PATCH_MEM(addr + 6,
+            0x2301,  // movs r3, #1
+            0x6023,  // str r3, [r4, #0]
+            0x2000,  // movs r0, #0   (NOT 2!)
+            0xBD10   // pop {r4, pc}
+        );
+    }
+
     // Register fastboot OEM commands.
     fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
     fastboot_register("oem env", cmd_env, 1);
