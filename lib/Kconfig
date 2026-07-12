@@ -165,6 +165,12 @@ menu "Fastboot Support"
                   Combined-style function that takes (type, msg) and sends
                   the appropriate USB response. Called as send_response("OKAY", msg).
 
+            config FASTBOOT_OKAY_ADDRESS
+                hex "fastboot_okay() wrapper address"
+                help
+                  Wrapper function that takes (msg), hardcodes "OKAY" as type,
+                  and calls send_response. Used for fastboot_okay.
+
             config FASTBOOT_REGISTER_ADDRESS
                 hex "fastboot_register() address"
 

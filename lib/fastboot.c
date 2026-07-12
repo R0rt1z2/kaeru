@@ -70,7 +70,10 @@ static void (*const _send_response)(const char* status, const char* fmt, ...) =
         (void*)(CONFIG_FASTBOOT_SEND_RESPONSE_ADDRESS | 1);
 
 void fastboot_okay(const char* reason) {
-    _send_response("OKAY", reason);
+    // Use the dedicated okay wrapper (e.g. 0x4C42C99C) that hardcodes
+    // "OKAY" as the type and calls send_response internally. This takes
+    // (msg) as arg, not (type, msg) — avoids send_response type handling.
+    ((void (*)(const char*))(CONFIG_FASTBOOT_OKAY_ADDRESS | 1))(reason);
 }
 
 void fastboot_fail(const char* reason) {
