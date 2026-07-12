@@ -7,6 +7,36 @@
 
 // ── Environment helpers (runtime SEARCH_PATTERN) ──
 
+// Forward declarations for the spoofing helpers below (board-local
+// versions — we don't use the library because it sends empty OKAY
+// messages that hang this LK build).
+char *get_env(char *name);
+int set_env(char *name, char *value);
+
+int is_spoofing_enabled(void) {
+    const char *val = get_env(KAERU_ENV_BLDR_SPOOF);
+    return val && strcmp(val, "1") == 0;
+}
+
+// ── Security stub functions ──
+// These replace the original LK security checks via PATCH_CALL.
+// The originals are in the LK and check hardware state; our stubs
+// always return the "disabled/unlocked" value so fastboot commands
+// work regardless of the actual hardware state.
+
+int sec_usbdl_enabled(void) {
+    return 0;
+}
+
+unsigned int seclib_sec_boot_enabled(unsigned int arg) {
+    (void)arg;
+    return 0;
+}
+
+unsigned get_unlocked_status(void) {
+    return 1;
+}
+
 int set_env(char *name, char *value) {
     uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0x2200, 0xF7FF, 0xBF0D, 0xBF00);
     if (addr) {

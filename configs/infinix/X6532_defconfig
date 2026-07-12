@@ -18,29 +18,11 @@ CONFIG_THREAD_RESUME_ADDRESS=0x4C427F78
 CONFIG_VIDEO_PRINTF_ADDRESS=0x4C43997C
 
 # ── Hybrid fastboot: combined response, standard register/publish ──
-# send_response at 0x4C42C0E8 takes (type, msg) args. If this is the
-# combined-style function, OKAY/FAIL/INFO responses will work correctly.
-# If it behaves like standard fastboot_info (ignoring type), the behavior
-# is identical to the old fallback (info-type only).
 CONFIG_FASTBOOT_STYLE_HYBRID=y
-# 0x4C42C058 is the combined send_response(type, msg) — saves r0 (type
-# string) to r6 and r1 (message) to r5, then calls the USB send chain.
-# Used for fastboot_fail.
 CONFIG_FASTBOOT_SEND_RESPONSE_ADDRESS=0x4C42C058
-
-# 0x4C42C99C is a wrapper that hardcodes "OKAY" as type and calls
-# send_response internally. Takes (msg) as arg, not (type, msg).
-# This is the correct entry point for fastboot_okay.
 CONFIG_FASTBOOT_OKAY_ADDRESS=0x4C42C99C
-
-# 0x4C42C0E8 is the original LK fastboot_info function. It uses a
-# separate state struct from send_response, so calling it before
-# fastboot_okay avoids the state machine conflict.
 CONFIG_FASTBOOT_INFO_ADDRESS=0x4C42C0E8
-
-# Set to 0 to silence the "printk to uart is on!" message from UART init.
 CONFIG_FASTBOOT_SETUP_ADDRESS=0
-
 CONFIG_FASTBOOT_REGISTER_ADDRESS=0x4C42BD38
 CONFIG_FASTBOOT_PUBLISH_ADDRESS=0x4C42BD74
 
