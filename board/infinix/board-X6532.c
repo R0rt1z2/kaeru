@@ -39,11 +39,10 @@ static void cmd_spoof_bootloader_lock(const char* arg, void* data, unsigned sz) 
                 set_env(KAERU_ENV_BLDR_SPOOF, "0");
                 fastboot_publish("is-spoofing", "0");
                 fastboot_info("Bootloader spoofing disabled.");
-                fastboot_info("A factory reset may be required.");
+                fastboot_okay("A factory reset may be required.");
             } else {
-                fastboot_info("Bootloader spoofing is already disabled.");
+                fastboot_okay("Bootloader spoofing is already disabled.");
             }
-            fastboot_okay("");
             return;
         }
 
@@ -52,11 +51,10 @@ static void cmd_spoof_bootloader_lock(const char* arg, void* data, unsigned sz) 
                 set_env(KAERU_ENV_BLDR_SPOOF, "1");
                 fastboot_publish("is-spoofing", "1");
                 fastboot_info("Bootloader spoofing enabled.");
-                fastboot_info("A factory reset may be required.");
+                fastboot_okay("A factory reset may be required.");
             } else {
-                fastboot_info("Bootloader spoofing is already enabled.");
+                fastboot_okay("Bootloader spoofing is already enabled.");
             }
-            fastboot_okay("");
             return;
         }
 
@@ -64,10 +62,9 @@ static void cmd_spoof_bootloader_lock(const char* arg, void* data, unsigned sz) 
             fastboot_info(status ?
                 "Bootloader spoofing is currently enabled." :
                 "Bootloader spoofing is currently disabled.");
-            fastboot_info(status ?
+            fastboot_okay(status ?
                 "Device is currently spoofed as bootloader locked." :
                 "Device is not being spoofed as bootloader locked.");
-            fastboot_okay("");
             return;
         }
     }

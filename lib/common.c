@@ -57,9 +57,8 @@ void cmd_version(const char* arg, void* data, unsigned sz) {
 #ifndef CONFIG_EXCLUDE_BRANDING
     char buffer[64];
     npf_snprintf(buffer, sizeof(buffer), "kaeru v%s", KAERU_VERSION);
-    fastboot_info(buffer);
+    fastboot_okay(buffer);
     print_kaeru_info(video_printf);
-    fastboot_okay("");
 #else
     (void)arg;
     (void)data;
