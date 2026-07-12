@@ -230,6 +230,35 @@ void board_early_init(void) {
         FORCE_RETURN(addr, 0);
     }
 
+    // ── Verified pattern: seccfg_get_lock_state ──
+    // Force seccfg lock_state to 1 and return 2. This makes TEE believe
+    // the device's lock state is properly initialized.
+    // Pattern: B1D0 B510 4604 F7FF FFDD @ 0x4C46C4E0
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB1D0, 0xB510, 0x4604, 0xF7FF, 0xFFDD);
+    if (addr) {
+        printf("Found seccfg_get_lock_state at 0x%08X\n", addr);
+        PATCH_MEM(addr + 6,
+            0x2301,  // movs r3, #1
+            0x6023,  // str r3, [r4, #0]
+            0x2002,  // movs r0, #2
+            0xBD10   // pop {r4, pc}
+        );
+    }
+
+    // ── Verified pattern: get_sboot_state ──
+    // Force secure boot state to ATTR_SBOOT_ENABLE (0x11) and return 0.
+    // Pattern: B510 4604 2001 F7FF FF93 @ 0x4C46B85C
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB510, 0x4604, 0x2001, 0xF7FF, 0xFF93);
+    if (addr) {
+        printf("Found get_sboot_state at 0x%08X\n", addr);
+        PATCH_MEM(addr,
+            0x2311,  // movs r3, #0x11
+            0x6003,  // str r3, [r0, #0]
+            0x2000,  // movs r0, #0
+            0x4770   // bx lr
+        );
+    }
+
     // ── Fastboot command registration ──
     fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
     fastboot_register("oem env", cmd_env, 1);
