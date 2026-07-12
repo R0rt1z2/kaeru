@@ -126,6 +126,15 @@ static void cmd_env(const char *arg, void *data, unsigned sz) {
     fastboot_fail("Usage: fastboot oem env <get|set>");
 }
 
+// ── Security bypass stub ──
+// This replaces the LK's central security check function at 0x4C43AE1C.
+// The original is called from dozens of places in the fastboot dispatch
+// to check whether operations are allowed. By returning 0 ("allowed"),
+// all fastboot commands work regardless of lock state.
+static int security_check_stub(void) {
+    return 0;
+}
+
 // ── Bootloader lock spoofing command ──
 
 static void cmd_spoof_bootloader_lock(const char* arg, void* data, unsigned sz) {
@@ -257,6 +266,22 @@ void board_early_init(void) {
             0x2000,  // movs r0, #0
             0x4770   // bx lr
         );
+    }
+
+    // ── Security check bypass ──
+    // The function at 0x4C43AE1C is the central security gate called from
+    // the fastboot dispatch. It checks if operations are allowed in the
+    // current device state. We redirect ALL calls to it within the fastboot
+    // area (0x4C429000-0x4C430000) to our stub that returns 0 ("allowed").
+    // This makes fastboot commands work even when the device reports as
+    // "locked" (which our seccfg_get_lock_state patch forces).
+    {
+        int count = PATCH_ALL_BL((void *)0x4C429000, 0x7000,
+                                  (void *)0x4C43AE1C, security_check_stub);
+        if (count > 0)
+            printf("Patched %d calls to security check function\n", count);
+        else
+            printf("No security check calls found (may be unreachable)\n");
     }
 
     // ── Fastboot command registration ──
