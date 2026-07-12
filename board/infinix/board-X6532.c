@@ -225,6 +225,18 @@ void board_early_init(void) {
         FORCE_RETURN(addr, 0);
     }
 
+    // Bypass the secure boot state gate in the fastboot command processor.
+    // This function (0x4C46B20C) reads the sboot state from a global struct
+    // and returns 1 only if the state is 0x11 (ATTR_SBOOT_ENABLE). If the state
+    // is anything else, it may block fastboot commands. FORCE_RETURN(1) makes
+    // it always report "sboot state OK" regardless of the actual state.
+    // This serves as a safety net for when we spoof the lock state later.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB538, 0x4B18, 0x447B, 0x681B);
+    if (addr) {
+        printf("Found sboot_state_check at 0x%08X\n", addr);
+        FORCE_RETURN(addr, 1);
+    }
+
     // Register fastboot OEM commands.
     fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
     fastboot_register("oem env", cmd_env, 1);
