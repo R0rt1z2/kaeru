@@ -5,12 +5,12 @@
 
 #include <board_ops.h>
 
+// NOTE: Patches are in board_early_init(), NOT board_late_init().
+// This LK build doesn't have the app() pointer that kaeru needs to
+// hook apps_init(), so kaeru_late_init() never runs. board_early_init()
+// runs from kaeru_early_init() which is always reached.
 void board_early_init(void) {
     printf("Entering early init for Infinix Smart 9 (X6532)\n");
-}
-
-void board_late_init(void) {
-    printf("Entering late init for Infinix Smart 9 (X6532)\n");
 
     uint32_t addr = 0;
 
@@ -37,4 +37,8 @@ void board_late_init(void) {
         printf("Found dm_verity_corruption at 0x%08X\n", addr);
         FORCE_RETURN(addr, 0);
     }
+}
+
+void board_late_init(void) {
+    printf("Entering late init for Infinix Smart 9 (X6532)\n");
 }
