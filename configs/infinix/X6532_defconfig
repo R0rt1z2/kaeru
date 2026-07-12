@@ -34,5 +34,11 @@ CONFIG_MTK_DETECT_KEY_ADDRESS=0x0
 CONFIG_INFINIX_X6532=y
 CONFIG_MEDIATEK_MT6769=y
 
-# ── Exclude branding to avoid calling broken fastboot_okay/fail ──
-CONFIG_EXCLUDE_BRANDING=y
+# ── fastboot_okay/fail: inlined in this LK build, can't be found ──
+# FASTBOOT_OKAY/FAIL_ADDRESS point to fastboot_info as a safe fallback.
+# OEM commands will respond but FAIL at the end because the host gets
+# "INFO" instead of "OKAY"/"FAIL". The version info IS displayed.
+#
+# Unverified placeholders (dead code, not called during boot):
+#   BOOTMODE_ADDRESS=0x0
+#   MTK_DETECT_KEY_ADDRESS=0x0
