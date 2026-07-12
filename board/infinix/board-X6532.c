@@ -38,10 +38,9 @@ static void cmd_spoof_bootloader_lock(const char* arg, void* data, unsigned sz) 
             if (status) {
                 set_env(KAERU_ENV_BLDR_SPOOF, "0");
                 fastboot_publish("is-spoofing", "0");
-                fastboot_info("Bootloader spoofing disabled.");
-                fastboot_okay("A factory reset may be required.");
+                fastboot_okay("Spoofing disabled. Factory reset may be required.");
             } else {
-                fastboot_okay("Bootloader spoofing is already disabled.");
+                fastboot_okay("Spoofing was already disabled.");
             }
             return;
         }
@@ -50,35 +49,22 @@ static void cmd_spoof_bootloader_lock(const char* arg, void* data, unsigned sz) 
             if (!status) {
                 set_env(KAERU_ENV_BLDR_SPOOF, "1");
                 fastboot_publish("is-spoofing", "1");
-                fastboot_info("Bootloader spoofing enabled.");
-                fastboot_okay("A factory reset may be required.");
+                fastboot_okay("Spoofing enabled. Factory reset may be required.");
             } else {
-                fastboot_okay("Bootloader spoofing is already enabled.");
+                fastboot_okay("Spoofing was already enabled.");
             }
             return;
         }
 
         if (!strcmp(option, "status")) {
-            fastboot_info(status ?
-                "Bootloader spoofing is currently enabled." :
-                "Bootloader spoofing is currently disabled.");
             fastboot_okay(status ?
-                "Device is currently spoofed as bootloader locked." :
-                "Device is not being spoofed as bootloader locked.");
+                "Spoofing enabled - device reports as locked." :
+                "Spoofing disabled - device reports as unlocked.");
             return;
         }
     }
 
-    fastboot_info("kaeru bootloader lock spoofing control");
-    fastboot_info("");
-    fastboot_info("When enabled, device reports as 'locked' to TEE");
-    fastboot_info("while maintaining full fastboot and root capabilities.");
-    fastboot_info("");
-    fastboot_info("Commands:");
-    fastboot_info("  on     - Enable spoofing (reboot required)");
-    fastboot_info("  off    - Disable spoofing (reboot required)");
-    fastboot_info("  status - Show current state");
-    fastboot_fail("Usage: fastboot oem bldr_spoof <on|off|status>");
+    fastboot_okay("Usage: fastboot oem bldr_spoof <on|off|status>.");
 }
 
 // NOTE: Warning suppression patches are in board_early_init(), NOT
