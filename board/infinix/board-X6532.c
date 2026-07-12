@@ -5,10 +5,6 @@
 
 #include <board_ops.h>
 
-// ── Direct LK fastboot_info for displaying text (uses separate state struct) ──
-#define LK_INFO(msg) \
-    ((void (*)(const char*))(CONFIG_FASTBOOT_INFO_ADDRESS | 1))(msg)
-
 // ── Environment helpers (runtime SEARCH_PATTERN) ──
 
 int set_env(char *name, char *value) {
@@ -28,6 +24,10 @@ char *get_env(char *name) {
     }
     return NULL;
 }
+
+// ── Direct LK fastboot_info for displaying text (uses separate state struct) ──
+#define LK_INFO(msg) \
+    ((void (*)(const char*))(CONFIG_FASTBOOT_INFO_ADDRESS | 1))(msg)
 
 #define ENV_KEY_MAX_LEN 64
 #define ENV_VAL_MAX_LEN 256
@@ -126,15 +126,6 @@ static void cmd_env(const char *arg, void *data, unsigned sz) {
     fastboot_fail("Usage: fastboot oem env <get|set>");
 }
 
-// ── Security bypass stub ──
-// This replaces the LK's central security check function at 0x4C43AE1C.
-// The original is called from dozens of places in the fastboot dispatch
-// to check whether operations are allowed. By returning 0 ("allowed"),
-// all fastboot commands work regardless of lock state.
-static int security_check_stub(void) {
-    return 0;
-}
-
 // ── Bootloader lock spoofing command ──
 
 static void cmd_spoof_bootloader_lock(const char* arg, void* data, unsigned sz) {
@@ -194,97 +185,39 @@ void board_early_init(void) {
 
     uint32_t addr = 0;
 
-    // ── Verified pattern: image authentication bypass ──
-    // Forces get_vfy_policy to return 0, skipping certificate verification
-    // for all partitions and firmware images. Pattern confirmed at 0x4C417F0C
-    // via disassembly analysis.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB508, 0xF7FF, 0xFF63, 0xF3C0);
-    if (addr) {
-        printf("Found get_vfy_policy at 0x%08X\n", addr);
-        FORCE_RETURN(addr, 0);
-    }
-
-    // ── Verified pattern: download policy bypass ──
-    // Forces get_dl_policy to return 0, ensuring no partition is marked
-    // as download-forbidden. Pattern confirmed at 0x4C417F18 via disasm.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB508, 0xF7FF, 0xFF5D, 0xF000);
-    if (addr) {
-        printf("Found get_dl_policy at 0x%08X\n", addr);
-        FORCE_RETURN(addr, 0);
-    }
-
-    // ── Verified pattern: modem verification bypass ──
-    // Forces ccci_ld_md_sec_ptr_hdr_verify to return 0 so modem images
-    // (md1rom, md3rom, etc.) can be loaded without signature verification.
-    // Pattern confirmed at 0x4C452AC0 via disasm.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x41F0, 0x460A, 0x4604);
-    if (addr) {
-        printf("Found ccci_ld_md_sec_ptr_hdr_verify at 0x%08X\n", addr);
-        FORCE_RETURN(addr, 0);
-    }
-
-    // ── Verified pattern: orange state warning suppression ──
-    // Suppresses the bootloader unlock warning + 5-second delay during boot.
+    // Suppresses the bootloader unlock warning shown during boot on
+    // unlocked devices. In addition to the visual warning, it also
+    // introduces an unnecessary 5-second delay.
     addr = SEARCH_PATTERN(LK_START, LK_END, 0xB508, 0x4B0E, 0x447B, 0x681B, 0x681B);
     if (addr) {
         printf("Found orange_state_warning at 0x%08X\n", addr);
         FORCE_RETURN(addr, 0);
     }
 
-    // ── Verified pattern: dm-verity corruption warning suppression ──
-    // Disables the "Your device is corrupt" screen during boot.
+    // Disables the dm-verity corruption warning during boot.
     addr = SEARCH_PATTERN(LK_START, LK_END, 0xB530, 0xB083, 0xAB02, 0x2200);
     if (addr) {
         printf("Found dm_verity_corruption at 0x%08X\n", addr);
         FORCE_RETURN(addr, 0);
     }
 
-    // ── Verified pattern: seccfg_get_lock_state ──
-    // Force seccfg lock_state to 1 and return 2. This makes TEE believe
-    // the device's lock state is properly initialized.
-    // Pattern: B1D0 B510 4604 F7FF FFDD @ 0x4C46C4E0
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB1D0, 0xB510, 0x4604, 0xF7FF, 0xFFDD);
+    // Forces get_vfy_policy to return 0 ("signature valid").
+    // Verified pattern at 0x4C417F0C: B508 F7FF FF63 F3C0
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB508, 0xF7FF, 0xFF63, 0xF3C0);
     if (addr) {
-        printf("Found seccfg_get_lock_state at 0x%08X\n", addr);
-        PATCH_MEM(addr + 6,
-            0x2301,  // movs r3, #1
-            0x6023,  // str r3, [r4, #0]
-            0x2002,  // movs r0, #2
-            0xBD10   // pop {r4, pc}
-        );
+        printf("Found get_vfy_policy at 0x%08X\n", addr);
+        FORCE_RETURN(addr, 0);
     }
 
-    // ── Verified pattern: get_sboot_state ──
-    // Force secure boot state to ATTR_SBOOT_ENABLE (0x11) and return 0.
-    // Pattern: B510 4604 2001 F7FF FF93 @ 0x4C46B85C
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB510, 0x4604, 0x2001, 0xF7FF, 0xFF93);
+    // Forces get_dl_policy to return 0 ("download allowed").
+    // Verified pattern at 0x4C417F18: B508 F7FF FF5D F000
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB508, 0xF7FF, 0xFF5D, 0xF000);
     if (addr) {
-        printf("Found get_sboot_state at 0x%08X\n", addr);
-        PATCH_MEM(addr,
-            0x2311,  // movs r3, #0x11
-            0x6003,  // str r3, [r0, #0]
-            0x2000,  // movs r0, #0
-            0x4770   // bx lr
-        );
+        printf("Found get_dl_policy at 0x%08X\n", addr);
+        FORCE_RETURN(addr, 0);
     }
 
-    // ── Security check bypass ──
-    // The function at 0x4C43AE1C is the central security gate called from
-    // the fastboot dispatch. It checks if operations are allowed in the
-    // current device state. We redirect ALL calls to it within the fastboot
-    // area (0x4C429000-0x4C430000) to our stub that returns 0 ("allowed").
-    // This makes fastboot commands work even when the device reports as
-    // "locked" (which our seccfg_get_lock_state patch forces).
-    {
-        int count = PATCH_ALL_BL((void *)0x4C429000, 0x7000,
-                                  (void *)0x4C43AE1C, security_check_stub);
-        if (count > 0)
-            printf("Patched %d calls to security check function\n", count);
-        else
-            printf("No security check calls found (may be unreachable)\n");
-    }
-
-    // ── Fastboot command registration ──
+    // Register fastboot OEM commands.
     fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
     fastboot_register("oem env", cmd_env, 1);
 
