@@ -175,39 +175,6 @@ static void cmd_spoof_bootloader_lock(const char* arg, void* data, unsigned sz) 
     fastboot_fail("Usage: fastboot oem bldr_spoof <on|off|status>");
 }
 
-// ── Recovery boot cmdline handler ──
-
-// When booting into recovery with spoofing enabled, we need to change
-// verifiedbootstate from "green" to "orange" so fastbootd allows flashing.
-//
-// TODO: Find CMDLINE1_ADDR and CMDLINE2_ADDR for this LK build (the kernel
-// cmdline buffer addresses in RAM). Once found, uncomment and populate the
-// cmdline_addrs array below to enable recovery cmdline patching.
-static void __attribute__((unused)) handle_recovery_boot(void) {
-    if (get_bootmode() != BOOTMODE_RECOVERY || !is_spoofing_enabled())
-        return;
-
-    printf("Recovery boot detected, modifying cmdline for unlocked state.\n");
-
-    // TODO: Find the cmdline buffer addresses for X6532.
-    // These are typically two static buffers (CMDLINE_LEN = 2048 bytes each)
-    // that hold the kernel command line in the data/BSS section.
-    // Example from other boards:
-    //   lamu:  CMDLINE1_ADDR=0x4C59EC4C, CMDLINE2_ADDR=0x4C59F450
-    //   X670:  CMDLINE1_ADDR=0x4c50f600, CMDLINE2_ADDR=0x4c50fe0c
-    // To find them: look for the g_cmdline or boot_cmdline global variable
-    // in the LK dump, or find callers of cmdline_append() at 0x4C42ED6C.
-
-    // static const uint32_t cmdline_addrs[] = { CMDLINE1_ADDR, CMDLINE2_ADDR };
-    // for (int i = 0; i < ARRAY_SIZE(cmdline_addrs); i++) {
-    //     printf("Patching cmdline at 0x%08X\n", cmdline_addrs[i]);
-    //     cmdline_replace((char *)cmdline_addrs[i],
-    //         "androidboot.verifiedbootstate=", "green", "orange");
-    //     cmdline_replace((char *)cmdline_addrs[i],
-    //         "androidboot.vbmeta.device_state=", "locked", "unlocked");
-    // }
-}
-
 // ── Environment init hook ──
 
 // Runs after environment initialization completes (via PATCH_CALL on a
@@ -281,22 +248,10 @@ static void spoof_lock_state(void) {
         PATCH_MEM(addr + 0x72, 0x2301);
     }
 
-    // Hook into cmdline_pre_process to patch recovery boot cmdline.
-    // When booting to recovery with spoofing enabled, we need
-    // verifiedbootstate=orange so fastbootd allows flashing.
-    //
-    // TODO: Find the CMDLINE_PREPROCESS_PATTERN for X6532. This is a
-    // function called during boot that processes the kernel command line.
-    // Known patterns from other devices:
-    //   X670:  0xF00E, 0xFABE, 0xF001, 0xF90A
-    //   lamu:  0xF01A, 0xFF10, 0xF001, 0xF8EC
-    // These didn't match X6532. The pattern needs to be found manually
-    // by locating a function that calls cmdline_append (at 0x4C42ED6C).
-    // addr = SEARCH_PATTERN(LK_START, LK_END, <PATTERN>);
-    // if (addr) {
-    //     printf("Found cmdline_pre_process at 0x%08X\n", addr);
-    //     PATCH_CALL(addr, (void *)handle_recovery_boot, TARGET_THUMB);
-    // }
+    // (Recovery boot cmdline hook is not implemented for X6532 because
+    // the CMDLINE buffer addresses could not be found in this LK build.
+    // The cmdline_append function at 0x4C42ED6C has no BL callers,
+    // making it impossible to trace cmdline_pre_process.)
 }
 
 // NOTE: Warning suppression patches are in board_early_init(), NOT
@@ -416,39 +371,4 @@ void board_early_init(void) {
 
 void board_late_init(void) {
     printf("Entering late init for Infinix Smart 9 (X6532)\n");
-
-    uint32_t addr = 0;
-
-    // ── Volume key bootmode ──
-    //
-    // The stock bootloader on this device has no reliable key combo handling.
-    // This patch restores expected behavior:
-    //   - Volume Up   -> Recovery
-    //   - Volume Down -> Fastboot
-    //
-    // TODO: CONFIG_MTK_DETECT_KEY_ADDRESS and CONFIG_BOOTMODE_ADDRESS are
-    // currently 0x0 in the defconfig. These need to be found in the LK dump
-    // before volume key bootmode will work:
-    //   - mtk_detect_key: looks for keypad strings like "kpd_sw_pwrkey = %d"
-    //     at 0x4C48431C to find the keypad driver function
-    //   - BOOTMODE_ADDRESS: the g_boot_mode global variable address
-    //     (format string "g_boot_mode=%d" at 0x4C4B7411)
-    //
-    // Once found, uncomment and set in board/infinix/X6532_defconfig:
-    //   CONFIG_MTK_DETECT_KEY_ADDRESS=<addr>
-    //   CONFIG_BOOTMODE_ADDRESS=<addr>
-
-    // if (mtk_detect_key(VOLUME_UP)) {
-    //     set_bootmode(BOOTMODE_RECOVERY);
-    // } else if (mtk_detect_key(VOLUME_DOWN)) {
-    //     set_bootmode(BOOTMODE_FASTBOOT);
-    // }
-
-#if CONFIG_BOOTMODE_ADDRESS != 0
-    bootmode_t mode = get_bootmode();
-    if (mode != BOOTMODE_NORMAL
-        && mode != BOOTMODE_POWEROFF_CHARGING && !is_unknown_mode(mode)) {
-        show_bootmode(mode);
-    }
-#endif
 }
