@@ -236,6 +236,19 @@ def main() -> None:
     print('File offset: 0x%X' % offset)
     data = bytearray(part.data)
     data[offset : offset + len(shellcode)] = shellcode
+
+    # Statically patch get_sboot_state to enforce force_sboot_enable without breaking runtime state
+    # This is required for X6739 because it checks secure boot state very early.
+    if config.get('INFINIX_X6739') == 'y':
+        # Search for pattern: b5 10 46 04 20 01 f7 ff (get_sboot_state)
+        idx = data.find(bytes.fromhex('10b504460120fff7'))
+        if idx != -1:
+            print(f'Statically patching get_sboot_state at offset 0x{idx:X}')
+            # Writes: 2310 6003 2000 4770 (movs r3, #16; str r3, [r0]; movs r0, #0; bx lr)
+            data[idx : idx+8] = bytes.fromhex('1023036000207047')
+        else:
+            print('ERROR: get_sboot_state pattern not found in binary!')
+            
     part.data = bytes(data)
 
     # Now that every modification is in place, forge new certificates for the

@@ -445,6 +445,12 @@ menu "Device Support"
         help
           Say Y if you want to include support for NOTE 12
 
+    config INFINIX_X6739
+        bool "Support Infinix GT 10 Pro (X6739)"
+        default n
+        help
+          Say Y if you want to include support for Infinix GT 10 Pro (X6739)
+
     config XIAOMI_FIRE
         bool "Support Redmi 12 4G"
         default n

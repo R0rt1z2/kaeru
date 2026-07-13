@@ -11,11 +11,11 @@
 #define ENV_VAL_MAX_LEN 256
 #define ENV_MSG_MAX_LEN (ENV_KEY_MAX_LEN + ENV_VAL_MAX_LEN + 16)
 
-char *get_env(char *name) {
+__attribute__((weak)) char *get_env(char *name) {
     return ((char *(*)(char *))(CONFIG_GET_ENV_ADDRESS | 1))(name);
 }
 
-int set_env(char *name, char *value) {
+__attribute__((weak)) int set_env(char *name, char *value) {
     return ((int (*)(char *, char *))(CONFIG_SET_ENV_ADDRESS | 1))(name, value);
 }
 
