@@ -175,6 +175,42 @@ static void cmd_spoof_bootloader_lock(const char* arg, void* data, unsigned sz) 
     fastboot_fail("Usage: fastboot oem bldr_spoof <on|off|status>");
 }
 
+// ── Environment init hook ──
+
+// Runs after environment initialization completes (via PATCH_CALL on a
+// printf in platform_init). At this point get_env() returns real values,
+// so we can conditionally apply lock state patches based on the spoofing
+// env variable.
+static void spoof_lock_state(void) {
+    uint32_t addr = 0;
+
+    const char* env_value = get_env(KAERU_ENV_BLDR_SPOOF);
+    int spoofing = (env_value && strcmp(env_value, "1") == 0) ? 1 : 0;
+
+    fastboot_publish("is-spoofing", spoofing ? "1" : "0");
+
+    if (!spoofing) {
+        printf("Bootloader lock status spoofing disabled.\n");
+        return;
+    }
+
+    printf("Bootloader lock status spoofing enabled, applying patches.\n");
+
+    // Makes seccfg_get_lock_state report LKS_LOCK (4) so TEE and Android
+    // detect the device as locked. This triggers the "format data" prompt
+    // on next boot when the lock state changes from unlocked to locked.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB1D0, 0xB510, 0x4604, 0xF7FF, 0xFFDD);
+    if (addr) {
+        printf("Found seccfg_get_lock_state at 0x%08X\n", addr);
+        PATCH_MEM(addr + 6,
+            0x2304,  // movs r3, #4      - LKS_LOCK
+            0x6023,  // str r3, [r4, #0]  - *arg = lock_state
+            0x2000,  // movs r0, #0       - return 0
+            0xBD10   // pop {r4, pc}      - return
+        );
+    }
+}
+
 // NOTE: Warning suppression patches are in board_early_init(), NOT
 // board_late_init(). This LK build doesn't have the app() pointer needed
 // by kaeru to hook apps_init(), so kaeru_late_init() never runs.
@@ -237,32 +273,19 @@ void board_early_init(void) {
         FORCE_RETURN(addr, 1);
     }
 
-    // Temporarily makes seccfg_get_lock_state report LKS_UNLOCK (3)
-    // so the TEE doesn't enforce verified boot and the device boots
-    // normally. The fastboot cmd processor's lock gate at +0x15A is
-    // bypassed separately via the NOP above.
+    // Hook into a printf call in platform_init that runs right after
+    // environment initialization. At this point get_env() returns real
+    // env values, allowing us to conditionally apply seccfg lock state
+    // patches based on the bldr_spoof env variable.
     //
-    // TODO: Add env_init_done hook + conditional patching so this
-    // can report locked when spoofing is enabled (needs recovery
-    // boot cmdline patching too for OS to boot with locked state).
-    //
-    // IMPORTANT: We return r0=0, NOT r0=2 (which previous attempts did
-    // and triggered the error path).
-    //
-    // PATCH_MEM at addr+6 overwrites the body after the prologue:
-    //   0x2303 = movs r3, #3      -- *arg = LKS_UNLOCK
-    //   0x6023 = str r3, [r4, #0]  -- store to arg
-    //   0x2000 = movs r0, #0       -- return 0 (NOT 2!)
-    //   0xBD10 = pop {r4, pc}      -- return
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB1D0, 0xB510, 0x4604, 0xF7FF, 0xFFDD);
+    // Pattern at 0x4C403C16 (platform_init + 0x01EA):
+    //   F036 F8C1 = bl dprintf
+    //   6823      = ldr r3, [r4, #0]
+    //   2000      = movs r0, #0
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF036, 0xF8C1, 0x6823, 0x2000);
     if (addr) {
-        printf("Found seccfg_get_lock_state at 0x%08X\n", addr);
-        PATCH_MEM(addr + 6,
-            0x2303,  // movs r3, #3      - LKS_UNLOCK (temp, until env hook)
-            0x6023,  // str r3, [r4, #0]  - *arg = lock_state
-            0x2000,  // movs r0, #0       - return 0 (NOT 2!)
-            0xBD10   // pop {r4, pc}      - return
-        );
+        printf("Found env_init_done at 0x%08X\n", addr);
+        PATCH_CALL(addr, (void*)spoof_lock_state, TARGET_THUMB);
     }
 
     // Forces get_sboot_state to store ATTR_SBOOT_ENABLE (0x11) in the
