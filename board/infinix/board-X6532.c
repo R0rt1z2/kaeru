@@ -237,17 +237,20 @@ void board_early_init(void) {
         FORCE_RETURN(addr, 1);
     }
 
-    // Makes seccfg_get_lock_state always report LKS_LOCK (lock_state=4)
-    // and return 0 (success). This is used by TEE and other subsystems
-    // that check the lock state independently of fastboot. The fastboot
-    // cmd processor's lock gate at +0x15A is bypassed separately above,
-    // so this can safely report locked for spoofing purposes.
+    // Temporarily makes seccfg_get_lock_state report LKS_UNLOCK (3)
+    // so the TEE doesn't enforce verified boot and the device boots
+    // normally. The fastboot cmd processor's lock gate at +0x15A is
+    // bypassed separately via the NOP above.
+    //
+    // TODO: Add env_init_done hook + conditional patching so this
+    // can report locked when spoofing is enabled (needs recovery
+    // boot cmdline patching too for OS to boot with locked state).
     //
     // IMPORTANT: We return r0=0, NOT r0=2 (which previous attempts did
     // and triggered the error path).
     //
     // PATCH_MEM at addr+6 overwrites the body after the prologue:
-    //   0x2304 = movs r3, #4      -- *arg = LKS_LOCK (locked)
+    //   0x2303 = movs r3, #3      -- *arg = LKS_UNLOCK
     //   0x6023 = str r3, [r4, #0]  -- store to arg
     //   0x2000 = movs r0, #0       -- return 0 (NOT 2!)
     //   0xBD10 = pop {r4, pc}      -- return
@@ -255,7 +258,7 @@ void board_early_init(void) {
     if (addr) {
         printf("Found seccfg_get_lock_state at 0x%08X\n", addr);
         PATCH_MEM(addr + 6,
-            0x2304,  // movs r3, #4      - LKS_LOCK
+            0x2303,  // movs r3, #3      - LKS_UNLOCK (temp, until env hook)
             0x6023,  // str r3, [r4, #0]  - *arg = lock_state
             0x2000,  // movs r0, #0       - return 0 (NOT 2!)
             0xBD10   // pop {r4, pc}      - return
