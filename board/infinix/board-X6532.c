@@ -444,9 +444,11 @@ void board_late_init(void) {
     //     set_bootmode(BOOTMODE_FASTBOOT);
     // }
 
+#if CONFIG_BOOTMODE_ADDRESS != 0
     bootmode_t mode = get_bootmode();
     if (mode != BOOTMODE_NORMAL
         && mode != BOOTMODE_POWEROFF_CHARGING && !is_unknown_mode(mode)) {
         show_bootmode(mode);
     }
+#endif
 }
