@@ -281,6 +281,19 @@ void board_early_init(void) {
         );
     }
 
+    // The fastboot command processor at 0x4C42C1B0 calls a lock state gate
+    // function at +0x15A (bl 0x4c46eb00) that checks the lock state and
+    // returns non-zero when locked. This triggers "not allowed in locked
+    // state" errors on all commands, even though the device is actually
+    // unlocked underneath. We NOP the call with movs r0,#0 so the success
+    // path (beq at +0x160) is always taken.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x4FF0, 0xB0A7, 0xAA1C);
+    if (addr) {
+        printf("Found fastboot command processor at 0x%08X\n", addr);
+        // NOP the lock state check: movs r0, #0; nop  (replaces bl call)
+        PATCH_MEM(addr + 0x15A, 0x2000, 0xBF00);
+    }
+
     // Register fastboot OEM commands.
     fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
     fastboot_register("oem env", cmd_env, 1);
