@@ -183,7 +183,7 @@ static void cmd_spoof_bootloader_lock(const char* arg, void* data, unsigned sz) 
 // TODO: Find CMDLINE1_ADDR and CMDLINE2_ADDR for this LK build (the kernel
 // cmdline buffer addresses in RAM). Once found, uncomment and populate the
 // cmdline_addrs array below to enable recovery cmdline patching.
-static void handle_recovery_boot(void) {
+static void __attribute__((unused)) handle_recovery_boot(void) {
     if (get_bootmode() != BOOTMODE_RECOVERY || !is_spoofing_enabled())
         return;
 
