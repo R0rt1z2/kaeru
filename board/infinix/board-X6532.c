@@ -237,29 +237,30 @@ void board_early_init(void) {
         FORCE_RETURN(addr, 1);
     }
 
-    // Makes seccfg_get_lock_state always report LKS_LOCK (lock_state=1) and
-    // return 0 (success). This function is called via a tail-call from
-    // 0x4C4264D4, which is called from 0x4C46EB00 at +0x15A in the fastboot
-    // command processor.
+    // Makes seccfg_get_lock_state always report the unlocked sentinel
+    // value (4) and return 0 (success). The stock code on an unlocked
+    // device sets *arg=4 via the wrapper at 0x4C4264D4. We match that
+    // behavior so the fastboot command processor's lock state gate at
+    // +0x15A (0x4c46eb00) naturally passes, allowing all commands.
     //
-    // IMPORTANT: We return r0=0, NOT r0=2. The caller (0x4C46EB00) checks
-    // 'cbnz r0, #error' — any non-zero return triggers an error log path!
-    // Returning 0 avoids that path entirely.
+    // IMPORTANT: We return r0=0, NOT r0=2 (which previous attempts did
+    // and triggered the error path). The value 4 in *arg matches what
+    // the stock unlocked code path produces.
     //
     // PATCH_MEM at addr+6 overwrites the body after the prologue (cbz, push,
     // mov r4, r0):
-    //   0x2301 = movs r3, #1      -- lock_state = LKS_LOCK
-    //   0x6023 = str r3, [r4, #0]  -- *arg = lock_state
+    //   0x2304 = movs r3, #4      -- *arg = unlocked sentinel (matches stock)
+    //   0x6023 = str r3, [r4, #0]  -- store to arg
     //   0x2000 = movs r0, #0       -- return 0 (NOT 2!)
     //   0xBD10 = pop {r4, pc}      -- return
     addr = SEARCH_PATTERN(LK_START, LK_END, 0xB1D0, 0xB510, 0x4604, 0xF7FF, 0xFFDD);
     if (addr) {
         printf("Found seccfg_get_lock_state at 0x%08X\n", addr);
         PATCH_MEM(addr + 6,
-            0x2301,  // movs r3, #1
-            0x6023,  // str r3, [r4, #0]
-            0x2000,  // movs r0, #0   (NOT 2!)
-            0xBD10   // pop {r4, pc}
+            0x2304,  // movs r3, #4      - unlocked sentinel
+            0x6023,  // str r3, [r4, #0]  - *arg = unlocked sentinel
+            0x2000,  // movs r0, #0       - return 0 (NOT 2!)
+            0xBD10   // pop {r4, pc}      - return
         );
     }
 
@@ -282,11 +283,10 @@ void board_early_init(void) {
     }
 
     // The fastboot command processor at 0x4C42C1B0 calls a lock state gate
-    // function at +0x15A (bl 0x4c46eb00) that checks the lock state and
-    // returns non-zero when locked. This triggers "not allowed in locked
-    // state" errors on all commands, even though the device is actually
-    // unlocked underneath. We NOP the call with movs r0,#0 so the success
-    // path (beq at +0x160) is always taken.
+    // function at +0x15A (bl 0x4c46eb00). We NOP the call with movs r0,#0
+    // so the success path (beq at +0x160) is always taken, as a safety net
+    // in case the seccfg_get_lock_state patch doesn't produce the expected
+    // sentinel value.
     addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x4FF0, 0xB0A7, 0xAA1C);
     if (addr) {
         printf("Found fastboot command processor at 0x%08X\n", addr);
