@@ -209,6 +209,17 @@ static void spoof_lock_state(void) {
             0xBD10   // pop {r4, pc}      - return
         );
     }
+
+    // AVB adds device state info to the kernel cmdline based on the
+    // actual lock state. When we're spoofing locked, AVB would now
+    // correctly write "locked" to the cmdline, which is what we want.
+    // This patch ensures the cmdline always reflects the correct state
+    // by NOP-ing out a redundant state check.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x4FF0, 0x4691, 0xF102);
+    if (addr) {
+        printf("Found AVB cmdline function at 0x%08X\n", addr);
+        NOP(addr + 0x9C, 4);
+    }
 }
 
 // NOTE: Warning suppression patches are in board_early_init(), NOT
