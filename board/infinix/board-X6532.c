@@ -175,6 +175,39 @@ static void cmd_spoof_bootloader_lock(const char* arg, void* data, unsigned sz) 
     fastboot_fail("Usage: fastboot oem bldr_spoof <on|off|status>");
 }
 
+// ── Recovery boot cmdline handler ──
+
+// When booting into recovery with spoofing enabled, we need to change
+// verifiedbootstate from "green" to "orange" so fastbootd allows flashing.
+//
+// TODO: Find CMDLINE1_ADDR and CMDLINE2_ADDR for this LK build (the kernel
+// cmdline buffer addresses in RAM). Once found, uncomment and populate the
+// cmdline_addrs array below to enable recovery cmdline patching.
+static void handle_recovery_boot(void) {
+    if (get_bootmode() != BOOTMODE_RECOVERY || !is_spoofing_enabled())
+        return;
+
+    printf("Recovery boot detected, modifying cmdline for unlocked state.\n");
+
+    // TODO: Find the cmdline buffer addresses for X6532.
+    // These are typically two static buffers (CMDLINE_LEN = 2048 bytes each)
+    // that hold the kernel command line in the data/BSS section.
+    // Example from other boards:
+    //   lamu:  CMDLINE1_ADDR=0x4C59EC4C, CMDLINE2_ADDR=0x4C59F450
+    //   X670:  CMDLINE1_ADDR=0x4c50f600, CMDLINE2_ADDR=0x4c50fe0c
+    // To find them: look for the g_cmdline or boot_cmdline global variable
+    // in the LK dump, or find callers of cmdline_append() at 0x4C42ED6C.
+
+    // static const uint32_t cmdline_addrs[] = { CMDLINE1_ADDR, CMDLINE2_ADDR };
+    // for (int i = 0; i < ARRAY_SIZE(cmdline_addrs); i++) {
+    //     printf("Patching cmdline at 0x%08X\n", cmdline_addrs[i]);
+    //     cmdline_replace((char *)cmdline_addrs[i],
+    //         "androidboot.verifiedbootstate=", "green", "orange");
+    //     cmdline_replace((char *)cmdline_addrs[i],
+    //         "androidboot.vbmeta.device_state=", "locked", "unlocked");
+    // }
+}
+
 // ── Environment init hook ──
 
 // Runs after environment initialization completes (via PATCH_CALL on a
@@ -220,6 +253,50 @@ static void spoof_lock_state(void) {
         printf("Found AVB cmdline function at 0x%08X\n", addr);
         NOP(addr + 0x9C, 4);
     }
+
+    // AVB verifies vbmeta public keys in two places: once for the main
+    // vbmeta image (validate_vbmeta_public_key) and once for chained
+    // vbmeta images (avb_safe_memcmp against the expected key). Both
+    // reject the boot if the key doesn't match, causing the "Public key
+    // used to sign data rejected" error. We patch both checks so any
+    // key is accepted regardless.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF47F, 0xAE6B, 0xE688, 0xF8DD);
+    if (addr) {
+        printf("Found load_and_verify_vbmeta at 0x%08X\n", addr);
+
+        // The chain key check first compares key lengths before calling
+        // memcmp. If lengths differ, it skips memcmp and falls straight
+        // to the error path. Change "cmp r2, r3" to "cmp r3, r3" so the
+        // length check always succeeds, allowing execution to reach the
+        // memcmp path (which we NOP below).
+        PATCH_MEM(addr - 0x32C, 0x451B);
+
+        // NOP the bne.w that rejects mismatched chained vbmeta keys,
+        // falling through to the success path unconditionally.
+        NOP(addr, 2);
+
+        // Replace "cmp r3, #0" with "movs r3, #1" so key_is_trusted
+        // is always nonzero and the following bne.w takes the success
+        // branch.
+        PATCH_MEM(addr + 0x72, 0x2301);
+    }
+
+    // Hook into cmdline_pre_process to patch recovery boot cmdline.
+    // When booting to recovery with spoofing enabled, we need
+    // verifiedbootstate=orange so fastbootd allows flashing.
+    //
+    // TODO: Find the CMDLINE_PREPROCESS_PATTERN for X6532. This is a
+    // function called during boot that processes the kernel command line.
+    // Known patterns from other devices:
+    //   X670:  0xF00E, 0xFABE, 0xF001, 0xF90A
+    //   lamu:  0xF01A, 0xFF10, 0xF001, 0xF8EC
+    // These didn't match X6532. The pattern needs to be found manually
+    // by locating a function that calls cmdline_append (at 0x4C42ED6C).
+    // addr = SEARCH_PATTERN(LK_START, LK_END, <PATTERN>);
+    // if (addr) {
+    //     printf("Found cmdline_pre_process at 0x%08X\n", addr);
+    //     PATCH_CALL(addr, (void *)handle_recovery_boot, TARGET_THUMB);
+    // }
 }
 
 // NOTE: Warning suppression patches are in board_early_init(), NOT
@@ -339,4 +416,37 @@ void board_early_init(void) {
 
 void board_late_init(void) {
     printf("Entering late init for Infinix Smart 9 (X6532)\n");
+
+    uint32_t addr = 0;
+
+    // ── Volume key bootmode ──
+    //
+    // The stock bootloader on this device has no reliable key combo handling.
+    // This patch restores expected behavior:
+    //   - Volume Up   -> Recovery
+    //   - Volume Down -> Fastboot
+    //
+    // TODO: CONFIG_MTK_DETECT_KEY_ADDRESS and CONFIG_BOOTMODE_ADDRESS are
+    // currently 0x0 in the defconfig. These need to be found in the LK dump
+    // before volume key bootmode will work:
+    //   - mtk_detect_key: looks for keypad strings like "kpd_sw_pwrkey = %d"
+    //     at 0x4C48431C to find the keypad driver function
+    //   - BOOTMODE_ADDRESS: the g_boot_mode global variable address
+    //     (format string "g_boot_mode=%d" at 0x4C4B7411)
+    //
+    // Once found, uncomment and set in board/infinix/X6532_defconfig:
+    //   CONFIG_MTK_DETECT_KEY_ADDRESS=<addr>
+    //   CONFIG_BOOTMODE_ADDRESS=<addr>
+
+    // if (mtk_detect_key(VOLUME_UP)) {
+    //     set_bootmode(BOOTMODE_RECOVERY);
+    // } else if (mtk_detect_key(VOLUME_DOWN)) {
+    //     set_bootmode(BOOTMODE_FASTBOOT);
+    // }
+
+    bootmode_t mode = get_bootmode();
+    if (mode != BOOTMODE_NORMAL
+        && mode != BOOTMODE_POWEROFF_CHARGING && !is_unknown_mode(mode)) {
+        show_bootmode(mode);
+    }
 }
