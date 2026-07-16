@@ -492,4 +492,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for OmniPod 5 PDM
+
+    config XIAOMI_LANCELOT
+        bool "Support Redmi 9/Redmi 9 Prime"
+        default n
+        help
+          Say Y if you want to include support for Redmi 9/Redmi 9 Prime
 endmenu
