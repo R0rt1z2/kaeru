@@ -498,4 +498,16 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Infinix Smart 9 (X6532)
+
+    config XIAOMI_LANCELOT
+        bool "Support Redmi 9/Redmi 9 Prime"
+        default n
+        help
+          Say Y if you want to include support for Redmi 9/Redmi 9 Prime
+
+    config XIAOMI_MERLIN
+        bool "Support Redmi 10X 4G/Redmi Note 9"
+        default n
+        help
+          Say Y if you want to include support for Redmi 10X 4G/Redmi Note 9
 endmenu
