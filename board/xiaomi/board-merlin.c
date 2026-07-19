@@ -5,9 +5,8 @@
 
 #include <board_ops.h>
 
-#define CMDLINE1_ADDR 0x4C50294C
-#define CMDLINE2_ADDR 0x4C42CFFC
-#define CMDLINE2_ADDR 0x4C503150
+#define CMDLINE1_ADDR 0x4c50294c
+#define CMDLINE2_ADDR 0x4c503150
 
 static void patch_cmdline(char *cmdline) {
     cmdline_replace(cmdline, "androidboot.verifiedbootstate=",
@@ -101,7 +100,7 @@ static void spoof_lock_state(void) {
     // and allows flashing. We also patch a few other cmdline params
     // (secureboot, device_state) as a precaution in case stock
     // recovery checks them as well.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF015, 0xFBA5, 0xF001, 0xF9DF);
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF015, 0xFB4A, 0xF001, 0xFAD8);
     if (addr) {
         printf("Found cmdline_pre_process at 0x%08X\n", addr);
         PATCH_CALL(addr, (void *)handle_recovery_boot, TARGET_THUMB);
@@ -109,7 +108,7 @@ static void spoof_lock_state(void) {
 }
 
 void board_early_init(void) {
-    printf("Entering early init for Redmi 9/Redmi 9 Prime\n");
+    printf("Entering early init for Redmi 10X 4G/Redmi Note 9\n");
 
     uint32_t addr = 0;
 
@@ -160,7 +159,7 @@ void board_early_init(void) {
     // initialization completes, it's a convenient entry point since
     // the call itself is non-essential and we need the env to be ready
     // before applying our lock state patches.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF03A, 0xF9A5, 0x6823, 0x2001);
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF03A, 0xFA57, 0x6823, 0x2001);
     if (addr) {
         printf("Found env_init_done at 0x%08X\n", addr);
         PATCH_CALL(addr, (void*)spoof_lock_state, TARGET_THUMB);
@@ -171,5 +170,5 @@ void board_early_init(void) {
 }
 
 void board_late_init(void) {
-    printf("Entering late init for Redmi 9/Redmi 9 Prime\n");
+    printf("Entering late init for Redmi 10X 4G/Redmi Note 9\n");
 }
