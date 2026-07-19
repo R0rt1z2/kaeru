@@ -504,4 +504,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Redmi 10X 4G/Redmi Note 9
+
+    config XIAOMI_BEGONIA
+        bool "Support Redmi Note 8 Pro"
+        default n
+        help
+          Say Y if you want to include support for Redmi Note 8 Pro
 endmenu
