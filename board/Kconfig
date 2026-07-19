@@ -510,4 +510,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Redmi Note 8 Pro
+
+    config SAMSUNG_GTA7LITE
+        bool "Support Galaxy Tab A7 Lite"
+        default n
+        help
+          Say Y if you want to include support for Galaxy Tab A7 Lite
 endmenu
