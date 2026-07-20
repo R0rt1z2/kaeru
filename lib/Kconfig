@@ -128,6 +128,9 @@ menu "Fastboot Support"
 
         config FASTBOOT_STYLE_COMBINED
             bool "Combined (send_response/send_info)"
+
+        config FASTBOOT_STYLE_HYBRID
+            bool "Hybrid (combined response, standard register/publish)"
         endchoice
 
         if FASTBOOT_STYLE_STANDARD
@@ -153,6 +156,42 @@ menu "Fastboot Support"
 
             config FASTBOOT_SEND_INFO_ADDRESS
                 hex "fastboot_send_info() address"
+        endif
+
+        if FASTBOOT_STYLE_HYBRID
+            config FASTBOOT_SEND_RESPONSE_ADDRESS
+                hex "fastboot_send_response() address"
+                help
+                  Combined-style function that takes (type, msg) and sends
+                  the appropriate USB response. Used for fastboot_fail and
+                  fastboot_info.
+
+            config FASTBOOT_OKAY_ADDRESS
+                hex "fastboot_okay() wrapper address"
+                help
+                  Wrapper function that takes (msg), hardcodes "OKAY" as type,
+                  and calls send_response. Used for fastboot_okay.
+
+            config FASTBOOT_INFO_ADDRESS
+                hex "fastboot_info() address (direct LK call)"
+                help
+                  Direct address of the stock fastboot_info function for sending
+                  INFO messages. Uses a separate state struct from send_response,
+                  so can be called before fastboot_okay without conflict.
+
+            config FASTBOOT_SETUP_ADDRESS
+                hex "Response setup/reset address"
+                default 0
+                help
+                  Some LK builds need the response state reset between calls.
+                  If non-zero, called before each response to reset the USB
+                  response state machine. Set to 0 to disable.
+
+            config FASTBOOT_REGISTER_ADDRESS
+                hex "fastboot_register() address"
+
+            config FASTBOOT_PUBLISH_ADDRESS
+                hex "fastboot_publish() address"
         endif
     endmenu
 endmenu

@@ -57,9 +57,11 @@ void cmd_version(const char* arg, void* data, unsigned sz) {
 #ifndef CONFIG_EXCLUDE_BRANDING
     char buffer[64];
     npf_snprintf(buffer, sizeof(buffer), "kaeru v%s", KAERU_VERSION);
-    fastboot_info(buffer);
+    // Use direct LK fastboot_info (separate state struct) to display
+    // the version text, then kaeru's fastboot_okay to terminate.
+    ((void (*)(const char*))(CONFIG_FASTBOOT_INFO_ADDRESS | 1))(buffer);
+    fastboot_okay("Done");
     print_kaeru_info(video_printf);
-    fastboot_okay("");
 #else
     (void)arg;
     (void)data;

@@ -6,6 +6,7 @@
 #include <board_ops.h>
 
 #define CMDLINE1_ADDR 0x4C50294C
+#define CMDLINE2_ADDR 0x4C42CFFC
 #define CMDLINE2_ADDR 0x4C503150
 
 static void patch_cmdline(char *cmdline) {

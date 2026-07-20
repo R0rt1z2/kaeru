@@ -493,6 +493,12 @@ menu "Device Support"
         help
           Say Y if you want to include support for OmniPod 5 PDM
 
+    config INFINIX_X6532
+        bool "Support Infinix Smart 9"
+        default n
+        help
+          Say Y if you want to include support for Infinix Smart 9 (X6532)
+
     config XIAOMI_LANCELOT
         bool "Support Redmi 9/Redmi 9 Prime"
         default n
