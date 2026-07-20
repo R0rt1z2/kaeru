@@ -329,6 +329,10 @@ else
 ifeq ($(dot-config),1)
 # Read in config
 -include include/config/auto.conf
+ifeq ($(CONFIG_INFINIX_X6739),y)
+KBUILD_CFLAGS += -mfloat-abi=hard -mfpu=vfpv4-d16
+KBUILD_AFLAGS += -mcpu=cortex-a15 -mthumb
+endif
 
 
 # Read in dependencies to all Kconfig* files, make sure to run

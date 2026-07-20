@@ -80,6 +80,9 @@ config MEDIATEK_MT6877
 config MEDIATEK_MT6889
     bool "MediaTek MT6889 SoC"
 
+config MEDIATEK_MT6893
+    bool "MediaTek MT6893 SoC"
+
 endchoice
 
 config SECURITY_AO_BASE
@@ -109,6 +112,7 @@ config SECURITY_AO_BASE
     default 0x1001A000 if MEDIATEK_MT6853
     default 0x1001A000 if MEDIATEK_MT6877
     default 0x1001A000 if MEDIATEK_MT6889
+    default 0x1001A000 if MEDIATEK_MT6893
 
 config SEJ_BASE
     hex "Security Engine for JTAG Protection / HACC base address"
@@ -137,6 +141,7 @@ config SEJ_BASE
     default 0x1000A000 if MEDIATEK_MT6853
     default 0x1000A000 if MEDIATEK_MT6877
     default 0x1000A000 if MEDIATEK_MT6889
+    default 0x1000A000 if MEDIATEK_MT6893
 
 config UART_BASE
     hex "UART base address"
@@ -165,6 +170,14 @@ config UART_BASE
     default 0x11002000 if MEDIATEK_MT6853
     default 0x11002000 if MEDIATEK_MT6877
     default 0x11002000 if MEDIATEK_MT6889
+    default 0x11002000 if MEDIATEK_MT6893
+
+config BOOTLOADER_SIZE
+    hex "Bootloader size"
+
+config STATIC_APP_PATCH
+    bool "Statically patch .apps via patch.py instead of dynamic patch in RAM"
+    default n
 
 config WDT_BASE
     hex "Watchdog timer base address"
@@ -193,5 +206,6 @@ config WDT_BASE
     default 0x10007000 if MEDIATEK_MT6853
     default 0x10007000 if MEDIATEK_MT6877
     default 0x10007000 if MEDIATEK_MT6889
+    default 0x10007000 if MEDIATEK_MT6893
 
 endmenu
