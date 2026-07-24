@@ -1,0 +1,10 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/universal
+{
+    "name": "🐸 かえる Workstation",
+    "image": "mcr.microsoft.com/devcontainers/base:debian",
+    "updateContentCommand": "./.devcontainer/scripts/updatecontentcommand.sh",
+    "remoteEnv": {
+        "PATH": "${containerEnv:PATH}:${containerEnv:HOME}/.local/bin"
+    }
+}
