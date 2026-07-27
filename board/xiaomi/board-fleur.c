@@ -5,18 +5,6 @@
 
 #include <board_ops.h>
 
-int sec_usbdl_enabled(void) {
-    return 0;
-}
-
-unsigned int seclib_sec_boot_enabled(unsigned int) {
-    return 0;
-}
-
-unsigned get_unlocked_status(void) {
-    return 1;
-}
-
 static void spoof_lock_state(void) {
     uint32_t addr = 0;
 

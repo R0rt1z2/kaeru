@@ -22,6 +22,20 @@ int get_lock_state(uint32_t *lock_state) {
     return 0;
 }
 
+// Stubs that boards patch over the LK security checks so download mode,
+// secure boot and the lock status always report the values we want.
+int sec_usbdl_enabled(void) {
+    return 0;
+}
+
+unsigned int seclib_sec_boot_enabled(unsigned int) {
+    return 0;
+}
+
+unsigned get_unlocked_status(void) {
+    return 1;
+}
+
 void cmd_spoof_bootloader_lock(const char *arg, void *data, unsigned sz) {
     int status = is_spoofing_enabled();
     const char *option = arg + 1;

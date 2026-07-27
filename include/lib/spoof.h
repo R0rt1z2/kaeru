@@ -12,4 +12,7 @@
 
 int is_spoofing_enabled(void);
 int get_lock_state(uint32_t *lock_state);
+int sec_usbdl_enabled(void);
+unsigned int seclib_sec_boot_enabled(unsigned int);
+unsigned get_unlocked_status(void);
 void cmd_spoof_bootloader_lock(const char *arg, void *data, unsigned sz);
