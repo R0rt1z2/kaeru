@@ -9,14 +9,14 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
-    echo "Usage: $0 [--debug] <codename> <bootloader>"
+    echo "Usage: $0 [-d|--debug] <codename> <bootloader>"
     exit 1
 }
 
 POSITIONAL=()
 while [ $# -gt 0 ]; do
     case "$1" in
-        --debug)
+        -d|--debug)
             KAERU_DEBUG=1
             shift
             ;;
