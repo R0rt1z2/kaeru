@@ -15,7 +15,7 @@ void board_early_init(void) {
     // shown during boot. This has no functional impact, purely visual.
     //
     // To restore the original behavior, simply remove this patch.
-    FORCE_RETURN(0x48213f4c, 0);
+    FORCE_RETURN(0x48213F4C, 0);
 }
 
 void board_late_init(void) {
@@ -26,7 +26,7 @@ void board_late_init(void) {
     //
     // This patch disables the wrapper registration entirely, allowing OEM commands
     // to run as intended without interference.
-    NOP(0x4824c7e0, 2);
+    NOP(0x4824C7E0, 2);
 
     // Suppresses the bootloader unlock warning shown during boot on
     // unlocked devices. In addition to the visual warning, it also
@@ -35,17 +35,17 @@ void board_late_init(void) {
     // This patch get rid of the delay and the warning by forcing the
     // function that holds the logic to always return 0 and therefore
     // not executing the code that shows the warning.
-    FORCE_RETURN(0x482b3660, 0);
+    FORCE_RETURN(0x482B3660, 0);
 
     // This device has a struct whose pointer is returned by getter function(s). Then
     // the callers add specific offsets to the pointer to access particular fields.
     //
     // From my analysis, these offsets appear to control FBLOCK, USRLOCK, and WIDEVINE lock
     // states. Forcing these fields to 1 (unlocked) bypasses the lock state checks.
-    WRITE32(0x4853b008 + 0x104, 1);
-    WRITE32(0x4853b008 + 0x108, 1);
-    WRITE32(0x4853b008 + 0x10C, 1);
-    WRITE32(0x4853b008 + 0x114, 1);
+    WRITE32(0x4853B008 + 0x104, 1);
+    WRITE32(0x4853B008 + 0x108, 1);
+    WRITE32(0x4853B008 + 0x10C, 1);
+    WRITE32(0x4853B008 + 0x114, 1);
 
     // Honor overrides standard bootmode selection with their own logic,
     // often forcing an alternative recovery mode, especially after a failed boot.

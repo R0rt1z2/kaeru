@@ -36,15 +36,15 @@ int recovery_keys(void) {
 }
 
 void cmd_flash(const char *arg, void *data, unsigned sz) {
-    ((void (*)(const char *, void *, unsigned))(0x4bd2a74c|1))(arg, data, sz);
+    ((void (*)(const char *, void *, unsigned))(0x4BD2A74C|1))(arg, data, sz);
 }
 
 void cmd_reboot(const char *arg, void *data, unsigned sz) {
-    ((void (*)(const char *, void *, unsigned))(0x4bd28c98|1))(arg, data, sz);
+    ((void (*)(const char *, void *, unsigned))(0x4BD28C98|1))(arg, data, sz);
 }
 
 uint32_t pmic_config_interface(uint32_t reg, uint32_t val, uint32_t mask, uint32_t shift) {
-    return ((uint32_t (*)(uint32_t, uint32_t, uint32_t, uint32_t))(0x4bd155fc | 1))(reg, val, mask, shift);
+    return ((uint32_t (*)(uint32_t, uint32_t, uint32_t, uint32_t))(0x4BD155FC | 1))(reg, val, mask, shift);
 }
 
 size_t (*original_read)(struct device_t *dev, uint64_t block_off, void *dst, uint32_t sz, uint32_t part);
@@ -312,7 +312,7 @@ void parse_bootloader_messages(void) {
 
     if (strncmp((char*)bootloader_msg + 0x10, "UART_PLEASE", 11) == 0) {
         printf("Found UART_PLEASE, enabling UART\n");
-        strcpy((char *)0x4bd41a38, " printk.disable_uart=0");
+        strcpy((char *)0x4BD41A38, " printk.disable_uart=0");
     }
 }
 

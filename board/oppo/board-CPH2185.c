@@ -54,7 +54,7 @@ void board_early_init(void) {
     // state warnings, visual only, with no real impact.
     //
     // Patch the function to always return 0 and thus not display the warning.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0x2802, 0xd000, 0x4770, 0xb538, 0x2432);
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0x2802, 0xD000, 0x4770, 0xB538, 0x2432);
     if (addr) {
         printf("Found dm_verity_corruption at 0x%08X\n", addr);
         FORCE_RETURN(addr, 0);

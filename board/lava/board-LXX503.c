@@ -37,7 +37,7 @@ static void spoof_lock_state(void) {
             0x2301,  // movs r3, #1
             0x6023,  // str r3, [r4, #0]
             0x2002,  // movs r0, #2
-            0xbd10   // pop {r4, pc}
+            0xBD10   // pop {r4, pc}
         );
     }
 
@@ -89,7 +89,7 @@ static void spoof_lock_state(void) {
 
     // Hook cmdline_pre_process so handle_recovery_boot() can flip
     // verifiedbootstate before LK hands the cmdline to the kernel.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF00e, 0xFd79, 0xF001, 0xFa2d);
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF00E, 0xFD79, 0xF001, 0xFA2D);
     if (addr) {
         printf("Found cmdline_pre_process at 0x%08X\n", addr);
         PATCH_CALL(addr, (void *)handle_recovery_boot, TARGET_THUMB);
@@ -101,7 +101,7 @@ static void spoof_lock_state(void) {
     // reject the boot if the key doesn't match, causing the "Public key
     // used to sign data rejected" error. We patch both checks so any
     // key is accepted regardless.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF47F, 0xAE71, 0xE68d, 0xF8DD);
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF47F, 0xAE71, 0xE68D, 0xF8DD);
     if (addr) {
         printf("Found load_and_verify_vbmeta at 0x%08X\n", addr);
 

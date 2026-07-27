@@ -24,7 +24,7 @@ static void spoof_lock_state(void) {
         NOP(addr + 0x162, 2);
 
         // "not allowed in locked state" call
-        NOP(addr + 0x17c, 2);
+        NOP(addr + 0x17C, 2);
 
         // Jump directly to the command handler
         PATCH_MEM(addr + 0xF8, 0xE006);

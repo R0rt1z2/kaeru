@@ -111,7 +111,7 @@ void board_late_init(void) {
     // states. Forcing these fields to 1 (unlocked) bypasses the lock state checks.
     WRITE32(0x48232008 + 0x104, 1);
     WRITE32(0x48232008 + 0x108, 1);
-    WRITE32(0x48232008 + 0x10c, 1);
+    WRITE32(0x48232008 + 0x10C, 1);
     WRITE32(0x48232008 + 0x114, 1);
     FORCE_RETURN(0x48028970, 1);
 
@@ -132,7 +132,7 @@ void board_late_init(void) {
     //
     // To ensure flashing works as expected, we patch this function to always return 0,
     // effectively marking the device as non-secure.
-    FORCE_RETURN(0x48094b8C, 1);
+    FORCE_RETURN(0x48094B8C, 1);
 
     // Huawei overrides standard bootmode selection with their own logic,
     // often forcing an alternative recovery mode, especially after a failed boot.

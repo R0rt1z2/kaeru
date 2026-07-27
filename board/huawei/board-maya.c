@@ -55,7 +55,7 @@ void board_early_init(void) {
     NOP(0x41E1F45A, 2); // FRP Unlock
     NOP(0x41E1F3E4, 2); // Phone Lock/Unlock
     NOP(0x41E1FFD4, 2); // Lock Status
-    strcpy((char*)0x41e3ef58, " => FASTBOOT mode (kaeru)...\n");
+    strcpy((char*)0x41E3EF58, " => FASTBOOT mode (kaeru)...\n");
 
     // Bypass partition whitelist check. The bootloader only allows flashing
     // boot/recovery/system partitions.

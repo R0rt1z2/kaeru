@@ -61,7 +61,7 @@ void board_late_init(void) {
     //
     // This patch bypasses the check entirely, allowing flashing regardless of
     // charge level.
-    FORCE_RETURN(0x480309c4, 1);
+    FORCE_RETURN(0x480309C4, 1);
 
     // Huawei defines two separate bootloader lock states: USRLOCK and FBLOCK.
     //
@@ -92,10 +92,10 @@ void board_late_init(void) {
     //
     // Unlock is done by editing seccfg, locking by flashing stock LK.
     // These commands shouldn’t harm the device, but it’s safer to avoid them.
-    NOP(0x4802a2e8, 2); // oem relock
-    NOP(0x4802a2da, 2); // oem unlock
-    NOP(0x4802a27a, 2); // flashing lock
-    NOP(0x4802a264, 2); // flashing unlock
+    NOP(0x4802A2E8, 2); // oem relock
+    NOP(0x4802A2DA, 2); // oem unlock
+    NOP(0x4802A27A, 2); // flashing lock
+    NOP(0x4802A264, 2); // flashing unlock
 
     // Show the current boot mode on screen when not performing a normal boot.
     // This is standard behavior in many LK images, but not in this one by default.
