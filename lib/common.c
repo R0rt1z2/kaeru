@@ -58,8 +58,8 @@ void cmd_version(const char* arg, void* data, unsigned sz) {
     char buffer[64];
     npf_snprintf(buffer, sizeof(buffer), "kaeru v%s", KAERU_VERSION);
     fastboot_info(buffer);
-    print_kaeru_info(video_printf);
     fastboot_okay("");
+    print_kaeru_info(video_printf);
 #else
     (void)arg;
     (void)data;
