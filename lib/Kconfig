@@ -188,6 +188,31 @@ menu "Spoof Support"
           Requires environment support to be enabled.
 endmenu
 
+menu "Recovery Support"
+    config RECOVERY_CMDLINE_PATCH
+        bool "Patch the kernel cmdline on recovery boot"
+        default n
+        depends on SPOOF_SUPPORT
+        help
+          Say Y to set androidboot.verifiedbootstate to orange when booting
+          into recovery. Without this, adbd and fastbootd see the spoofed
+          locked state, so adb access and flashing are both refused.
+
+    if RECOVERY_CMDLINE_PATCH
+        config RECOVERY_CMDLINE1_ADDRESS
+            hex "First cmdline buffer address"
+            help
+              Address of the kernel cmdline buffer in the bootloader
+
+        config RECOVERY_CMDLINE2_ADDRESS
+            hex "Second cmdline buffer address"
+            default 0x0
+            help
+              Address of the second cmdline buffer, if the image has one.
+              Leave at 0 otherwise.
+    endif
+endmenu
+
 menu "Memory and Address Mapping"
     menu "Bootloader Configuration"
         config BOOTLOADER_BASE

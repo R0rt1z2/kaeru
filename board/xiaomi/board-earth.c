@@ -5,31 +5,6 @@
 
 #include <board_ops.h>
 
-#define CMDLINE1_ADDR 0x4C56FCF4
-#define CMDLINE2_ADDR 0x4C5704F8
-
-static void patch_cmdline(char *cmdline) {
-    cmdline_replace(cmdline, "androidboot.verifiedbootstate=",
-                    "green", "orange");
-    cmdline_replace(cmdline, "androidboot.secureboot=",
-                    "1", "0");
-    cmdline_replace(cmdline, "androidboot.vbmeta.device_state=",
-                    "locked", "unlocked");
-}
-
-static void handle_recovery_boot(void) {
-    if (get_bootmode() != BOOTMODE_RECOVERY || !is_spoofing_enabled())
-        return;
-
-    printf("Recovery boot detected, modifying cmdline for unlocked state.\n");
-
-    static const uint32_t cmdline_addrs[] = { CMDLINE1_ADDR, CMDLINE2_ADDR };
-    for (int i = 0; i < ARRAY_SIZE(cmdline_addrs); i++) {
-        printf("Patching cmdline at 0x%08X\n", cmdline_addrs[i]);
-        patch_cmdline((char *)cmdline_addrs[i]);
-    }
-}
-
 static void spoof_lock_state(void) {
     uint32_t addr = 0;
 
@@ -109,11 +84,8 @@ static void spoof_lock_state(void) {
         NOP(addr + 0x9C, 4);
     }
 
-    // When booting into recovery, we need to ensure verifiedbootstate
-    // is set to "orange" so fastbootd detects the device as unlocked
-    // and allows flashing. We also patch a few other cmdline params
-    // (secureboot, device_state) as a precaution in case stock
-    // recovery checks them as well.
+    // Hook cmdline_pre_process so handle_recovery_boot() can flip
+    // verifiedbootstate before LK hands the cmdline to the kernel.
     addr = SEARCH_PATTERN(LK_START, LK_END, 0xF012, 0xFA54, 0xF001, 0xFB04);
     if (addr) {
         printf("Found cmdline_pre_process at 0x%08X\n", addr);
