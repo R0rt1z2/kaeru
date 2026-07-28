@@ -504,4 +504,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Galaxy Tab A7 Lite
+
+    config LG_MCAYMANLM
+        bool "Support LG Velvet 5G"
+        default n
+        help
+          Say Y if you want to include support for LG Velvet 5G
 endmenu
