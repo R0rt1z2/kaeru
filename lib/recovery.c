@@ -23,6 +23,23 @@ bootmode_t misc_command_to_bootmode(const char* c) {
     return BOOTMODE_NORMAL;
 }
 
+// Maps the target of a fastboot 'reboot-*' command to the misc command that
+// requests it, so boards handling those themselves can just write it back.
+// The leading dash is what the command dispatcher leaves behind when it
+// matches on the 'reboot' prefix, so accept it either way.
+const char* reboot_target_to_misc_command(const char* target) {
+    if (!target || !target[0])
+        return NULL;
+
+    if (target[0] == '-')
+        target++;
+
+    if (!strcmp(target, "bootloader")) return "bootonce-bootloader";
+    if (!strcmp(target, "recovery"))   return "boot-recovery";
+    if (!strcmp(target, "fastboot"))   return "boot-fastboot";
+    return NULL;
+}
+
 #ifdef CONFIG_RECOVERY_CMDLINE_PATCH
 // When booting into recovery, we need to ensure verifiedbootstate is set
 // to "orange" so adbd and fastbootd detect the device as unlocked. With
