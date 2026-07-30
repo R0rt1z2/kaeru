@@ -510,4 +510,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for LG Velvet 5G
+
+    config XIAOMI_SELENE
+        bool "Support Redmi 10 2022"
+        default n
+        help
+          Say Y if you want to include support for Redmi 10 2022
 endmenu
