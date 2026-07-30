@@ -38,8 +38,10 @@ def encode_bl(src, dst):
     return struct.pack('<HH', 0xF000 | hi, 0xF800 | lo)
 
 
-def patch_bss(partition: LkPartition, payload_size: int) -> None:
-    bss_start = partition.header.data_size + partition.lk_address
+def patch_bss(
+    partition: LkPartition, image_size: int, payload_size: int
+) -> int:
+    bss_start = image_size + partition.lk_address
     data = bytearray(partition.data)
     position = data.find(struct.pack('<I', bss_start))
     dest_addr = (bss_start + payload_size + 3) & ~3
@@ -47,7 +49,10 @@ def patch_bss(partition: LkPartition, payload_size: int) -> None:
     # This should be fatal regardless of the injection method, because we
     # will always need room for either kaeru or stage1.
     if position < 0:
-        exit('ERROR: Unable to find BSS markers!')
+        exit(
+            'ERROR: Unable to find BSS markers for 0x%X! '
+            '(is LK_SIGNATURE_SIZE right?)' % bss_start
+        )
 
     while position > 0:
         data[position : position + 4] = struct.pack('<I', dest_addr)
@@ -199,22 +204,37 @@ def main() -> None:
         loader_size = len(loader)
         print('Loader size: %d bytes' % loader_size)
 
+    # A signature appended to the image counts towards data_size, so the
+    # image, and with it the BSS markers, ends earlier than it claims.
+    signature_size = to_int(config.get('LK_SIGNATURE_SIZE') or '0')
+    image_size = part.header.data_size - signature_size
+
+    if signature_size:
+        print(
+            'Signature size: %d bytes (image ends at 0x%X)'
+            % (signature_size, base + image_size)
+        )
+
     # Decide if we should increase the code section to make room for
     # the payload, or if we should use a fixed address specified by
     # the configuration file.
-    # 
+    #
     # Extending the code section is generally more reliable, since a
     # forced address may overlap existing data, which is bad.
     if config.get('FORCE_INJECT_ADDR'):
         payload_dest = to_int(config.get('FORCE_INJECT_ADDR'))
     else:
         payload_dest = patch_bss(
-            part, payload_size if not args.loader else loader_size
+            part, image_size, payload_size if not args.loader else loader_size
         )
 
     # Inject the payload into the end of the 'lk' sub-partition. This
-    # can be either stage1 or kaeru as stated before.
-    part.data += payload if not args.loader else loader
+    # can be either stage1 or kaeru as stated before. Any signature
+    # stays past it.
+    blob = payload if not args.loader else loader
+    data = bytearray(part.data)
+    data[image_size:image_size] = blob
+    part.data = bytes(data)
 
     if args.loader:
         # If the user specified a loader, this means kaeru has to be

@@ -284,6 +284,14 @@ menu "Third party libraries"
 endmenu
 
 menu "Image Patching"
+    config LK_SIGNATURE_SIZE
+        hex "Size of the signature appended to the LK image"
+        default 0x0
+        help
+          Size of the signature some vendors append to the LK image. It
+          counts towards the partition's data_size, so the image ends this
+          many bytes earlier. Leave at 0 if there is none.
+
     config CERT_BYPASS
         bool "Enable certificate bypass"
         default n
