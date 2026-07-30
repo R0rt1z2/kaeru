@@ -66,6 +66,10 @@ void handle_recovery_boot(void) {
         printf("Patching cmdline at 0x%08X\n", cmdline_addrs[i]);
         cmdline_replace((char*)cmdline_addrs[i],
                         "androidboot.verifiedbootstate=", "green", "orange");
+        cmdline_replace((char*)cmdline_addrs[i],
+                        "androidboot.vbmeta.device_state=", "unlocked", "locked");
+        cmdline_replace((char*)cmdline_addrs[i],
+                        "androidboot.veritymode=", "disabled", "enforcing");
     }
 }
 #endif
