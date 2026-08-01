@@ -138,8 +138,7 @@ static void cmd_flash_wrapper(const char *arg, void *data, unsigned sz) {
 
     if (strcmp(part, "lk") == 0 || strcmp(part, "lk_a") == 0 ||
         strcmp(part, "lk_b") == 0) {
-            // Redirect to swdl, which is where LK is actually loaded
-            // from.
+            // Redirect to where LK is actually loaded from.
             arg = CONFIG_BOOTLOADER_PARTITION_NAME;
     } else if (is_partition_protected(part, false)) {
         critical_op_fail("You are attempting to flash to a critical partition.");
