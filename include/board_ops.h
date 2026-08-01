@@ -19,6 +19,10 @@
 #include <lib/storage.h>
 #include <lib/thread.h>
 
+#ifdef CONFIG_AMZN_BCB_SUPPORT
+#include <lib/bcb_amzn/bcblib.h>
+#endif
+
 #ifdef CONFIG_ENVIRONMENT_SUPPORT
 #include <lib/environment.h>
 #endif

@@ -281,6 +281,16 @@ menu "Third party libraries"
         help
           Say Y to enable libsej support, allowing to interact with
           the device crypto engine.
+
+    config AMZN_BCB_SUPPORT
+        bool "Enable Amazon BCB (bcblib) support"
+        default n
+        help
+          Say Y to enable bcblib, allowing boards to parse and edit the
+          slot metadata Amazon devices keep in /misc.
+
+          This is Amazon's own BCB format, not AOSP's bootloader_message,
+          so it is only useful on Amazon (Echo & friends) targets.
 endmenu
 
 menu "Image Patching"
