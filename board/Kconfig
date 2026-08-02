@@ -513,6 +513,7 @@ menu "Device Support"
 
     config AMAZON_CUPCAKE
         bool "Support Echo Input"
+        select AMZN_BCB_SUPPORT
         default n
         help
           Say Y if you want to include support for Echo Input
