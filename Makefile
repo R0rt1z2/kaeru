@@ -216,7 +216,7 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -std=gnu99 -Os -mthumb  \
 		   -fno-delete-null-pointer-checks \
 		   -Wno-builtin-declaration-mismatch -fPIE -Wno-main -nostdlib \
-		   -mcpu=cortex-a15
+		   -mcpu=cortex-a15 -mno-unaligned-access
 KBUILD_CFLAGS += -DKAERU_VERSION=\"$(KAERU_VERSION)\" -DKAERU_DEBUG=$(KAERU_DEBUG)
 KBUILD_CFLAGS += $(foreach var,$(filter CONFIG_%,$(.VARIABLES)),-D$(var)=$($(var)))
 KBUILD_AFLAGS_KERNEL :=
