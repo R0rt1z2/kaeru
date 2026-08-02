@@ -105,7 +105,7 @@ void spoof_lock_state(void) {
             0x2301,  // movs r3, #0x1
             0x6023,  // str r3, [r4, #0x0]
             0x2002,  // movs r0, #0x2
-            0xbd10   // pop {r4, pc}
+            0xBD10   // pop {r4, pc}
         );
     }
 

@@ -80,6 +80,9 @@ config MEDIATEK_MT6853
 config MEDIATEK_MT6877
     bool "MediaTek MT6877 SoC"
 
+config MEDIATEK_MT6885
+    bool "MediaTek MT6885 SoC"
+
 config MEDIATEK_MT6889
     bool "MediaTek MT6889 SoC"
 
@@ -112,6 +115,7 @@ config SECURITY_AO_BASE
     default 0x1001A000 if MEDIATEK_MT6833
     default 0x1001A000 if MEDIATEK_MT6853
     default 0x1001A000 if MEDIATEK_MT6877
+    default 0x1001A000 if MEDIATEK_MT6885
     default 0x1001A000 if MEDIATEK_MT6889
 
 config SEJ_BASE
@@ -141,6 +145,7 @@ config SEJ_BASE
     default 0x1000A000 if MEDIATEK_MT6833
     default 0x1000A000 if MEDIATEK_MT6853
     default 0x1000A000 if MEDIATEK_MT6877
+    default 0x1000A000 if MEDIATEK_MT6885
     default 0x1000A000 if MEDIATEK_MT6889
 
 config UART_BASE
@@ -170,6 +175,7 @@ config UART_BASE
     default 0x11002000 if MEDIATEK_MT6833
     default 0x11002000 if MEDIATEK_MT6853
     default 0x11002000 if MEDIATEK_MT6877
+    default 0x11002000 if MEDIATEK_MT6885
     default 0x11002000 if MEDIATEK_MT6889
 
 config WDT_BASE
@@ -199,6 +205,7 @@ config WDT_BASE
     default 0x10007000 if MEDIATEK_MT6833
     default 0x10007000 if MEDIATEK_MT6853
     default 0x10007000 if MEDIATEK_MT6877
+    default 0x10007000 if MEDIATEK_MT6885
     default 0x10007000 if MEDIATEK_MT6889
 
 endmenu

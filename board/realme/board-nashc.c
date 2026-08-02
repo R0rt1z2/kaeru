@@ -33,7 +33,7 @@ void board_early_init(void) {
     // Cosmetic patch to disable the broken boot mode selection menu shown
     // when entering fastboot mode. It serves no real purpose and it just
     // clutters the screen. We can display the boot mode later if needed.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF012, 0xFe24, 0xF7FF);
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xF012, 0xFE24, 0xF7FF);
     if (addr) {
         printf("Found fastboot_mode_show at 0x%08X\n", addr);
         NOP(addr, 2);

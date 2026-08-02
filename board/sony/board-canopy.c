@@ -166,11 +166,11 @@ void board_late_init(void) {
     // This patch makes the device report as secure but unlocked when running
     // 'fastboot getvar all'. I'm not entirely sure, but it seems that reporting
     // the device as not secure caused issues elsewhere in the bootloader.
-    PATCH_MEM_ARM(0x4604a9c0,
-                  0xe3b02000,  // movs r2, #0
-                  0xe5c12000,  // strb r2, [r1, #0]
-                  0xe3b00000,  // movs r0, #0
-                  0xe12fff1e   // bx lr
+    PATCH_MEM_ARM(0x4604A9C0,
+                  0xE3B02000,  // movs r2, #0
+                  0xE5C12000,  // strb r2, [r1, #0]
+                  0xE3B00000,  // movs r0, #0
+                  0xE12FFF1E   // bx lr
     );
 
     if (s1boot_get_bootimage() == BOOT_FASTBOOT_IMAGE) {

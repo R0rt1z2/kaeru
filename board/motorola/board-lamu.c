@@ -64,18 +64,43 @@ static void mt_disp_show_boot_logo(void) {
         ((void (*)(void))(addr | 1))();
 }
 
-static void handle_recovery_boot(void) {
-    if (get_bootmode() != BOOTMODE_RECOVERY || !is_spoofing_enabled())
+static int seccfg_get_lock_state(uint32_t *lock_state) {
+    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0xB1D0, 0xB510, 0x4604, 0xF7FF, 0xFFDD);
+    if (addr)
+        return ((int (*)(uint32_t*))(addr | 1))(lock_state);
+    return -1;
+}
+
+static int seccfg_set_lock_state(uint32_t lock_state) {
+    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0xB538, 0x4605, 0xF7FF, 0xFFAE);
+    if (addr)
+        return ((int (*)(uint32_t))(addr | 1))(lock_state);
+    return -1;
+}
+
+static void seccfg_unlock(void) {
+    uint32_t lock_state = 0;
+
+    int ret = seccfg_get_lock_state(&lock_state);
+    if (ret != 0) {
+        printf("Unable to read seccfg lock state, skipping unlock\n");
         return;
-
-    printf("Recovery boot detected, modifying cmdline for unlocked state.\n");
-
-    static const uint32_t cmdline_addrs[] = { CMDLINE1_ADDR, CMDLINE2_ADDR };
-    for (int i = 0; i < ARRAY_SIZE(cmdline_addrs); i++) {
-        printf("Patching cmdline at 0x%08X\n", cmdline_addrs[i]);
-        cmdline_replace((char *)cmdline_addrs[i],
-            "androidboot.verifiedbootstate=", "green", "orange");    
     }
+
+    printf("Current seccfg lock state: %d\n", (int)lock_state);
+
+    if (lock_state != LKS_LOCK) {
+        printf("Device is already unlocked, skipping seccfg write\n");
+        return;
+    }
+
+    ret = seccfg_set_lock_state(LKS_UNLOCK);
+    if (ret != 0) {
+        printf("Failed to write seccfg lock state, device may not be unlocked\n");
+        return;
+    }
+
+    printf("Successfully unlocked device (%d -> %d)\n", (int)lock_state, LKS_UNLOCK);
 }
 
 void parse_bootloader_messages(void) {
@@ -200,11 +225,8 @@ static void post_env_process(void) {
         NOP(addr + 0x9C, 4);
     }
 
-    // When booting into recovery, we need to ensure verifiedbootstate
-    // is set to "orange" so fastbootd detects the device as unlocked
-    // and allows flashing. We also patch a few other cmdline params
-    // (secureboot, device_state) as a precaution in case stock
-    // recovery checks them as well.
+    // Hook cmdline_pre_process so handle_recovery_boot() can flip
+    // verifiedbootstate before LK hands the cmdline to the kernel.
     addr = SEARCH_PATTERN(LK_START, LK_END, CMDLINE_PREPROCESS_PATTERN);
     if (addr) {
         printf("Found cmdline_pre_process at 0x%08X\n", addr);

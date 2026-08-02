@@ -29,6 +29,8 @@ const char* bootmode2str(bootmode_t mode) {
             return "FASTBOOT";
         case BOOTMODE_ERECOVERY:
             return "ERECOVERY";
+        case BOOTMODE_LAF:
+            return "LAF";
         default:
             return "UNKNOWN";
     }

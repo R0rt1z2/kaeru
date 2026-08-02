@@ -54,7 +54,7 @@ void board_late_init(void) {
     //
     // This patch bypasses the check entirely, allowing flashing regardless of
     // charge level.
-    FORCE_RETURN(0x480309c4, 1);
+    FORCE_RETURN(0x480309C4, 1);
 
     // Huawei defines two separate bootloader lock states: USRLOCK and FBLOCK.
     //

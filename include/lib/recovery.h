@@ -14,3 +14,8 @@ struct misc_message {
 };
 
 bootmode_t misc_command_to_bootmode(const char* command);
+const char* reboot_target_to_misc_command(const char* target);
+
+#ifdef CONFIG_RECOVERY_CMDLINE_PATCH
+void handle_recovery_boot(void);
+#endif

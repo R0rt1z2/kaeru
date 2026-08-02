@@ -107,7 +107,7 @@ void spoof_lock_state(void) {
             0x2301,  // movs r3, #1
             0x6023,  // str r3, [r4, #0]
             0x2002,  // movs r0, #2
-            0xbd10   // pop {r4, pc}
+            0xBD10   // pop {r4, pc}
         );
     }
 
@@ -142,7 +142,7 @@ void spoof_lock_state(void) {
         
         // Jump directly to command handler
         PATCH_MEM(addr + 0x14A,
-            0xE00B, // b 0x4c42cf9c
+            0xE00B, // b 0x4C42CF9C
             0xBF00  // nop
         );
     }

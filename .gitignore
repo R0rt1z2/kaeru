@@ -186,3 +186,6 @@ kaeru
 stageone
 *-kaeru
 *.lds
+
+# Development container metadata
+!.devcontainer/

@@ -55,9 +55,9 @@ void fastboot_info(const char* reason) {
 void fastboot_register(const char* prefix,
                        void (*handle)(const char* arg, void* data, unsigned sz),
                        unsigned char security_enabled) {
-    ((void (*)(const char*, void (*)(const char*, void*, unsigned),
-               unsigned char))(CONFIG_FASTBOOT_REGISTER_ADDRESS | 1))(
-            prefix, handle, security_enabled);
+    ((void (*)(const char*, void (*)(const char*, void*, unsigned), unsigned,
+               unsigned))(CONFIG_FASTBOOT_REGISTER_ADDRESS | 1))(prefix, handle,
+                                                                 security_enabled, 0);
 }
 
 void fastboot_publish(const char* name, const char* value) {

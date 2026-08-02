@@ -111,7 +111,7 @@ void board_late_init(void) {
     // states. Forcing these fields to 1 (unlocked) bypasses the lock state checks.
     WRITE32(0x48248008 + 0x104, 1);
     WRITE32(0x48248008 + 0x108, 1);
-    WRITE32(0x48248008 + 0x10c, 1);
+    WRITE32(0x48248008 + 0x10C, 1);
     WRITE32(0x48248008 + 0x114, 1);
     FORCE_RETURN(0x480284C4, 1);
 

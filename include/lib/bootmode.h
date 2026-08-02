@@ -17,7 +17,8 @@ typedef enum {
     BOOTMODE_ALARM = 7,
     BOOTMODE_POWEROFF_CHARGING = 9,
     BOOTMODE_FASTBOOT = 99,
-    BOOTMODE_ERECOVERY = 101
+    BOOTMODE_ERECOVERY = 101,
+    BOOTMODE_LAF = 110,
 } bootmode_t;
 
 const char* bootmode2str(bootmode_t mode);
