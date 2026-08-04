@@ -511,9 +511,16 @@ menu "Device Support"
         help
           Say Y if you want to include support for LG Velvet 5G
 
+    config AMAZON_MT8516_COMMON
+        bool
+        select AMZN_BCB_SUPPORT
+        help
+          Select this if you need to include common board code
+          for Amazon MT8516 devices.
+
     config AMAZON_CUPCAKE
         bool "Support Echo Input"
-        select AMZN_BCB_SUPPORT
+        select AMAZON_MT8516_COMMON
         default n
         help
           Say Y if you want to include support for Echo Input

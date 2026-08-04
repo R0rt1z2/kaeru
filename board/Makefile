@@ -12,6 +12,7 @@ lib-$(CONFIG_REALME_NASHC) += realme/board-nashc.o
 lib-$(CONFIG_XIAOMI_NIKEL) += xiaomi/board-nikel.o
 lib-$(CONFIG_XIAOMI_DANDELION) += xiaomi/board-dandelion.o
 lib-$(CONFIG_REALME_SALAA) += realme/board-salaa.o
+lib-$(CONFIG_AMAZON_MT8516_COMMON) += amazon/board-mt8516-common.o
 lib-$(CONFIG_AMAZON_CUPCAKE) += amazon/board-cupcake.o
 lib-$(CONFIG_BQ_BROLLY) += bq/board-brolly.o
 lib-$(CONFIG_REALME_MONET) += realme/board-monet.o
