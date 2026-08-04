@@ -273,6 +273,14 @@ static void led_set_rgb(uint8_t r, uint8_t g, uint8_t b) {
     lp5562_write(LP5562_B_PWM, r);
 }
 
+static void led_off(void) {
+    lp5562_write(LP5562_R_PWM, 0);
+    lp5562_write(LP5562_G_PWM, 0);
+    lp5562_write(LP5562_B_PWM, 0);
+    lp5562_write(LP5562_W_PWM, 0);
+    lp5562_write(LP5562_ENABLE, 0x00);
+}
+
 static void cmd_flash_wrapper(const char *arg, void *data, unsigned sz) {
     const char *part = arg;
     advance_partition_name(&part);
@@ -306,6 +314,9 @@ static void cmd_erase_wrapper(const char *arg, void *data, unsigned sz) {
 }
 
 static void cmd_reboot_wrapper(const char *arg, void *data, unsigned sz) {
+    // Turn off the LED, we don't want it to stay on after reboot.
+    led_off();
+
     if (arg && strcmp(arg, "-recovery") == 0) {
         cmd_oem_reboot_recovery("", data, sz);
         return;
@@ -503,6 +514,7 @@ void board_early_init(void) {
     NOP(0x41E1CF46, 2); // fastboot flash
     NOP(0x41E1CF5A, 2); // fastboot erase
     NOP(0x41E1CF84, 2); // fastboot reboot
+    NOP(0x41E1CF98, 2); // fastboot reboot-bootloader
     NOP(0x41E1D042, 2); // fastboot set_active
 
     // Replace Amazon's BCB load function to work around a nasty
