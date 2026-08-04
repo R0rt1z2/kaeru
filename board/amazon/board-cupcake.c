@@ -6,6 +6,8 @@
 #include <board_ops.h>
 #include <lib/bcb_amzn/bcblib.h>
 
+#define RECOVERY_PARTITION_NAME "swdl"
+
 #define LP5562_ENABLE   0x00
 #define LP5562_OP_MODE  0x01
 #define LP5562_B_PWM    0x02
@@ -89,6 +91,10 @@ static void lp5562_write(uint8_t reg, uint8_t val) {
 
 static void mdelay(unsigned long msecs) {
     ((void (*)(unsigned long))(0x41E11650|1))(msecs);
+}
+
+static const char* get_boot_part(void) {
+    return ((const char* (*)(void))(0x41E18638|1))();
 }
 
 static struct device_t* mt_part_get_device(void) {
@@ -273,8 +279,12 @@ static void cmd_flash_wrapper(const char *arg, void *data, unsigned sz) {
 
     if (strcmp(part, "lk") == 0 || strcmp(part, "lk_a") == 0 ||
         strcmp(part, "lk_b") == 0) {
-            // Redirect to where LK is actually loaded from.
-            arg = CONFIG_BOOTLOADER_PARTITION_NAME;
+        // Redirect to where LK is actually loaded from.
+        arg = CONFIG_BOOTLOADER_PARTITION_NAME;
+    } else if (strcmp(part, "recovery") == 0 || strcmp(part, "recovery_a") == 0 ||
+               strcmp(part, "recovery_b") == 0) {
+        // Redirect to the actual recovery partition.
+        arg = RECOVERY_PARTITION_NAME;
     } else if (is_partition_protected(part, false)) {
         critical_op_fail("You are attempting to flash to a critical partition.");
         return;
@@ -457,6 +467,16 @@ static void fastboot_init_hook(const char *) {
     return;
 }
 
+static const char *get_boot_part_hook(void) {
+    if (get_bootmode() == BOOTMODE_RECOVERY) {
+        // Override the name of the boot partition to
+        // the recovery one regardless of slot.
+        return RECOVERY_PARTITION_NAME;
+    }
+
+    return get_boot_part();
+}
+
 void board_early_init(void) {
     printf("Entering early init for Echo Input\n");
 
@@ -493,6 +513,10 @@ void board_early_init(void) {
     // not reliable here for detecting if we will enter
     // fastboot or not.
     PATCH_CALL(0x41E1CEA0, &fastboot_init_hook, TARGET_THUMB);
+
+    // Hook get_boot_part() so we can load recovery from a dedicated
+    // partition (swdl) instead of dealing with SAR shenanigans.
+    PATCH_CALL(0x41E1BFD2, &get_boot_part_hook, TARGET_THUMB);
 }
 
 void board_late_init(void) {
