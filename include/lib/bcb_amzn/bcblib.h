@@ -20,8 +20,7 @@
 
 #include <lib/string.h>
 
-#define BCB_MAGIC	"ABB" /* excluding null byte */
-#define BCB_MAGIC_SIZE	3
+#define BCB_MAGIC	0x42424100U
 #define BCB_OFFSET	0x360 /* offset into the /misc partition */
 #define BCB_MAX_VERSION	1
 #define BCB_MAX_SLOTS	2
@@ -55,8 +54,7 @@ typedef struct {
 } bcb_slot_metadata_t;
 
 struct bcb {
-	uint8_t magic_null; // always 0
-	char magic[BCB_MAGIC_SIZE];
+	uint32_t magic;
 	uint8_t version;
 	bcb_slot_metadata_t slot[BCB_MAX_SLOTS];
 } __attribute__((packed));
@@ -83,8 +81,7 @@ static inline bcb_slot_metadata_t* bcblib_bcb_get_slot(struct bcb *bcb, unsigned
  */
 static inline bool bcblib_bcb_magic_valid(const struct bcb *bcb)
 {
-	return bcb->magic_null == 0 &&
-	       memcmp(bcb->magic, BCB_MAGIC, BCB_MAGIC_SIZE) == 0 &&
+	return bcb->magic == BCB_MAGIC &&
 	       bcb->version > 0 && bcb->version <= BCB_MAX_VERSION;
 }
 

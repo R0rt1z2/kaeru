@@ -18,8 +18,7 @@
  */
 void bcblib_bcb_init(struct bcb *bcb)
 {
-	bcb->magic_null = 0;
-	memcpy(bcb->magic, BCB_MAGIC, BCB_MAGIC_SIZE);
+	bcb->magic = BCB_MAGIC;
 	bcb->version = BCB_MAX_VERSION;
 
 	/* default values */
