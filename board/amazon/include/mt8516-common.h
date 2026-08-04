@@ -9,6 +9,8 @@
 
 #if defined(CONFIG_AMAZON_CUPCAKE)
 #include "mt8516-cupcake.h"
+#elif defined(CONFIG_AMAZON_DONUT)
+#include "mt8516-donut.h"
 #else
 #error "Invalid device selection"
 #endif

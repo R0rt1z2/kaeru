@@ -530,4 +530,11 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Fire HD 10 (2019)
+
+    config AMAZON_DONUT
+        bool "Support Echo Dot 3rd Generation"
+        select AMAZON_MT8516_COMMON
+        default n
+        help
+          Say Y if you want to include support for Echo Dot 3rd Generation
 endmenu
