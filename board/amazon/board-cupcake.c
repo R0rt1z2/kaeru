@@ -53,6 +53,10 @@ static const struct led_frame anim_frames[] = {
     { LED_ACTION_DELAY, FRAME_DELAY },
 };
 
+static inline int mt_get_gpio_in(uint32_t pin) {
+    return ((int (*)(uint32_t))(MT_GET_GPIO_IN_FUNC_ADDR|1))(pin);
+}
+
 static inline void lp5562_write(uint8_t reg, uint8_t val) {
     ((void (*)(uint8_t, uint8_t))(LP5562_WRITE_FUNC_ADDR|1))(reg, val);
 }
@@ -106,6 +110,13 @@ static int led_thread(void* arg) {
 void device_early_init(void) {
     // Do not set the LED color to green in fastboot mode.
     FORCE_RETURN(FB_LED_GREEN_FUNC_CALLER_ADDR, 0);
+}
+
+void device_late_init(void) {
+    if (mt_get_gpio_in(GPIO_KEY_MUTE) == 1) {
+        printf("Mute button held, booting recovery\n");
+        set_bootmode(BOOTMODE_RECOVERY);
+    }
 }
 
 void device_fastboot_init(void) {

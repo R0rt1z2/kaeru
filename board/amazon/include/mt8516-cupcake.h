@@ -9,8 +9,12 @@
 #define RECOVERY_PARTITION  "swdl"
 
 #define HAVE_EARLY_INIT
+#define HAVE_LATE_INIT
 #define HAVE_FASTBOOT_INIT
 #define HAVE_FASTBOOT_CMD_REBOOT
+
+#define GPIO_KEY_ACTION                   42 // active low
+#define GPIO_KEY_MUTE                     72 // active high
 
 #define MDELAY_FUNC_ADDR                  0x41E11650
 
@@ -35,6 +39,8 @@
 #define SELINUX_CMDLINE_FUNC_ADDR         0x41E1BF2C
 #define VERITY_CMDLINE_FUNC_ADDR          0x41E1D2C4
 #define CMDLINE_APPEND_FUNC_ADDR          0x41E1AAE0
+
+#define MT_GET_GPIO_IN_FUNC_ADDR          0x41E0E222
 
 #define LP5562_WRITE_FUNC_ADDR            0x41E1A91C
 #define FB_LED_GREEN_FUNC_CALLER_ADDR     0x41E0DF22

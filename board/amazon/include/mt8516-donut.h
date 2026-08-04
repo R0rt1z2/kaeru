@@ -9,8 +9,13 @@
 #define RECOVERY_PARTITION  "swdl"
 
 #define HAVE_EARLY_INIT
+#define HAVE_LATE_INIT
 #define HAVE_FASTBOOT_INIT
 #define HAVE_FASTBOOT_CMD_REBOOT
+
+#define GPIO_KEY_VOLUME_UP                7
+#define GPIO_KEY_VOLUME_DOWN              12
+#define GPIO_KEY_ACTION                   42
 
 #define MDELAY_FUNC_ADDR                  0x41E116CC
 #define THREAD_SLEEP_FUNC_ADDR            0x41E1A400
@@ -31,6 +36,8 @@
 #define GET_BOOT_PART_FUNC_ADDR           0x41E186B8
 #define GET_BOOT_PART_FUNC_CALLER_ADDR    0x41E1C206
 #define GET_ACTIVE_SLOT_FUNC_CALLER_ADDR  0x41E1C200
+
+#define MT_GET_GPIO_IN_FUNC_ADDR          0x41E0E29E
 
 #define ISSI_WRITE_FUNC_ADDR              0x41E1AA00
 #define ISSI_INIT_FUNC_ADDR               0x41E1AA5C

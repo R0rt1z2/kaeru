@@ -28,6 +28,10 @@
 
 static volatile bool led_ring_animating;
 
+static inline int mt_get_gpio_in(uint32_t pin) {
+    return ((int (*)(uint32_t))(MT_GET_GPIO_IN_FUNC_ADDR|1))(pin);
+}
+
 static inline int issi_write(uint8_t reg, uint8_t val) {
     return ((int (*)(uint8_t, uint8_t))(ISSI_WRITE_FUNC_ADDR|1))(reg, val);
 }
@@ -106,6 +110,13 @@ void device_early_init(void) {
     // LK paints the ring a solid colour every time it enters fastboot and on
     // every command it processes, which would fight our animation.
     FORCE_RETURN(ISSI_SET_STATE_FUNC_ADDR, 0);
+}
+
+void device_late_init(void) {
+    if (mt_get_gpio_in(GPIO_KEY_VOLUME_UP) == 0) {
+        printf("Volume up held, booting recovery\n");
+        set_bootmode(BOOTMODE_RECOVERY);
+    }
 }
 
 void device_fastboot_init(void) {
