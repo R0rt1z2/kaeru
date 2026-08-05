@@ -19,16 +19,6 @@ menu "Stage1 Options"
             Enable this if the devices LK is a legacy one, which has different
             function implementations that are not compatible with modern LK.
 
-    config USE_PMT_PARTITION
-        bool "Use PMT partition table"
-        default n
-        depends on LEGACY_LK
-        help
-            Enable this for legacy devices that use PMT (Partition Meta Table)
-            instead of GPT. This selects the correct part_t structure layout
-            returned by mt_part_get_partition(). PMT devices use startblk/blknum
-            fields while GPT devices use start_sect/nr_sects fields.
-
     config BOOTLOADER_PARTITION_NAME
         string "Bootloader partition name"
         default "lk"
@@ -51,14 +41,6 @@ menu "Stage1 Options"
 
     config FREE_ADDRESS
         hex "free() address"
-
-    config MT_PART_GET_DEVICE_ADDRESS
-        hex "mt_part_get_device() address"
-        depends on LEGACY_LK
-
-    config MT_PART_GET_PARTITION_ADDRESS
-        hex "mt_part_get_partition() address"
-        depends on LEGACY_LK
 
     config PARTITION_READ_ADDRESS
         hex "partition_read() address"

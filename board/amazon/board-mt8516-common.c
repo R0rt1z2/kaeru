@@ -4,6 +4,7 @@
 //
 
 #include <lib/bcb_amzn/bcblib.h>
+#include <lib/mt_part.h>
 
 #include "include/mt8516-common.h"
 
@@ -22,7 +23,7 @@ static bool get_misc_offset(uint64_t *offset) {
         return true;
     }
 
-    part_t* misc_part = mt_get_part("misc");
+    part_t* misc_part = mt_part_get_partition("misc");
     if (!misc_part) {
         printf("misc partition not found\n");
         return false;

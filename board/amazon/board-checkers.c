@@ -5,6 +5,8 @@
 
 #include <board_ops.h>
 
+#include <lib/mt_part.h>
+
 #define KEY_PRIVACY 0x2F
 
 int video_get_rows(void) {
@@ -13,14 +15,6 @@ int video_get_rows(void) {
 
 void video_set_cursor(int row, int col) {
     ((void (*)(int, int))(0x4BD2C308 | 1))(row, col);
-}
-
-struct device_t* mt_part_get_device(void) {
-    return ((struct device_t* (*)(void))(0x4BD1FDE4|1))();
-}
-
-part_t* mt_get_part(const char* name) {
-    return ((part_t* (*)(const char*))(0x4BD1FD24|1))(name);
 }
 
 int is_key_pressed(int key) {
@@ -81,7 +75,7 @@ void cmd_reboot_recovery(const char* arg, void* data, unsigned sz) {
         return;
     }
 
-    part_t* part = mt_get_part("MISC");
+    part_t* part = mt_part_get_partition("MISC");
     if (!part) {
         fastboot_fail("MISC partition not found!");
         return;

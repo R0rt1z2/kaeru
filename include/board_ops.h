@@ -16,7 +16,6 @@
 #include <lib/security/seccfg.h>
 #include <lib/recovery.h>
 #include <lib/string.h>
-#include <lib/storage.h>
 #include <lib/thread.h>
 
 #ifdef CONFIG_AMZN_BCB_SUPPORT

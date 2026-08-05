@@ -5,6 +5,8 @@
 
 #include <board_ops.h>
 
+#include <lib/mt_part.h>
+
 #define GPIO_DIN3 0x10005520
 
 #define BACKUP_SRC 0x200000
@@ -37,14 +39,6 @@ int is_volume_up_pressed(void) {
 int is_volume_down_pressed(void) {
     uint32_t reg_val = *(volatile uint32_t *)GPIO_DIN3;
     return ((reg_val >> 5) & 1) == 0; // GPIO_ACTIVE_LOW, pin 37, bit 5
-}
-
-struct device_t* mt_part_get_device(void) {
-    return ((struct device_t* (*)(void))(CONFIG_MT_PART_GET_DEVICE_ADDRESS|1))();
-}
-
-part_t* mt_get_part(const char* name) {
-    return ((part_t* (*)(const char*))(CONFIG_MT_PART_GET_PARTITION_ADDRESS|1))(name);
 }
 
 int is_key_pressed(int key) {
@@ -91,7 +85,7 @@ void cmd_help(const char *arg, void *data, unsigned sz) {
 }
 
 uint64_t get_partition_sector(const char *partition_name) {
-    part_t* part = mt_get_part(partition_name);
+    part_t* part = mt_part_get_partition(partition_name);
     if (!part) {
         return 0;
     }
@@ -292,7 +286,7 @@ void parse_bootloader_messages(void) {
         return;
     }
 
-    part_t* misc_part = mt_get_part("MISC");
+    part_t* misc_part = mt_part_get_partition("MISC");
     if (!misc_part) {
         printf("MISC partition not found\n");
         return;
