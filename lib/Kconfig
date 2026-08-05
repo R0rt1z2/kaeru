@@ -213,6 +213,26 @@ menu "Recovery Support"
     endif
 endmenu
 
+menu "Storage Support"
+    config USE_PMT_PARTITION
+        bool "Use PMT partition table"
+        depends on LEGACY_LK
+        default n
+        help
+            Enable this if the device uses a PMT partition table
+            instead of GPT. This selects the correct part_t structure
+            layout returned by mt_part_get_partition(). PMT devices use
+            startblk/blknum while GPT devices use start_sect/nr_sects.
+
+    config MT_PART_GET_DEVICE_ADDRESS
+        hex "mt_part_get_device() address"
+        depends on LEGACY_LK
+
+    config MT_PART_GET_PARTITION_ADDRESS
+        hex "mt_part_get_partition() address"
+        depends on LEGACY_LK
+endmenu
+
 menu "Memory and Address Mapping"
     menu "Bootloader Configuration"
         config BOOTLOADER_BASE

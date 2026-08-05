@@ -5,7 +5,10 @@
 //
 
 #include <stage1/common.h>
-#include <lib/storage.h>
+
+#ifdef CONFIG_LEGACY_LK
+#include <lib/mt_part.h>
+#endif
 
 void init_storage(void) {
     // AAPCS: r0-r3 are caller-saved scratch registers regardless of
@@ -21,18 +24,6 @@ void platform_init(void) {
     ((void (*)(void))(CONFIG_PLATFORM_INIT_ADDRESS | 1))();
 }
 
-#ifdef CONFIG_LEGACY_LK
-
-struct device_t* mt_part_get_device(void) {
-    return ((struct device_t* (*)(void))(CONFIG_MT_PART_GET_DEVICE_ADDRESS | 1))();
-}
-
-part_t* mt_part_get_partition(const char* name) {
-    return ((part_t* (*)(const char*))(CONFIG_MT_PART_GET_PARTITION_ADDRESS | 1))(name);
-}
-
-#endif
-
 ssize_t partition_read(const char* part_name, off_t offset, uint8_t* data, size_t size) {
 #ifdef CONFIG_LEGACY_LK
     struct device_t* dev = mt_part_get_device();
@@ -43,13 +34,7 @@ ssize_t partition_read(const char* part_name, off_t offset, uint8_t* data, size_
     if (!part)
         return -1;
 
-#ifdef CONFIG_USE_PMT_PARTITION
-    uint64_t part_offset = ((uint64_t)part->startblk * BLOCK_SIZE) + offset;
-#else
-    uint64_t part_offset = ((uint64_t)part->start_sect * BLOCK_SIZE) + offset;
-#endif
-
-    ssize_t read_bytes = dev->read(dev, part_offset, data, size, part->part_id);
+    ssize_t read_bytes = dev->read(dev, mt_part_offset(part) + offset, data, size, part->part_id);
     return (read_bytes < 0) ? -1 : read_bytes;
 #else
     return ((ssize_t (*)(const char*, off_t, uint8_t*, size_t))(CONFIG_PARTITION_READ_ADDRESS | 1))(
@@ -63,12 +48,7 @@ uint64_t partition_get_size_by_name(const char* part_name) {
     if (!part)
         return 0;
 
-#ifdef CONFIG_USE_PMT_PARTITION
-    return (uint64_t)part->blknum * BLOCK_SIZE;
-#else
-    return (uint64_t)part->nr_sects * BLOCK_SIZE;
-#endif
-
+    return mt_part_size(part);
 #else
     return ((uint64_t (*)(const char*))(CONFIG_PARTITION_GET_SIZE_BY_NAME_ADDRESS | 1))(part_name);
 #endif

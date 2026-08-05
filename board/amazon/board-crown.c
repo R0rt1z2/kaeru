@@ -5,6 +5,8 @@
 
 #include <board_ops.h>
 
+#include <lib/mt_part.h>
+
 #define KEY_PRIVACY 0x2F
 
 #define PAYLOAD_DST 0x41000000
@@ -18,14 +20,6 @@
 #define BACKUP_SRC 0x200000
 
 #define DOWNLOAD_BASE 0x45000000
-
-struct device_t* mt_part_get_device(void) {
-    return ((struct device_t* (*)(void))(CONFIG_MT_PART_GET_DEVICE_ADDRESS|1))();
-}
-
-part_t* mt_get_part(const char* name) {
-    return ((part_t* (*)(const char*))(CONFIG_MT_PART_GET_PARTITION_ADDRESS|1))(name);
-}
 
 int is_key_pressed(int key) {
     return ((int (*)(int))(0x4BD1110C|1))(key);
@@ -71,7 +65,7 @@ void cmd_help(const char *arg, void *data, unsigned sz) {
 }
 
 uint64_t get_partition_sector(const char *partition_name) {
-    part_t* part = mt_get_part(partition_name);
+    part_t* part = mt_part_get_partition(partition_name);
     if (!part) {
         return 0;
     }
@@ -272,7 +266,7 @@ void parse_bootloader_messages(void) {
         return;
     }
 
-    part_t* misc_part = mt_get_part("MISC");
+    part_t* misc_part = mt_part_get_partition("MISC");
     if (!misc_part) {
         printf("MISC partition not found\n");
         return;

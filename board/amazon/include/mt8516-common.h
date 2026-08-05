@@ -44,14 +44,6 @@ static inline void mdelay(unsigned long msecs) {
     ((void (*)(unsigned long))(MDELAY_FUNC_ADDR|1))(msecs);
 }
 
-static inline struct device_t* mt_part_get_device(void) {
-    return ((struct device_t* (*)(void))(CONFIG_MT_PART_GET_DEVICE_ADDRESS|1))();
-}
-
-static inline part_t* mt_get_part(const char* name) {
-    return ((part_t* (*)(const char*))(CONFIG_MT_PART_GET_PARTITION_ADDRESS|1))(name);
-}
-
 // Optional hooks that a device can implement if required.
 #ifdef HAVE_EARLY_INIT
 void device_early_init(void);
