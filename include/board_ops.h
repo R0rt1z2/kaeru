@@ -22,6 +22,10 @@
 #include <lib/bcb_amzn/bcblib.h>
 #endif
 
+#ifdef CONFIG_BOOTLOADER_MESSAGE_SUPPORT
+#include <lib/bootloader_message.h>
+#endif
+
 #ifdef CONFIG_ENVIRONMENT_SUPPORT
 #include <lib/environment.h>
 #endif
