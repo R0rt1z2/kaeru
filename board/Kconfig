@@ -537,4 +537,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Echo Dot 3rd Generation
+
+    config AMAZON_DOUGLAS
+        bool "Support Fire HD 8 (2017)"
+        default n
+        help
+          Say Y if you want to include support for Fire HD 8 (2017)
 endmenu

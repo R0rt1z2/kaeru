@@ -84,3 +84,4 @@ lib-$(CONFIG_SAMSUNG_GTA7LITE) += samsung/board-gta7lite.o
 lib-$(CONFIG_LG_MCAYMANLM) += lg/board-mcaymanlm.o
 lib-$(CONFIG_AMAZON_MAVERICK) += amazon/board-maverick.o
 lib-$(CONFIG_AMAZON_DONUT) += amazon/board-donut.o
+lib-$(CONFIG_AMAZON_DOUGLAS) += amazon/board-douglas.o
