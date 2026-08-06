@@ -7,19 +7,6 @@
 #include <board_ops.h>
 #include "include/lamu.h"
 
-long partition_read(const char* part_name, long long offset, uint8_t* data, size_t size) {
-    return ((long (*)(const char*, long long, uint8_t*, size_t))(CONFIG_PARTITION_READ_ADDRESS | 1))(
-            part_name, offset, data, size);
-}
-
-long partition_write(const char* part_name, long long offset, uint8_t* data, size_t size) {
-    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, PARTITION_WRITE_PATTERN);
-    if (addr)
-        return ((long (*)(const char*, long long, uint8_t*, size_t))(addr | 1))(
-            part_name, offset, data, size);
-    return -1;
-}
-
 bool cmdline_append(const char *append_string) {
     uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x41F0, 0x4676, 0x4C22);
     if (addr)
@@ -74,29 +61,6 @@ static void seccfg_unlock(void) {
     }
 
     printf("Successfully unlocked device (%d -> %d)\n", (int)lock_state, LKS_UNLOCK);
-}
-
-void parse_bootloader_messages(void) {
-    struct misc_message misc_msg = {0};
-
-    if (partition_read("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg)) < 0) {
-        printf("Failed to read misc partition\n");
-        return;
-    }
-
-#if KAERU_DEBUG
-    printf("Read bootloader command: %s\n", misc_msg.command);
-#endif
-
-    bootmode_t mode = misc_command_to_bootmode(misc_msg.command);
-    if (mode == BOOTMODE_NORMAL)
-        return;
-
-    printf("Found '%s', forcing %s\n", misc_msg.command, bootmode2str(mode));
-    set_bootmode(mode);
-
-    memset(&misc_msg, 0, sizeof(misc_msg));
-    partition_write("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg));
 }
 
 static int is_uart_enabled(void) {
@@ -329,9 +293,10 @@ void board_late_init(void) {
 
     // The stock bootloader ignores boot commands written to the misc partition,
     // making it impossible to programmatically reboot into fastboot or recovery.
-    // We implement our own misc parsing so tools like mtkclient or Penumbra can
-    // trigger these modes automatically by writing to misc before rebooting.
-    parse_bootloader_messages();
+    // Handling the AOSP bootloader message ourselves lets tools like mtkclient
+    // or Penumbra trigger these modes automatically by writing to misc before
+    // rebooting.
+    read_and_set_bootmode_from_message();
 
     // The stock bootloader has the worst key combo handling I've ever seen.
     // It works whenever it feels like it, making it a nightmare to enter
