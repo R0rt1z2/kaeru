@@ -48,9 +48,11 @@ static inline struct device_t* mt_part_get_device(void) {
     return ((struct device_t* (*)(void))(CONFIG_MT_PART_GET_DEVICE_ADDRESS | 1))();
 }
 
+#ifdef CONFIG_MT_PART_GET_PARTITION_ADDRESS
 static inline part_t* mt_part_get_partition(const char* name) {
     return ((part_t* (*)(const char*))(CONFIG_MT_PART_GET_PARTITION_ADDRESS | 1))(name);
 }
+#endif
 
 static inline uint64_t mt_part_offset(const part_t* part) {
 #ifdef CONFIG_USE_PMT_PARTITION

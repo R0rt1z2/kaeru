@@ -34,5 +34,9 @@
 #include <lib/spoof.h>
 #endif
 
+#ifdef CONFIG_STORAGE_SUPPORT
+#include <lib/storage.h>
+#endif
+
 void board_early_init(void);
 void board_late_init(void);

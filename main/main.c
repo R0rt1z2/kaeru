@@ -9,6 +9,7 @@
 
 void kaeru_late_init(void) {
     OPTIONAL_INIT(framebuffer_init);
+    OPTIONAL_INIT(storage_init);
 
     board_late_init();
 
