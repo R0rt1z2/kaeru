@@ -54,3 +54,5 @@ long strtol(const char* str, char** endptr, int base);
 unsigned short strtou16(const char* str);
 char* strcpy(char* dest, const char* src);
 char* strncpy(char* dest, const char* src, size_t count);
+int streq(const char *a, const char *b);
+void strnarrow(const uint16_t *src, char *dst, int max);

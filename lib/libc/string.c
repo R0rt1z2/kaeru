@@ -305,3 +305,18 @@ char *strncpy(char *dest, char const *src, size_t count) {
     ;
 	return tmp;
 }
+
+int streq(const char *a, const char *b) {
+    while (*a && *b) {
+        if (*a++ != *b++)
+            return 0;
+    }
+    return *a == *b;
+}
+
+void strnarrow(const uint16_t *src, char *dst, int max) {
+    int i;
+    for (i = 0; i < max && src[i]; i++)
+        dst[i] = (char)(src[i] & 0x7F);
+    dst[i] = '\0';
+}
