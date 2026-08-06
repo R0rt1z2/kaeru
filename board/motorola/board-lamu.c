@@ -49,7 +49,7 @@ static void seccfg_unlock(void) {
 
     printf("Current seccfg lock state: %d\n", (int)lock_state);
 
-    if (lock_state != LKS_LOCK) {
+    if (lock_state == LKS_UNLOCK) {
         printf("Device is already unlocked, skipping seccfg write\n");
         return;
     }
