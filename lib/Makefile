@@ -18,3 +18,5 @@ lib-$(CONFIG_SEJ_SUPPORT) += security/sej/sej.o security/sej/sej_hk.o security/s
 lib-$(CONFIG_SEJ_SUPPORT) += security/seccfg.o
 
 lib-$(CONFIG_STORAGE_SUPPORT) += storage/storage.o storage/gpt.o
+
+lib-$(CONFIG_BOOTLOADER_MESSAGE_SUPPORT) += bootloader_message.o

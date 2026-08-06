@@ -301,7 +301,7 @@ menu "Logging Options"
           Address of the lk_log_store() function in the bootloader
 endmenu
 
-menu "Third party libraries"
+menu "Third party / Miscellaneous libraries"
     config SEJ_SUPPORT
         bool "Enable libsej support"
         default n
@@ -318,6 +318,21 @@ menu "Third party libraries"
 
           This is Amazon's own BCB format, not AOSP's bootloader_message,
           so it is only useful on Amazon (Echo & friends) targets.
+    
+    config BOOTLOADER_MESSAGE_SUPPORT
+        bool "Enable AOSP bootloader_message support"
+        depends on STORAGE_SUPPORT
+        default n
+        help
+          Say Y here to enable AOSP bootloader_message support, allowing
+          boards to easily handle the standardized format if their stock
+          LKs either do not handle it properly or use an alternative method.
+
+    if BOOTLOADER_MESSAGE_SUPPORT
+        config MISC_PARTITION_NAME
+            string "Name of the misc partition"
+            default "misc"
+    endif
 endmenu
 
 menu "Image Patching"
