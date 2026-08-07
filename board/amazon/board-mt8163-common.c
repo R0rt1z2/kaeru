@@ -171,6 +171,17 @@ static void neuter_cmdline_format(char *fmt, const char *name) {
     WRITE8(fmt + 2, '\0');
 }
 
+static void bootimg_cmdline_hook(const char *fmt, const char *tag,
+                                 const char *cmdline) {
+    printf(fmt, tag, cmdline);
+
+    // Stock LK always boots a 32-bit kernel no matter what...
+    if (cmdline_kernel_bits(cmdline) == 64) {
+        printf("Boot image requests a 64-bit kernel, forcing it\n");
+        WRITE32(KERNEL_64BIT_FLAG_ADDR, 1);
+    }
+}
+
 static void cmd_kaeru_version(const char *arg, void *data, unsigned sz) {
     video_set_cursor(video_get_rows() / 12, 0);
     cmd_version(arg, data, sz);
@@ -243,6 +254,12 @@ void board_early_init(void) {
     // Redirect the call that prints "fastboot_init()\n" to our hook, so
     // we can register custom fastboot commands and other things.
     PATCH_CALL(FASTBOOT_INIT_PRINTF_CALL_ADDR, &fastboot_init_hook, TARGET_THUMB);
+
+    // Stock LK always boots a 32-bit kernel. Hook the spot where it reads the
+    // boot image command line so we can honor a 'bootopt=64...' request and
+    // force the 64-bit kernel flag before the kernel is prepared.
+    PATCH_CALL(BOOTIMG_CMDLINE_PRINT_CALL_ADDR, &bootimg_cmdline_hook,
+               TARGET_THUMB);
 
     // Get rid of the stock mode strings LK draws during boot. They are
     // confusing, tell the user nothing useful, and the fastboot one lands

@@ -50,3 +50,23 @@ bool cmdline_replace(char *cmdline, const char *param,
     restore_unaligned(prev);
     return ret;
 }
+
+#define KERNEL_BIT_OFF 0x12
+
+int cmdline_kernel_bits(const char *cmdline) {
+    if (!cmdline)
+        return -1;
+
+    // Aim for bootopt=64S3,32N2,64N2 or similar.
+    const char *opt = strstr(cmdline, "bootopt=");
+    if (!opt || strnlen(opt, KERNEL_BIT_OFF + 2) < KERNEL_BIT_OFF + 2)
+        return -1;
+
+    const char *bits = opt + KERNEL_BIT_OFF;
+    if (strncmp(bits, "64", 2) == 0)
+        return 64;
+    if (strncmp(bits, "32", 2) == 0)
+        return 32;
+
+    return -1;
+}

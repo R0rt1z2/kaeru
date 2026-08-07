@@ -12,3 +12,5 @@
 
 bool cmdline_replace(char *cmdline, const char *param,
                      const char *old, const char *new);
+
+int cmdline_kernel_bits(const char *cmdline);
