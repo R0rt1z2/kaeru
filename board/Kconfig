@@ -264,8 +264,15 @@ menu "Device Support"
         help
           Say Y if you want to include support for Honor 60 SE
 
+    config AMAZON_MT8163_COMMON
+        bool
+        help
+          Select this if you need to include common board code
+          for Amazon MT8163 devices.
+
     config AMAZON_CROWN
         bool "Support Echo Show 8 1st Gen (2019)"
+        select AMAZON_MT8163_COMMON
         default n
         help
           Say Y if you want to include support for Echo Show 8 1st Gen (2019)
@@ -284,6 +291,7 @@ menu "Device Support"
 
     config AMAZON_CHECKERS
         bool "Support Echo Show 5 1st Gen (2019)"
+        select AMAZON_MT8163_COMMON
         default n
         help
           Say Y if you want to include support for Echo Show 5 1st Gen (2019)
@@ -350,6 +358,7 @@ menu "Device Support"
 
     config AMAZON_CRONOS
         bool "Support Echo Show 5 2nd Gen (2021)"
+        select AMAZON_MT8163_COMMON
         default n
         help
           Say Y if you want to include support for Echo Show 5 2nd Gen (2021)
