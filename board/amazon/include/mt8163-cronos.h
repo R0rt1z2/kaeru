@@ -1,0 +1,22 @@
+//
+// SPDX-FileCopyrightText: 2026 R0rt1z2 <roger@r0rt1z2.com>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
+
+#pragma once
+
+#define BOARD_NAME                      "Echo Show 5 2nd Gen (2021)"
+
+#define FASTBOOT_INIT_PRINTF_CALL_ADDR  0x4BD28C1C
+
+#define FB_CMD_FLASH_FUNC_ADDR          0x4BD2AE24
+#define FB_CMD_ERASE_FUNC_ADDR          0x4BD2AE74
+
+#define FB_REGISTER_FLASH_ADDR          0x4BD28CB2
+#define FB_REGISTER_ERASE_ADDR          0x4BD28CC4
+
+#define VIDEO_SET_CURSOR_FUNC_ADDR      0x4BD2C3B0
+#define VIDEO_GET_ROWS_FUNC_ADDR        0x4BD2C3E8
+
+#define VERITY_CMDLINE_CHECK_ADDR       0x4BD29A6A
+#define VERITY_CMDLINE_DISABLED_ADDR    0x4BD29A90

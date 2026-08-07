@@ -1,0 +1,22 @@
+//
+// SPDX-FileCopyrightText: 2026 R0rt1z2 <roger@r0rt1z2.com>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
+
+#pragma once
+
+#define BOARD_NAME                      "Echo Show 8 1st Gen (2019)"
+
+#define FASTBOOT_INIT_PRINTF_CALL_ADDR  0x4BD28544
+
+#define FB_CMD_FLASH_FUNC_ADDR          0x4BD2A74C
+#define FB_CMD_ERASE_FUNC_ADDR          0x4BD2A79C
+
+#define FB_REGISTER_FLASH_ADDR          0x4BD285DA
+#define FB_REGISTER_ERASE_ADDR          0x4BD285EC
+
+#define VIDEO_SET_CURSOR_FUNC_ADDR      0x4BD2BC30
+#define VIDEO_GET_ROWS_FUNC_ADDR        0x4BD2BC68
+
+#define VERITY_CMDLINE_CHECK_ADDR       0x4BD29392
+#define VERITY_CMDLINE_DISABLED_ADDR    0x4BD293B8
