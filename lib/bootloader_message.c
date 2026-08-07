@@ -78,9 +78,13 @@ bool set_bootmode_from_message(struct bootloader_message *boot) {
     if (target != BOOTMODE_NORMAL) {
         set_bootmode(target);
 
-        // Clear the bootloader message if needed.
-        if (target == BOOTMODE_FASTBOOT)
-            return clear_bootloader_command(true);
+        // Consume the command here rather than trusting whatever we are
+        // about to boot to do it. AOSP leaves 'boot-recovery' in place for
+        // recovery to clear once it is done, but a recovery that never gets
+        // around to it leaves the device looping back into recovery forever.
+        //
+        // Only the command goes, so the args recovery reads are untouched.
+        return clear_bootloader_command(true);
     }
 
     return true;
