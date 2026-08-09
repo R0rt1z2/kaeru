@@ -5,10 +5,27 @@
 
 #include "include/mt8163-common.h"
 
+#define RTC_PDN1                0x802C
+#define RTC_PDN1_FAST_BOOT      0x2000
+#define RTC_PDN1_RECOVERY_MASK  0x0030
+
 // devinfo[6] bit 8
 #define DEVINFO_BROM_CMD_DIS    0x10206060
 
+#define VOLUME_UP   0
+#define VOLUME_DOWN 1
+
+enum mode_reason {
+    MODE_REASON_NONE = 0,
+    MODE_REASON_MISC = 1,
+    MODE_REASON_RTC = 2,
+    MODE_REASON_KEY = 3,
+    MODE_REASON_FACTORY = 4,
+};
+
 static struct {
+    enum mode_reason reason;
+    uint32_t rtc_pdn1;
     bool unlocked_critical;
     bool bypass_remap;
 } gd;
@@ -19,6 +36,60 @@ static inline void cmd_flash(const char *arg, void *data, unsigned sz) {
 
 static inline void cmd_erase(const char *arg, void *data, unsigned sz) {
     ((void (*)(const char *, void *, unsigned))(FB_CMD_ERASE_FUNC_ADDR|1))(arg, data, sz);
+}
+
+static inline void cmd_reboot(const char *arg, void *data, unsigned sz) {
+    ((void (*)(const char *, void *, unsigned))(FB_CMD_REBOOT_FUNC_ADDR|1))(arg, data, sz);
+}
+
+static inline void pwrap_read(uint32_t reg, uint32_t *val) {
+    ((void (*)(uint32_t, uint32_t *))(PWRAP_READ_FUNC_ADDR|1))(reg, val);
+}
+
+static inline void pwrap_write(uint32_t reg, uint32_t val) {
+    ((void (*)(uint32_t, uint32_t))(PWRAP_WRITE_FUNC_ADDR|1))(reg, val);
+}
+
+static inline void rtc_writeif_unlock(void) {
+    ((void (*)(void))(RTC_WRITEIF_UNLOCK_FUNC_ADDR|1))();
+}
+
+static inline void rtc_write_trigger(void) {
+    ((void (*)(void))(RTC_WRITE_TRIGGER_FUNC_ADDR|1))();
+}
+
+static inline bool mtk_detect_pmic_just_rst(void) {
+    return ((bool (*)(void))(MTK_DETECT_PMIC_JUST_RST_ADDR|1))();
+}
+
+static const char *modereason2str(enum mode_reason reason) {
+    switch (reason) {
+        case MODE_REASON_MISC:
+            return "BCB";
+        case MODE_REASON_RTC:
+            return "RTC";
+        case MODE_REASON_KEY:
+            return "Volume Keys";
+        case MODE_REASON_FACTORY:
+            return "Factory";
+        default:
+            return "None";
+    }
+}
+
+static inline bool read_rtc_mode(uint32_t mask) {
+    // This comes from the saved RTC_PDN1 we got
+    // from real_boot_mode_select().
+    return !!(gd.rtc_pdn1 & mask);
+}
+
+static void clear_rtc_mode(uint32_t clr_bits) {
+    uint32_t pdn1;
+
+    rtc_writeif_unlock();
+    pwrap_read(RTC_PDN1, &pdn1);
+    pwrap_write(RTC_PDN1, pdn1 & ~clr_bits);
+    rtc_write_trigger();
 }
 
 static bool advance_partition_name(const char** partition) {
@@ -150,6 +221,11 @@ usage:
     fastboot_fail("Usage: fastboot oem part-remap [0|1]");
 }
 
+static void cmd_reboot_wrapper(const char *arg, void *data, unsigned sz) {
+    cmd_reboot_write_message(arg);
+    cmd_reboot("", data, sz);
+}
+
 static void blank_string(char *s, const char *name) {
     if (!s) {
         printf("Could not find the %s string\n", name);
@@ -187,13 +263,84 @@ static void cmd_kaeru_version(const char *arg, void *data, unsigned sz) {
     cmd_version(arg, data, sz);
 }
 
+static void real_boot_mode_select(void) {
+    // We use this opportunity to grab RTC_PDN1 for use later,
+    // as RTC driver init will clear out the recovery bits,
+    // which is not what we want when we have to detect
+    // RTC recovery mode.
+    pwrap_read(RTC_PDN1, &gd.rtc_pdn1);
+
+    // Set bootmode to BOOTMODE_NORMAL for good measure.
+    set_bootmode(BOOTMODE_NORMAL);
+}
+
+static void boot_mode_select(void) {
+    // Clear out the reset flag from the PMIC. We really don't care
+    // about the return, but not calling this function could mess
+    // things up.
+    mtk_detect_pmic_just_rst();
+
+    // The preloader hands us its boot mode in the boot arg block at
+    // BOOTLOADER_BASE + 0x20. Act on it before anything else, forcing
+    // fastboot on a factory boot and recovery on an ATE factory boot.
+    uint32_t *arg = *(uint32_t **)(CONFIG_BOOTLOADER_BASE + 0x20);
+    uint32_t pl_mode = arg ? arg[1] : BOOTMODE_NORMAL;
+    if (pl_mode == BOOTMODE_FACTORY) {
+        set_bootmode(BOOTMODE_FASTBOOT);
+        gd.reason = MODE_REASON_FACTORY;
+        return;
+    } else if (pl_mode == BOOTMODE_ATEFACT) {
+        set_bootmode(BOOTMODE_RECOVERY);
+        gd.reason = MODE_REASON_FACTORY;
+        return;
+    }
+
+    // Act on any boot command left in misc before anything else, so a
+    // key press can still override it below.
+    read_and_set_bootmode_from_message();
+    if (get_bootmode() != BOOTMODE_NORMAL)
+        gd.reason = MODE_REASON_MISC;
+
+    // Amazon removed the ability to enter fastboot / recovery mode with
+    // the volume keys, we restore that here. Require an exclusive hold so
+    // holding both does nothing.
+    bool up = mtk_detect_key(VOLUME_UP);
+    bool down = mtk_detect_key(VOLUME_DOWN);
+    if (up && !down) {
+        set_bootmode(BOOTMODE_RECOVERY);
+        gd.reason = MODE_REASON_KEY;
+    } else if (down && !up) {
+        set_bootmode(BOOTMODE_FASTBOOT);
+        gd.reason = MODE_REASON_KEY;
+    }
+
+    // If our bootmode is STILL normal after all that, give a chance for
+    // RTC to select the boot mode, for compatibility with stock OS.
+    if (get_bootmode() == BOOTMODE_NORMAL) {
+        if (read_rtc_mode(RTC_PDN1_FAST_BOOT)) {
+            clear_rtc_mode(RTC_PDN1_FAST_BOOT);
+            set_bootmode(BOOTMODE_FASTBOOT);
+            gd.reason = MODE_REASON_RTC;
+        } else if (read_rtc_mode(RTC_PDN1_RECOVERY_MASK)) {
+            clear_rtc_mode(RTC_PDN1_RECOVERY_MASK);
+            set_bootmode(BOOTMODE_RECOVERY);
+            gd.reason = MODE_REASON_RTC;
+        }
+    }
+
+    // We would normally handle KPOC here too, but Amazon disable that
+    // as well ¯\_(ツ)_/¯
+}
+
 static void fastboot_init_hook(const char *) {
     video_printf(" => HACKED FASTBOOT mode - xyz, k4y0z, R0rt1z2, bengris32\n");
+    fastboot_publish("boot-reason", modereason2str(gd.reason));
     fastboot_publish("brom-cmd-dis", brom_cmd_disabled() ? "1" : "0");
 
     // Register our custom command(s).
     fastboot_register("flash:", cmd_flash_wrapper, 1);
     fastboot_register("erase:", cmd_erase_wrapper, 1);
+    fastboot_register("reboot", cmd_reboot_wrapper, 1);
     fastboot_register("flashing unlock_critical", cmd_unlock_critical, 1);
     fastboot_register("flashing lock_critical", cmd_lock_critical, 1);
     fastboot_register("oem part-remap", cmd_oem_bypass_remap, 1);
@@ -241,6 +388,11 @@ void board_early_init(void) {
     NOP(FB_REGISTER_FLASH_ADDR, 2);
     NOP(FB_REGISTER_ERASE_ADDR, 2);
 
+    // Same treatment for reboot and reboot-bootloader, so our own reboot
+    // handler (which records the target in misc) is the one that serves.
+    NOP(FB_REGISTER_REBOOT_ADDR, 2);
+    NOP(FB_REGISTER_REBOOT_BOOTLOADER_ADDR, 2);
+
     // Silence everything LK draws while serving fastboot commands, it all
     // ends up on top of our banner.
     const uint32_t video_calls[] = { FB_VIDEO_CALL_ADDRS };
@@ -267,15 +419,22 @@ void board_early_init(void) {
     // share the string, so blanking it covers both.
     blank_string(SEARCH_STRING(" => FASTBOOT mode...\n"), "fastboot mode");
     blank_string(SEARCH_STRING(" => FACTORYRESET mode...\n"), "factory reset mode");
+
+    // Override LK's default boot mode handling.
+    PATCH_CALL(BOOT_MODE_SELECT_CALL_ADDR, &real_boot_mode_select, TARGET_THUMB);
+
+    // Kill LK's factory reset key combo, it wipes userdata when held.
+    FORCE_RETURN(FACTORY_RESET_CHECK_ADDR, 0);
+
+    // Same for LK's own fastboot key check, it overrides our selection.
+    FORCE_RETURN(FASTBOOT_KEY_CHECK_ADDR, 0);
 }
 
 void board_late_init(void) {
     printf("Entering late init for %s\n", BOARD_NAME);
 
-    // Act on any boot command left in misc and consume it. The stock
-    // bootloader reads misc too, but never clears the command, so the
-    // device would keep coming back here.
-    read_and_set_bootmode_from_message();
+    boot_mode_select();
+    printf("Boot mode reason: %s\n", modereason2str(gd.reason));
 
     // Expose brom_cmd_dis to the OS as ro.boot.brom_cmd_dis.
     cmdline_append(brom_cmd_disabled() ? "androidboot.brom_cmd_dis=1"
