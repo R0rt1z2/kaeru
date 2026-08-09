@@ -570,4 +570,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Fire Max 11 (2023)
+
+    config XIAOMI_PISSARRO
+        bool "Support Redmi Note 11 Pro+ 5G"
+        default n
+        help
+          Say Y if you want to include support for Redmi Note 11 Pro+ 5G
 endmenu
