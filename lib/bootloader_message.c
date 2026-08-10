@@ -84,6 +84,12 @@ bool set_bootmode_from_message(struct bootloader_message *boot) {
         // around to it leaves the device looping back into recovery forever.
         //
         // Only the command goes, so the args recovery reads are untouched.
+        //
+        // Sticky commands are the exception, they are supposed to survive
+        // and pin the device to this mode until someone erases them.
+        if (misc_command_is_sticky(boot->command))
+            return true;
+
         return clear_bootloader_command(true);
     }
 
