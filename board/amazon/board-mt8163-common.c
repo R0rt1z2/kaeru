@@ -62,6 +62,14 @@ static inline bool mtk_detect_pmic_just_rst(void) {
     return ((bool (*)(void))(MTK_DETECT_PMIC_JUST_RST_ADDR|1))();
 }
 
+static inline int load_recovery_hdr(const char *partition, uint32_t addr) {
+    return ((int (*)(const char *, uint32_t))(LOAD_RECOVERY_HDR_FUNC_ADDR|1))(partition, addr);
+}
+
+static inline int load_recovery_img(const char *partition, uint32_t addr) {
+    return ((int (*)(const char *, uint32_t))(LOAD_RECOVERY_IMG_FUNC_ADDR|1))(partition, addr);
+}
+
 static const char *modereason2str(enum mode_reason reason) {
     switch (reason) {
         case MODE_REASON_MISC:
@@ -132,6 +140,10 @@ static const char* remap_partition(const char* partition) {
     if (strcmp(partition, "misc") == 0)
         // For whatever reason Amazon decided to use uppercase.
         return CONFIG_MISC_PARTITION_NAME;
+
+    if (strcmp(partition, "recovery") == 0)
+        // Redirect to the actual recovery partition.
+        return RECOVERY_PARTITION;
 
     return NULL;
 }
@@ -256,6 +268,14 @@ static void bootimg_cmdline_hook(const char *fmt, const char *tag,
         printf("Boot image requests a 64-bit kernel, forcing it\n");
         WRITE32(KERNEL_64BIT_FLAG_ADDR, 1);
     }
+}
+
+static int load_recovery_hdr_hook(const char *, uint32_t addr) {
+    return load_recovery_hdr(RECOVERY_PARTITION, addr);
+}
+
+static int load_recovery_img_hook(const char *, uint32_t addr) {
+    return load_recovery_img(RECOVERY_PARTITION, addr);
 }
 
 static void cmd_kaeru_version(const char *arg, void *data, unsigned sz) {
@@ -419,6 +439,11 @@ void board_early_init(void) {
     // share the string, so blanking it covers both.
     blank_string(SEARCH_STRING(" => FASTBOOT mode...\n"), "fastboot mode");
     blank_string(SEARCH_STRING(" => FACTORYRESET mode...\n"), "factory reset mode");
+
+    // Load recovery from a dedicated partition instead of the stock one. LK
+    // reads the header and the image in two passes, so hook both.
+    PATCH_CALL(LOAD_RECOVERY_HDR_CALL_ADDR, &load_recovery_hdr_hook, TARGET_THUMB);
+    PATCH_CALL(LOAD_RECOVERY_IMG_CALL_ADDR, &load_recovery_img_hook, TARGET_THUMB);
 
     // Override LK's default boot mode handling.
     PATCH_CALL(BOOT_MODE_SELECT_CALL_ADDR, &real_boot_mode_select, TARGET_THUMB);
