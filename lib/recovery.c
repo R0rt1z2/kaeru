@@ -12,15 +12,38 @@
 #include <lib/spoof.h>
 #endif
 
+// Oh Amazon...
+static bool command_is(const char* c, const char* want, size_t n) {
+    for (size_t i = 0; i < n; i++) {
+        char a = c[i];
+
+        if (a >= 'A' && a <= 'Z')
+            a += 'a' - 'A';
+
+        if (a != want[i])
+            return false;
+    }
+
+    return true;
+}
+
 bootmode_t misc_command_to_bootmode(const char* c) {
     if (!c || !c[0])
         return BOOTMODE_NORMAL;
 
-    if (!strncmp(c, "boot-recovery",       13)) return BOOTMODE_RECOVERY;
-    if (!strncmp(c, "boot-fastboot",       13)) return BOOTMODE_RECOVERY;
-    if (!strncmp(c, "boot-bootloader",     15)) return BOOTMODE_FASTBOOT;
-    if (!strncmp(c, "bootonce-bootloader", 19)) return BOOTMODE_FASTBOOT;
+    if (command_is(c, "boot-recovery",       13)) return BOOTMODE_RECOVERY;
+    if (command_is(c, "boot-fastboot",       13)) return BOOTMODE_RECOVERY;
+    if (command_is(c, "boot-bootloader",     15)) return BOOTMODE_FASTBOOT;
+    if (command_is(c, "bootonce-bootloader", 19)) return BOOTMODE_FASTBOOT;
+    if (command_is(c, "fastboot_please",     15)) return BOOTMODE_FASTBOOT;
     return BOOTMODE_NORMAL;
+}
+
+bool misc_command_is_sticky(const char* c) {
+    if (!c || !c[0])
+        return false;
+
+    return command_is(c, "fastboot_please", 15);
 }
 
 // Maps the target of a fastboot 'reboot-*' command to the misc command that
@@ -34,9 +57,10 @@ const char* reboot_target_to_misc_command(const char* target) {
     if (target[0] == '-')
         target++;
 
-    if (!strcmp(target, "bootloader")) return "bootonce-bootloader";
-    if (!strcmp(target, "recovery"))   return "boot-recovery";
-    if (!strcmp(target, "fastboot"))   return "boot-fastboot";
+    if (!strcmp(target, "bootloader"))      return "bootonce-bootloader";
+    if (!strcmp(target, "recovery"))        return "boot-recovery";
+    if (!strcmp(target, "fastboot"))        return "boot-fastboot";
+    if (!strcmp(target, "fastboot_please")) return "fastboot_please";
     return NULL;
 }
 

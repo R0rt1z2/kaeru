@@ -89,7 +89,7 @@ static void seccfg_unlock(void) {
 
     printf("Current seccfg lock state: %d\n", (int)lock_state);
 
-    if (lock_state != LKS_LOCK) {
+    if (lock_state == LKS_UNLOCK) {
         printf("Device is already unlocked, skipping seccfg write\n");
         return;
     }
@@ -101,29 +101,6 @@ static void seccfg_unlock(void) {
     }
 
     printf("Successfully unlocked device (%d -> %d)\n", (int)lock_state, LKS_UNLOCK);
-}
-
-void parse_bootloader_messages(void) {
-    struct misc_message misc_msg = {0};
-
-    if (partition_read("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg)) < 0) {
-        printf("Failed to read misc partition\n");
-        return;
-    }
-
-#if KAERU_DEBUG
-    printf("Read bootloader command: %s\n", misc_msg.command);
-#endif
-
-    bootmode_t mode = misc_command_to_bootmode(misc_msg.command);
-    if (mode == BOOTMODE_NORMAL)
-        return;
-
-    printf("Found '%s', forcing %s\n", misc_msg.command, bootmode2str(mode));
-    set_bootmode(mode);
-
-    memset(&misc_msg, 0, sizeof(misc_msg));
-    partition_write("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg));
 }
 
 static int is_uart_enabled(void) {
@@ -356,9 +333,10 @@ void board_late_init(void) {
 
     // The stock bootloader ignores boot commands written to the misc partition,
     // making it impossible to programmatically reboot into fastboot or recovery.
-    // We implement our own misc parsing so tools like mtkclient or Penumbra can
-    // trigger these modes automatically by writing to misc before rebooting.
-    parse_bootloader_messages();
+    // Handling the AOSP bootloader message ourselves lets tools like mtkclient
+    // or Penumbra trigger these modes automatically by writing to misc before
+    // rebooting.
+    read_and_set_bootmode_from_message();
 
     // The stock bootloader has the worst key combo handling I've ever seen.
     // It works whenever it feels like it, making it a nightmare to enter

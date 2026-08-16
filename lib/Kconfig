@@ -252,6 +252,33 @@ menu "Recovery Support"
     endif
 endmenu
 
+menu "Storage Support"
+    config STORAGE_SUPPORT
+        bool "Enable storage support"
+        depends on !USE_PMT_PARTITION
+        default n
+        help
+          Support for reading and writing to storage.
+
+    config USE_PMT_PARTITION
+        bool "Use PMT partition table"
+        depends on LEGACY_LK
+        default n
+        help
+            Enable this if the device uses a PMT partition table
+            instead of GPT. This selects the correct part_t structure
+            layout returned by mt_part_get_partition(). PMT devices use
+            startblk/blknum while GPT devices use start_sect/nr_sects.
+
+    config MT_PART_GET_DEVICE_ADDRESS
+        hex "mt_part_get_device() address"
+        depends on LEGACY_LK || STORAGE_SUPPORT
+
+    config MT_PART_GET_PARTITION_ADDRESS
+        hex "mt_part_get_partition() address"
+        depends on LEGACY_LK
+endmenu
+
 menu "Memory and Address Mapping"
     menu "Bootloader Configuration"
         config BOOTLOADER_BASE
@@ -313,7 +340,7 @@ menu "Logging Options"
           Address of the lk_log_store() function in the bootloader
 endmenu
 
-menu "Third party libraries"
+menu "Third party / Miscellaneous libraries"
     config SEJ_SUPPORT
         bool "Enable libsej support"
         default n
@@ -330,6 +357,21 @@ menu "Third party libraries"
 
           This is Amazon's own BCB format, not AOSP's bootloader_message,
           so it is only useful on Amazon (Echo & friends) targets.
+    
+    config BOOTLOADER_MESSAGE_SUPPORT
+        bool "Enable AOSP bootloader_message support"
+        depends on STORAGE_SUPPORT
+        default n
+        help
+          Say Y here to enable AOSP bootloader_message support, allowing
+          boards to easily handle the standardized format if their stock
+          LKs either do not handle it properly or use an alternative method.
+
+    if BOOTLOADER_MESSAGE_SUPPORT
+        config MISC_PARTITION_NAME
+            string "Name of the misc partition"
+            default "misc"
+    endif
 endmenu
 
 menu "Image Patching"

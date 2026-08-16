@@ -1,51 +1,19 @@
 //
 // SPDX-FileCopyrightText: 2026 Roger Ortiz <roger@r0rt1z2.com>
+//                         2026 Ben Grisdale <bengris32@protonmail.ch>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 
-#define BLOCK_SIZE 512
+#include <lib/storage/part.h>
 
-#define MISC_PAGES            3
-#define MISC_COMMAND_PAGE     1
+typedef long long off_t;
+typedef long ssize_t;
 
-#define BOOT0_PART 1
-#define USER_PART  8
-
-#ifdef CONFIG_LEGACY_LK
-
-#ifdef CONFIG_USE_PMT_PARTITION
-
-typedef struct {
-    char *name;
-    unsigned long blknum;
-    unsigned long flags;
-    unsigned long startblk;
-    unsigned int part_id;
-} part_t;
-
-#else
-
-typedef struct {
-    unsigned long start_sect;
-    unsigned long nr_sects;
-    unsigned int part_id;
-    char *name;
-    void *info;
-} part_t;
-
-#endif
-
-struct device_t {
-    uint32_t init;
-    uint32_t id;
-    void *blkdev;
-    int (*init_dev)(int id);
-    size_t (*read)(struct device_t *dev, uint64_t dev_addr, void *dst, uint32_t size, uint32_t part);
-    size_t (*write)(struct device_t *dev, void *src, uint64_t block_off, size_t size, uint32_t part);
-};
-
-#endif
+const struct part_info* storage_part_find(const char *name);
+ssize_t storage_part_read(const struct part_info* part, void *dst, uint64_t off, size_t size);
+ssize_t storage_part_write(const struct part_info* part, void *src, uint64_t off, size_t size);

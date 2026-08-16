@@ -16,11 +16,14 @@
 #include <lib/security/seccfg.h>
 #include <lib/recovery.h>
 #include <lib/string.h>
-#include <lib/storage.h>
 #include <lib/thread.h>
 
 #ifdef CONFIG_AMZN_BCB_SUPPORT
 #include <lib/bcb_amzn/bcblib.h>
+#endif
+
+#ifdef CONFIG_BOOTLOADER_MESSAGE_SUPPORT
+#include <lib/bootloader_message.h>
 #endif
 
 #ifdef CONFIG_ENVIRONMENT_SUPPORT
@@ -33,6 +36,10 @@
 
 #ifdef CONFIG_SPOOF_SUPPORT
 #include <lib/spoof.h>
+#endif
+
+#ifdef CONFIG_STORAGE_SUPPORT
+#include <lib/storage.h>
 #endif
 
 void board_early_init(void);

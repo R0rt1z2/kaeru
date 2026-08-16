@@ -105,6 +105,10 @@ void parse_bootloader_messages(void) {
     printf("Found '%s', forcing %s\n", misc_msg.command, bootmode2str(mode));
     set_bootmode(mode);
 
+    // Sticky commands stay put so every boot lands back here.
+    if (misc_command_is_sticky(misc_msg.command))
+        return;
+
     memset(&misc_msg, 0, sizeof(misc_msg));
     partition_write("misc", 0, (uint8_t *)&misc_msg, sizeof(misc_msg));
 }

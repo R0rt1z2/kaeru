@@ -51,8 +51,11 @@ static bool parse_bootloader_messages(void) {
 
     printf("Found '%s', forcing %s\n", misc_msg.command, bootmode2str(mode));
 
-    memset(&misc_msg, 0, sizeof(misc_msg));
-    partition_write("misc", 0, (uint8_t*)&misc_msg, sizeof(misc_msg));
+    // Sticky commands stay put so every boot lands back here.
+    if (!misc_command_is_sticky(misc_msg.command)) {
+        memset(&misc_msg, 0, sizeof(misc_msg));
+        partition_write("misc", 0, (uint8_t*)&misc_msg, sizeof(misc_msg));
+    }
 
     // Fastboot isn't a boot mode here, it's the ramdump branch patch. LK picks
     // the rest up from the global on its own, so let the caller know which.

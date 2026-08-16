@@ -16,3 +16,7 @@ lib-$(CONFIG_AMZN_BCB_SUPPORT) += bcb_amzn/bcblib.o
 lib-$(CONFIG_SEJ_SUPPORT) += crypto/xor.o crypto/sha256.o
 lib-$(CONFIG_SEJ_SUPPORT) += security/sej/sej.o security/sej/sej_hk.o security/sej/sej_sk.o
 lib-$(CONFIG_SEJ_SUPPORT) += security/seccfg.o
+
+lib-$(CONFIG_STORAGE_SUPPORT) += storage/storage.o storage/gpt.o
+
+lib-$(CONFIG_BOOTLOADER_MESSAGE_SUPPORT) += bootloader_message.o

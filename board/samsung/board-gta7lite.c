@@ -82,9 +82,12 @@ void parse_bootloader_messages(void) {
 
     printf("Found '%s', forcing %s\n", misc_msg.command, bootmode2str(mode));
 
-    // Clear the command so the next boot does not loop back into this mode.
-    memset(&misc_msg, 0, sizeof(misc_msg));
-    partition_write("misc", 0, (uint8_t*)&misc_msg, sizeof(misc_msg));
+    // Clear the command so the next boot does not loop back into this mode,
+    // unless it is a sticky one, where looping back is the whole point.
+    if (!misc_command_is_sticky(misc_msg.command)) {
+        memset(&misc_msg, 0, sizeof(misc_msg));
+        partition_write("misc", 0, (uint8_t*)&misc_msg, sizeof(misc_msg));
+    }
 
     if (mode == BOOTMODE_FASTBOOT)
         enter_fastboot();

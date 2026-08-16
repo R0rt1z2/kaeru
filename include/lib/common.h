@@ -84,4 +84,5 @@ void common_early_init(void);
 void mtk_wdt_reset(void);
 bool mtk_detect_key(unsigned short key);
 void print_kaeru_info(int (*out)(const char *, ...));
+void cmd_version(const char* arg, void* data, unsigned sz);
 void reboot_emergency(void);

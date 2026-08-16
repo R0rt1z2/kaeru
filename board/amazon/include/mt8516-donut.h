@@ -1,0 +1,49 @@
+//
+// SPDX-FileCopyrightText: 2026 Ben Grisdale <bengris32@protonmail.ch>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
+
+#pragma once
+
+#define BOARD_NAME          "Echo Dot 3rd Generation"
+#define RECOVERY_PARTITION  "swdl"
+
+#define HAVE_EARLY_INIT
+#define HAVE_LATE_INIT
+#define HAVE_FASTBOOT_INIT
+#define HAVE_FASTBOOT_CMD_REBOOT
+
+#define GPIO_KEY_VOLUME_UP                7
+#define GPIO_KEY_VOLUME_DOWN              12
+#define GPIO_KEY_ACTION                   42
+
+#define MDELAY_FUNC_ADDR                  0x41E116CC
+#define THREAD_SLEEP_FUNC_ADDR            0x41E1A400
+
+#define FB_CMD_FLASH_FUNC_ADDR            0x41E1E629
+#define FB_CMD_ERASE_FUNC_ADDR            0x41E1E771
+#define FB_CMD_REBOOT_FUNC_ADDR           0x41E1D79D
+#define FB_CMD_REBOOT_RECOVERY_FUNC_ADDR  0x41E1D679
+
+#define FB_FLASH_CMD_REGISTER_CALLER      0x41E1D18A
+#define FB_ERASE_CMD_REGISTER_CALLER      0x41E1D19E
+#define FB_REBOOT_CMD_REGISTER_CALLER     0x41E1D1C8
+#define FB_REBOOT_BL_CMD_REGISTER_CALLER  0x41E1D1DC
+#define FB_SET_ACTIVE_CMD_REGISTER_CALLER 0x41E1D286
+
+#define FB_INIT_LOG_FUNC_CALLER_ADDR      0x41E1D0E4
+
+#define GET_BOOT_PART_FUNC_ADDR           0x41E186B8
+#define GET_BOOT_PART_FUNC_CALLER_ADDR    0x41E1C206
+#define GET_ACTIVE_SLOT_FUNC_CALLER_ADDR  0x41E1C200
+
+#define MT_GET_GPIO_IN_FUNC_ADDR          0x41E0E29E
+
+#define ISSI_WRITE_FUNC_ADDR              0x41E1AA00
+#define ISSI_INIT_FUNC_ADDR               0x41E1AA5C
+#define ISSI_SET_STATE_FUNC_ADDR          0x41E1AB2C
+
+#define UNLOCK_CHECK_FUNC_ADDR            0x41E0196C
+#define SELINUX_CMDLINE_FUNC_ADDR         0x41E1C160
+#define VERITY_CMDLINE_FUNC_ADDR          0x41E1D508
+#define CMDLINE_APPEND_FUNC_ADDR          0x41E1AD14
