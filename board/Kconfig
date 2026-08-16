@@ -552,4 +552,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Fire HD 8 (2017)
+
+    config AMAZON_ROOK
+        bool "Support Echo Spot 1st Gen (2017)"
+        default n
+        help
+          Say Y if you want to include support for Echo Spot 1st Gen (2017)
 endmenu
