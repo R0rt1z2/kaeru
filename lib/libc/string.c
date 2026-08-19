@@ -357,6 +357,84 @@ uint64_t parse_hex64(const char* s, const char** end) {
     return v;
 }
 
+unsigned long strtoul(const char* nptr, char** endptr, register int base) {
+    const char* s = nptr;
+    unsigned long acc = 0;
+    int neg = 0;
+    int any = 0;
+
+    while (ISSPACE(*s)) {
+        s++;
+    }
+
+    if (*s == '-') {
+        neg = 1;
+        s++;
+    } else if (*s == '+') {
+        s++;
+    }
+
+    if ((base == 0 || base == 16) && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
+        s += 2;
+        base = 16;
+    } else if (base == 0) {
+        base = (*s == '0') ? 8 : 10;
+    }
+
+    for (;; s++) {
+        int c = *s;
+
+        if (ISDIGIT(c)) {
+            c -= '0';
+        } else if (c >= 'a' && c <= 'z') {
+            c -= 'a' - 10;
+        } else if (c >= 'A' && c <= 'Z') {
+            c -= 'A' - 10;
+        } else {
+            break;
+        }
+
+        if (c >= base) {
+            break;
+        }
+
+        acc = acc * (unsigned long)base + (unsigned long)c;
+        any = 1;
+    }
+
+    if (endptr) {
+        *endptr = (char*)(any ? s : nptr);
+    }
+
+    return neg ? -acc : acc;
+}
+
+long strtol(const char* str, char** endptr, int base) {
+    const char* s = str;
+    unsigned long v;
+    int neg = 0;
+
+    while (ISSPACE(*s)) {
+        s++;
+    }
+
+    if (*s == '-') {
+        neg = 1;
+        s++;
+    } else if (*s == '+') {
+        s++;
+    }
+
+    v = strtoul(s, endptr, base);
+
+    // Nothing was consumed, so the sign we ate is not ours to keep.
+    if (endptr && *endptr == (char*)s) {
+        *endptr = (char*)str;
+    }
+
+    return neg ? -(long)v : (long)v;
+}
+
 unsigned short strtou16(const char* str) {
     unsigned short result = 0;
 
