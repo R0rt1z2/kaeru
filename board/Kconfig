@@ -558,4 +558,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Echo Spot 1st Gen (2017)
+
+    config AMAZON_KARAT
+        bool "Support Fire TV Stick 4K / 4K Max / 4K Plus (2nd Gen)"
+        default n
+        help
+          Say Y if you want to include support for Fire TV Stick 4K / 4K Max / 4K Plus (2nd Gen)
 endmenu
