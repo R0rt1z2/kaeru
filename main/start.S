@@ -38,6 +38,8 @@ main:
 .Lno_reloc:
     ldr     r0, =__bss_start
     ldr     r1, =__bss_end
+    adds    r0, r0, r4
+    adds    r1, r1, r4
     sub     r2, r1, r0
     mov     r1, #0
     bl     memset
