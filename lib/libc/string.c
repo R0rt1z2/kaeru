@@ -309,6 +309,54 @@ size_t strnlen(char const *s, size_t count)
 	return sc - s;
 }
 
+void hex64(char* out, uint64_t v) {
+    static const char digits[] = "0123456789abcdef";
+    char tmp[16];
+    int i = 0;
+
+    do {
+        tmp[i++] = digits[v & 0xF];
+        v >>= 4;
+    } while (v);
+
+    *out++ = '0';
+    *out++ = 'x';
+    while (i) {
+        *out++ = tmp[--i];
+    }
+    *out = '\0';
+}
+
+uint64_t parse_hex64(const char* s, const char** end) {
+    uint64_t v = 0;
+
+    if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
+        s += 2;
+    }
+
+    for (;; s++) {
+        uint32_t d;
+
+        if (*s >= '0' && *s <= '9') {
+            d = *s - '0';
+        } else if (*s >= 'a' && *s <= 'f') {
+            d = *s - 'a' + 10;
+        } else if (*s >= 'A' && *s <= 'F') {
+            d = *s - 'A' + 10;
+        } else {
+            break;
+        }
+
+        v = (v << 4) | d;
+    }
+
+    if (end) {
+        *end = s;
+    }
+
+    return v;
+}
+
 unsigned short strtou16(const char* str) {
     unsigned short result = 0;
 

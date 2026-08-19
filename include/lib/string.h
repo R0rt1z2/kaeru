@@ -54,6 +54,9 @@ char* strstr(const char* h, const char* n);
 unsigned long strtoul(const char* nptr, char** endptr, register int base);
 long strtol(const char* str, char** endptr, int base);
 unsigned short strtou16(const char* str);
+// hex64() writes an 0x prefixed string, so out needs 19 bytes.
+void hex64(char* out, uint64_t v);
+uint64_t parse_hex64(const char* s, const char** end);
 char* strcpy(char* dest, const char* src);
 char* strncpy(char* dest, const char* src, size_t count);
 int streq(const char *a, const char *b);
