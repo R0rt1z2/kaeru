@@ -83,4 +83,8 @@ void __attribute__((weak)) common_early_init(void) {
 #ifdef CONFIG_ENVIRONMENT_SUPPORT
     fastboot_register("oem env", cmd_env, 1);
 #endif
+
+#ifdef CONFIG_IDMELIB_SUPPORT
+    fastboot_register("oem idme", cmd_idme, 1);
+#endif
 }

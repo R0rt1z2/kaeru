@@ -318,6 +318,14 @@ menu "Third party / Miscellaneous libraries"
           IDME block Amazon devices keep their per unit data in, such as
           the serial number, board id and the fos/dev/usr flags.
 
+    config IDME_EMMC_PART
+        int "eMMC hardware partition the IDME block lives in"
+        depends on IDMELIB_SUPPORT
+        default 2
+        help
+          Which eMMC hardware area to read the IDME block from. MTK numbers
+          these from one, and Amazon normally uses the second boot area.
+
     config AMZN_BCB_SUPPORT
         bool "Enable Amazon BCB (bcblib) support"
         default n

@@ -30,6 +30,10 @@
 #include <lib/environment.h>
 #endif
 
+#ifdef CONFIG_IDMELIB_SUPPORT
+#include <lib/idmelib.h>
+#endif
+
 #ifdef CONFIG_FRAMEBUFFER_SUPPORT
 #include <lib/framebuffer.h>
 #endif
