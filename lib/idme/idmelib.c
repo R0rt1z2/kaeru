@@ -12,6 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+#include <arch/cache.h>
 #include <lib/common.h>
 #include <lib/debug.h>
 #include <lib/idmelib.h>
@@ -79,6 +80,7 @@ struct idme_item *idmelib_get_item(struct idme *hdr, const char *name) {
 int idmelib_get_var(struct idme *hdr, const char *name, char *buf, size_t len) {
     struct idme_item *item;
     size_t copy_len;
+    uint32_t prev;
 
     if (!buf || len == 0)
         return -1;
@@ -88,7 +90,11 @@ int idmelib_get_var(struct idme *hdr, const char *name, char *buf, size_t len) {
         return -1;
 
     copy_len = MIN(item->desc.size, len - 1);
+
+    prev = enable_unaligned();
     memcpy(buf, item->data, copy_len);
+    restore_unaligned(prev);
+
     buf[copy_len] = '\0';
 
     return 0;
@@ -98,6 +104,7 @@ int idmelib_get_var(struct idme *hdr, const char *name, char *buf, size_t len) {
 int idmelib_set_var(struct idme *hdr, const char *name, const char *value) {
     struct idme_item *item;
     size_t vlen;
+    uint32_t prev;
 
     if (!value)
         return -1;
@@ -107,8 +114,11 @@ int idmelib_set_var(struct idme *hdr, const char *name, const char *value) {
         return -1;
 
     vlen = strlen(value);
+
+    prev = enable_unaligned();
     memset(item->data, 0, item->desc.size);
     memcpy(item->data, value, MIN(vlen, item->desc.size));
+    restore_unaligned(prev);
 
     return 0;
 }
@@ -116,12 +126,17 @@ int idmelib_set_var(struct idme *hdr, const char *name, const char *value) {
 // Get the IDME version as a null-terminated string.
 int idmelib_get_version(struct idme *hdr, char *buf, size_t len) {
     size_t copy_len;
+    uint32_t prev;
 
     if (!hdr || !buf || len == 0)
         return -1;
 
     copy_len = MIN((size_t)IDME_VERSION_LEN, len - 1);
+
+    prev = enable_unaligned();
     memcpy(buf, hdr->version, copy_len);
+    restore_unaligned(prev);
+
     buf[copy_len] = '\0';
 
     return 0;
@@ -130,6 +145,7 @@ int idmelib_get_version(struct idme *hdr, char *buf, size_t len) {
 // Set the IDME version from a string.
 int idmelib_set_version(struct idme *hdr, const char *version) {
     size_t vlen;
+    uint32_t prev;
 
     if (!hdr || !version)
         return -1;
@@ -138,8 +154,10 @@ int idmelib_set_version(struct idme *hdr, const char *version) {
     if (vlen > IDME_VERSION_LEN)
         return -1;
 
+    prev = enable_unaligned();
     memset(hdr->version, 0, IDME_VERSION_LEN);
     memcpy(hdr->version, version, vlen);
+    restore_unaligned(prev);
 
     return 0;
 }
@@ -325,11 +343,14 @@ int idmelib_get_bootcount(struct idme *hdr, unsigned int *out) {
 static unsigned int parse_hex_substr(const char *str, size_t off, size_t n) {
     char tmp[8] = {0};
     size_t slen = strlen(str);
+    uint32_t prev;
 
     if (off + n > slen || n >= sizeof(tmp))
         return 0;
 
+    prev = enable_unaligned();
     memcpy(tmp, str + off, n);
+    restore_unaligned(prev);
 
     return (unsigned int)strtoul(tmp, NULL, 16);
 }
