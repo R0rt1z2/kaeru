@@ -310,6 +310,14 @@ menu "Third party / Miscellaneous libraries"
           Say Y to enable libsej support, allowing to interact with
           the device crypto engine.
 
+    config IDMELIB_SUPPORT
+        bool "Enable Amazon IDME (idmelib) support"
+        default n
+        help
+          Say Y to enable idmelib support, for reading and writing the
+          IDME block Amazon devices keep their per unit data in, such as
+          the serial number, board id and the fos/dev/usr flags.
+
     config AMZN_BCB_SUPPORT
         bool "Enable Amazon BCB (bcblib) support"
         default n
