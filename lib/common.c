@@ -17,7 +17,12 @@ void reboot_emergency(void) {
 }
 
 bool mtk_detect_key(unsigned short key) {
+#if defined(CONFIG_MTK_DETECT_KEY_ADDRESS) && CONFIG_MTK_DETECT_KEY_ADDRESS
     return ((bool (*)(unsigned short))(CONFIG_MTK_DETECT_KEY_ADDRESS | 1))(key);
+#else
+    (void)key;
+    return false;
+#endif
 }
 
 void print_kaeru_info(int (*out)(const char *, ...)) {

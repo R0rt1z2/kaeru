@@ -276,6 +276,7 @@ menu "Memory and Address Mapping"
 
         config MTK_DETECT_KEY_ADDRESS
             hex "mtk_detect_key() address"
+            default 0x0
             help
               Address of the mtk_detect_key() function for key detection
 
