@@ -284,6 +284,11 @@ def main() -> None:
         if not signed:
             print('No partitions required re-signing (no cert2 present?)')
 
+    if lk_part_name := config.get('LK_PART_HDR_NAME'):
+        lk_part_name = lk_part_name.strip().strip('"')
+        print("Changing image name to %s" % lk_part_name)
+        part.header.name = lk_part_name
+
     lk._rebuild_contents()
     lk.save(args.output if args.output else ('%s-patched.bin' % device))
 

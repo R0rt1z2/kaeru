@@ -416,4 +416,11 @@ menu "Image Patching"
         help
           Forging strategy for the cert2: "override" (2026 variant) or
           "wrap" (2023 variant). Older devices may need "wrap".
+
+    config LK_PART_HDR_NAME
+        string "Change the partition name of LK in the image header"
+        default ""
+        help
+          If set, name of LK in the image header will be changed to the
+          specified value.
 endmenu
