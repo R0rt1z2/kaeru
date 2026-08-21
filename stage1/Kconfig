@@ -20,6 +20,28 @@ menu "Stage1 Options"
             for storage accesses. You will need to provide addresses
             for mt_part_get_device and mt_part_get_partition().
 
+    config USE_LEGACY_PARTITION_API
+        bool "Use legacy partition_* APIs for storage accesses"
+        depends on !USE_MT_PART_API
+        default n
+        help
+            Enable this if the devices LK only provides partition_get_index,
+            partition_get_offset and partition_get_size and does not use
+            the mt_part_* API for partition accesses. You will need to
+            provide addresses for the aformentioned functions.
+
+    config PARTITION_GET_INDEX_ADDRESS
+        hex "partition_get_index() address"
+        depends on USE_LEGACY_PARTITION_API
+
+    config PARTITION_GET_OFFSET_ADDRESS
+        hex "partition_get_offset() address"
+        depends on USE_LEGACY_PARTITION_API
+
+    config PARTITION_GET_SIZE_ADDRESS
+        hex "partition_get_size() address"
+        depends on USE_LEGACY_PARTITION_API
+
     config BOOTLOADER_PARTITION_NAME
         string "Bootloader partition name"
         default "lk"
@@ -45,11 +67,11 @@ menu "Stage1 Options"
 
     config PARTITION_READ_ADDRESS
         hex "partition_read() address"
-        depends on !USE_MT_PART_API
+        depends on !USE_MT_PART_API && !USE_LEGACY_PARTITION_API
 
     config PARTITION_GET_SIZE_BY_NAME_ADDRESS
         hex "partition_get_size_by_name() address"
-        depends on !USE_MT_PART_API
+        depends on !USE_MT_PART_API && !USE_LEGACY_PARTITION_API
 
 endmenu
 

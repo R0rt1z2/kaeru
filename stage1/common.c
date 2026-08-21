@@ -6,7 +6,7 @@
 
 #include <stage1/common.h>
 
-#ifdef CONFIG_USE_MT_PART_API
+#if defined(CONFIG_USE_MT_PART_API) || defined(CONFIG_USE_LEGACY_PARTITION_API)
 #include <lib/mt_part.h>
 #endif
 
@@ -24,8 +24,33 @@ void platform_init(void) {
     ((void (*)(void))(CONFIG_PLATFORM_INIT_ADDRESS | 1))();
 }
 
+#ifdef CONFIG_USE_LEGACY_PARTITION_API
+static inline int partition_get_index(const char* name) {
+    return ((int (*)(const char*))(CONFIG_PARTITION_GET_INDEX_ADDRESS | 1))(name);
+}
+
+static inline uint64_t partition_get_offset(int index) {
+    return ((uint64_t (*)(int))(CONFIG_PARTITION_GET_OFFSET_ADDRESS | 1))(index);
+}
+
+static inline uint64_t partition_get_size(int index) {
+    return ((uint64_t (*)(int))(CONFIG_PARTITION_GET_SIZE_ADDRESS | 1))(index);
+}
+#endif
+
 ssize_t partition_read(const char* part_name, off_t offset, uint8_t* data, size_t size) {
-#ifdef CONFIG_USE_MT_PART_API
+#if defined(CONFIG_USE_LEGACY_PARTITION_API)
+    struct device_t* dev = mt_part_get_device();
+    if (!dev || dev->init != 1)
+        return -1;
+
+    int index = partition_get_index(part_name);
+    if (index < 0)
+        return -1;
+
+    ssize_t read_bytes = dev->read(dev, partition_get_offset(index) + offset, data, size, USER_PART);
+    return (read_bytes < 0) ? -1 : read_bytes;
+#elif defined(CONFIG_USE_MT_PART_API)
     struct device_t* dev = mt_part_get_device();
     if (!dev || dev->init != 1)
         return -1;
@@ -43,7 +68,14 @@ ssize_t partition_read(const char* part_name, off_t offset, uint8_t* data, size_
 }
 
 uint64_t partition_get_size_by_name(const char* part_name) {
-#ifdef CONFIG_USE_MT_PART_API
+#if defined(CONFIG_USE_LEGACY_PARTITION_API)
+    int index = partition_get_index(part_name);
+    if (index < 0)
+        return 0;
+
+    uint64_t size = partition_get_size(index);
+    return (size == (uint64_t)-1) ? 0 : size;
+#elif defined(CONFIG_USE_MT_PART_API)
     part_t* part = mt_part_get_partition(part_name);
     if (!part)
         return 0;
