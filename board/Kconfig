@@ -592,4 +592,24 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Fire Max 11 (2023)
+
+    config AMAZON_MT8127_COMMON
+        bool
+        help
+          Select this if you need to include common board code
+          for Amazon MT8127 devices.
+
+    config AMAZON_AUSTIN
+        bool "Support Fire 7 (7th Gen)"
+        select AMAZON_MT8127_COMMON
+        default n
+        help
+          Say Y if you want to include support for Fire 7 (2017)
+
+    config AMAZON_FORD
+        bool "Support Fire (ford)"
+        select AMAZON_MT8127_COMMON
+        default n
+        help
+          Say Y if you want to include support for Fire (2015)
 endmenu

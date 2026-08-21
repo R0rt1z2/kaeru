@@ -1,0 +1,36 @@
+//
+// SPDX-FileCopyrightText: 2026 Ben Grisdale <bengris32@protonmail.ch>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
+
+#pragma once
+
+#define BOARD_NAME                      "Fire 7 (2017)"
+
+#define BOOT_MODE_SELECT_CALL_ADDR      0x81E217BA
+
+#define PL_BOOTARG_PTR_ADDR             0x81E8D66C
+
+#define PWRAP_READ_FUNC_ADDR            0x81E3438C
+#define PWRAP_WRITE_FUNC_ADDR           0x81E3439C
+#define RTC_WRITEIF_UNLOCK_FUNC_ADDR    0x81E266A4
+#define RTC_WRITE_TRIGGER_FUNC_ADDR     0x81E26678
+
+#define UNLOCK_CODE_FUNC_ADDR           0x81E20E40
+#define UNLOCK_STATUS_FUNC_ADDR         0x81E21060
+
+#define FB_MODE_PRINTF_CALL_ADDR        0x81E21852
+
+#define FASTBOOT_INIT_PRINTF_CALL_ADDR  0x81E3EFFC
+
+#define FB_REGISTER_FLASH_ADDR          0x81E3F04C
+#define FB_REGISTER_ERASE_ADDR          0x81E3F05A
+#define FB_CMD_FLASH_FUNC_ADDR          0x81E41AE4
+#define FB_CMD_ERASE_FUNC_ADDR          0x81E41B34
+
+#define FB_CMD_REBOOT_FUNC_ADDR             0x81E3F6B0
+#define FB_REGISTER_REBOOT_ADDR             0x81E3F076
+#define FB_REGISTER_REBOOT_BOOTLOADER_ADDR  0x81E3F084
+
+#define PRINTK_DISABLE_UART_ADDR        0x81E691F8
+#define PRINTK_DISABLE_UART_ADDR_2     0x81E68880
