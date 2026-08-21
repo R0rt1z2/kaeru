@@ -35,6 +35,20 @@ const struct part_info* storage_part_find(const char *name) {
     return part_find(&ctx.part, name);
 }
 
+// Number of partitions in the parsed table.
+int storage_part_count(void) {
+    return ctx.initialized ? ctx.part.count : 0;
+}
+
+// Walks the parsed table, for callers that want to list rather than look up.
+const struct part_info* storage_part_get(int index) {
+    if (!ctx.initialized || index < 0 || index >= ctx.part.count) {
+        return NULL;
+    }
+
+    return &ctx.part.parts[index];
+}
+
 // Reads from a partition.
 ssize_t storage_part_read(const struct part_info* part, void *dst,
                           uint64_t off, size_t size) {

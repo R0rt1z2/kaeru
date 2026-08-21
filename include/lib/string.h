@@ -48,10 +48,15 @@ char* strchr(const char* s, int c);
 size_t strlen(const char* str);
 size_t strnlen(char const *s, size_t count);
 int strncmp(const char* s1, const char* s2, size_t n);
+int strcasecmp(const char* s1, const char* s2);
+int strncasecmp(const char* s1, const char* s2, size_t n);
 char* strstr(const char* h, const char* n);
 unsigned long strtoul(const char* nptr, char** endptr, register int base);
 long strtol(const char* str, char** endptr, int base);
 unsigned short strtou16(const char* str);
+// hex64() writes an 0x prefixed string, so out needs 19 bytes.
+void hex64(char* out, uint64_t v);
+uint64_t parse_hex64(const char* s, const char** end);
 char* strcpy(char* dest, const char* src);
 char* strncpy(char* dest, const char* src, size_t count);
 int streq(const char *a, const char *b);

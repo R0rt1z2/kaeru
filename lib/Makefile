@@ -12,6 +12,7 @@ lib-$(CONFIG_FONT_8X8_CALSTONE) += framebuffer/fonts/font_8x8_calstone.o
 lib-$(CONFIG_FONT_8X8_COMIC_FANS) += framebuffer/fonts/font_8x8_comic_fans.o
 
 lib-$(CONFIG_AMZN_BCB_SUPPORT) += bcb_amzn/bcblib.o
+lib-$(CONFIG_IDMELIB_SUPPORT) += idme/idmelib.o idme/idme_cmd.o
 
 lib-$(CONFIG_SEJ_SUPPORT) += crypto/xor.o crypto/sha256.o
 lib-$(CONFIG_SEJ_SUPPORT) += security/sej/sej.o security/sej/sej_hk.o security/sej/sej_sk.o

@@ -315,6 +315,7 @@ menu "Memory and Address Mapping"
 
         config MTK_DETECT_KEY_ADDRESS
             hex "mtk_detect_key() address"
+            default 0x0
             help
               Address of the mtk_detect_key() function for key detection
 
@@ -347,6 +348,22 @@ menu "Third party / Miscellaneous libraries"
         help
           Say Y to enable libsej support, allowing to interact with
           the device crypto engine.
+
+    config IDMELIB_SUPPORT
+        bool "Enable Amazon IDME (idmelib) support"
+        default n
+        help
+          Say Y to enable idmelib support, for reading and writing the
+          IDME block Amazon devices keep their per unit data in, such as
+          the serial number, board id and the fos/dev/usr flags.
+
+    config IDME_EMMC_PART
+        int "eMMC hardware partition the IDME block lives in"
+        depends on IDMELIB_SUPPORT
+        default 2
+        help
+          Which eMMC hardware area to read the IDME block from. MTK numbers
+          these from one, and Amazon normally uses the second boot area.
 
     config AMZN_BCB_SUPPORT
         bool "Enable Amazon BCB (bcblib) support"

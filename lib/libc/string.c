@@ -261,6 +261,37 @@ int strncmp(const char* s1, const char* s2, size_t n) {
     return (0);
 }
 
+int strcasecmp(const char* s1, const char* s2) {
+    const unsigned char* u1 = (const unsigned char*)s1;
+    const unsigned char* u2 = (const unsigned char*)s2;
+    int c1, c2;
+
+    do {
+        c1 = *u1++;
+        c2 = *u2++;
+        if (ISUPPER(c1)) c1 += 'a' - 'A';
+        if (ISUPPER(c2)) c2 += 'a' - 'A';
+    } while (c1 == c2 && c1 != 0);
+
+    return (c1 - c2);
+}
+
+int strncasecmp(const char* s1, const char* s2, size_t n) {
+    const unsigned char* u1 = (const unsigned char*)s1;
+    const unsigned char* u2 = (const unsigned char*)s2;
+    int c1 = 0, c2 = 0;
+
+    while (n--) {
+        c1 = *u1++;
+        c2 = *u2++;
+        if (ISUPPER(c1)) c1 += 'a' - 'A';
+        if (ISUPPER(c2)) c2 += 'a' - 'A';
+        if (c1 != c2 || c1 == 0) break;
+    }
+
+    return (c1 - c2);
+}
+
 size_t strlen(const char* str) {
     const char* s;
 
@@ -276,6 +307,132 @@ size_t strnlen(char const *s, size_t count)
 	for(sc = s; count-- && *sc != '\0'; ++sc)
 		;
 	return sc - s;
+}
+
+void hex64(char* out, uint64_t v) {
+    static const char digits[] = "0123456789abcdef";
+    char tmp[16];
+    int i = 0;
+
+    do {
+        tmp[i++] = digits[v & 0xF];
+        v >>= 4;
+    } while (v);
+
+    *out++ = '0';
+    *out++ = 'x';
+    while (i) {
+        *out++ = tmp[--i];
+    }
+    *out = '\0';
+}
+
+uint64_t parse_hex64(const char* s, const char** end) {
+    uint64_t v = 0;
+
+    if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
+        s += 2;
+    }
+
+    for (;; s++) {
+        uint32_t d;
+
+        if (*s >= '0' && *s <= '9') {
+            d = *s - '0';
+        } else if (*s >= 'a' && *s <= 'f') {
+            d = *s - 'a' + 10;
+        } else if (*s >= 'A' && *s <= 'F') {
+            d = *s - 'A' + 10;
+        } else {
+            break;
+        }
+
+        v = (v << 4) | d;
+    }
+
+    if (end) {
+        *end = s;
+    }
+
+    return v;
+}
+
+unsigned long strtoul(const char* nptr, char** endptr, register int base) {
+    const char* s = nptr;
+    unsigned long acc = 0;
+    int neg = 0;
+    int any = 0;
+
+    while (ISSPACE(*s)) {
+        s++;
+    }
+
+    if (*s == '-') {
+        neg = 1;
+        s++;
+    } else if (*s == '+') {
+        s++;
+    }
+
+    if ((base == 0 || base == 16) && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
+        s += 2;
+        base = 16;
+    } else if (base == 0) {
+        base = (*s == '0') ? 8 : 10;
+    }
+
+    for (;; s++) {
+        int c = *s;
+
+        if (ISDIGIT(c)) {
+            c -= '0';
+        } else if (c >= 'a' && c <= 'z') {
+            c -= 'a' - 10;
+        } else if (c >= 'A' && c <= 'Z') {
+            c -= 'A' - 10;
+        } else {
+            break;
+        }
+
+        if (c >= base) {
+            break;
+        }
+
+        acc = acc * (unsigned long)base + (unsigned long)c;
+        any = 1;
+    }
+
+    if (endptr) {
+        *endptr = (char*)(any ? s : nptr);
+    }
+
+    return neg ? -acc : acc;
+}
+
+long strtol(const char* str, char** endptr, int base) {
+    const char* s = str;
+    unsigned long v;
+    int neg = 0;
+
+    while (ISSPACE(*s)) {
+        s++;
+    }
+
+    if (*s == '-') {
+        neg = 1;
+        s++;
+    } else if (*s == '+') {
+        s++;
+    }
+
+    v = strtoul(s, endptr, base);
+
+    // Nothing was consumed, so the sign we ate is not ours to keep.
+    if (endptr && *endptr == (char*)s) {
+        *endptr = (char*)str;
+    }
+
+    return neg ? -(long)v : (long)v;
 }
 
 unsigned short strtou16(const char* str) {

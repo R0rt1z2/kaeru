@@ -5,6 +5,8 @@
 
 #pragma once
 
+#define FASTBOOT_INFO_MAX 59
+
 struct fastboot_cmd {
     struct fastboot_cmd* next;
     const char* prefix;
@@ -20,3 +22,7 @@ void fastboot_okay(const char* reason);
 void fastboot_register(const char* prefix, void (*handle)(const char* arg, void* data, unsigned sz),
                        unsigned char security_enabled);
 void fastboot_publish(const char* name, const char* value);
+
+#ifdef CONFIG_IDMELIB_SUPPORT
+void cmd_idme(const char* arg, void* data, unsigned sz);
+#endif

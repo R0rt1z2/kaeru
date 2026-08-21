@@ -15,5 +15,7 @@ typedef long long off_t;
 typedef long ssize_t;
 
 const struct part_info* storage_part_find(const char *name);
+int storage_part_count(void);
+const struct part_info* storage_part_get(int index);
 ssize_t storage_part_read(const struct part_info* part, void *dst, uint64_t off, size_t size);
 ssize_t storage_part_write(const struct part_info* part, void *src, uint64_t off, size_t size);
