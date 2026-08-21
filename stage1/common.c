@@ -6,7 +6,7 @@
 
 #include <stage1/common.h>
 
-#ifdef CONFIG_LEGACY_LK
+#ifdef CONFIG_USE_MT_PART_API
 #include <lib/mt_part.h>
 #endif
 
@@ -25,7 +25,7 @@ void platform_init(void) {
 }
 
 ssize_t partition_read(const char* part_name, off_t offset, uint8_t* data, size_t size) {
-#ifdef CONFIG_LEGACY_LK
+#ifdef CONFIG_USE_MT_PART_API
     struct device_t* dev = mt_part_get_device();
     if (!dev || dev->init != 1)
         return -1;
@@ -43,7 +43,7 @@ ssize_t partition_read(const char* part_name, off_t offset, uint8_t* data, size_
 }
 
 uint64_t partition_get_size_by_name(const char* part_name) {
-#ifdef CONFIG_LEGACY_LK
+#ifdef CONFIG_USE_MT_PART_API
     part_t* part = mt_part_get_partition(part_name);
     if (!part)
         return 0;
