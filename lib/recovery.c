@@ -25,6 +25,13 @@ bootmode_t misc_command_to_bootmode(const char* c) {
     return BOOTMODE_NORMAL;
 }
 
+bool misc_command_is_system(const char* c) {
+    if (!c || !c[0])
+        return false;
+
+    return !strncasecmp(c, "boot-system", 11);
+}
+
 bool misc_command_is_sticky(const char* c) {
     if (!c || !c[0])
         return false;

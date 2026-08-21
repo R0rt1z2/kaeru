@@ -16,6 +16,10 @@
 
 #define MAX_FETCH_SIZE 0x100000
 
+#define BOOT_ARG_PTR             0x4CEAFFB4
+#define BOOT_ARG_USB_EXTCONN_OFF 0x180
+#define BOOT_ARG_Y_CABLE_OFF     0x181
+
 static const struct {
     char name[12];
     uint32_t base;
@@ -31,6 +35,7 @@ enum mode_reason {
     MODE_REASON_NONE = 0,
     MODE_REASON_MISC = 1,
     MODE_REASON_FACTORY = 2,
+    MODE_REASON_Y_CABLE = 3,
 };
 
 static struct {
@@ -47,6 +52,8 @@ static const char *modereason2str(enum mode_reason reason) {
             return "BCB";
         case MODE_REASON_FACTORY:
             return "Factory";
+        case MODE_REASON_Y_CABLE:
+            return "Y-cable";
         default:
             return NULL;
     }
@@ -683,6 +690,14 @@ static void fastboot_init_hook(const char *) {
     fastboot_register("oem kaeru-version", cmd_kaeru_version, 1);
 }
 
+static bool is_y_cable(void) {
+    uint32_t barg = READ32(BOOT_ARG_PTR);
+    if (!barg)
+        return false;
+
+    return READ8(barg + BOOT_ARG_Y_CABLE_OFF) == 1;
+}
+
 static void boot_mode_select(void) {
     // Act on the preloader's boot mode before anything else, forcing
     // fastboot on a factory boot and recovery on an ATE factory boot.
@@ -698,8 +713,23 @@ static void boot_mode_select(void) {
     }
 
     read_and_set_bootmode_from_message();
-    if (get_bootmode() != BOOTMODE_NORMAL)
+    if (get_bootmode() != BOOTMODE_NORMAL) {
         gd.reason = MODE_REASON_MISC;
+        return;
+    }
+
+    // Recovery writes this when the user picks the OS. The cable is usually
+    // still plugged in by then, so without it we'd bounce straight back.
+    if (take_boot_system_request()) {
+        printf("misc asked for a system boot, ignoring OTG\n");
+        return;
+    }
+
+    if (is_y_cable()) {
+        printf("OTG detected, booting into recovery\n");
+        set_bootmode(BOOTMODE_RECOVERY);
+        gd.reason = MODE_REASON_Y_CABLE;
+    }
 }
 
 void board_early_init(void) {
