@@ -7,6 +7,9 @@
 #include <stage1/common.h>
 
 #if defined(CONFIG_USE_MT_PART_API) || defined(CONFIG_USE_LEGACY_PARTITION_API)
+#ifdef CONFIG_BLKDEV_HAS_BROKEN_UNALIGNED_ACCESS
+#include <lib/blkdev_unaligned.h>
+#endif
 #include <lib/mt_part.h>
 #endif
 
@@ -48,8 +51,15 @@ ssize_t partition_read(const char* part_name, off_t offset, uint8_t* data, size_
     if (index < 0)
         return -1;
 
+#ifdef CONFIG_BLKDEV_HAS_BROKEN_UNALIGNED_ACCESS
+    if (blkdev_read_unaligned(dev, partition_get_offset(index) + offset, data, size))
+        return -1;
+
+    return (ssize_t)size;
+#else
     ssize_t read_bytes = dev->read(dev, partition_get_offset(index) + offset, data, size, USER_PART);
     return (read_bytes < 0) ? -1 : read_bytes;
+#endif
 #elif defined(CONFIG_USE_MT_PART_API)
     struct device_t* dev = mt_part_get_device();
     if (!dev || dev->init != 1)
@@ -59,8 +69,15 @@ ssize_t partition_read(const char* part_name, off_t offset, uint8_t* data, size_
     if (!part)
         return -1;
 
+#ifdef CONFIG_BLKDEV_HAS_BROKEN_UNALIGNED_ACCESS
+    if (blkdev_read_unaligned(dev, mt_part_offset(part) + offset, data, size))
+        return -1;
+
+    return (ssize_t)size;
+#else
     ssize_t read_bytes = dev->read(dev, mt_part_offset(part) + offset, data, size, part->part_id);
     return (read_bytes < 0) ? -1 : read_bytes;
+#endif
 #else
     return ((ssize_t (*)(const char*, off_t, uint8_t*, size_t))(CONFIG_PARTITION_READ_ADDRESS | 1))(
             part_name, offset, data, size);

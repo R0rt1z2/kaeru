@@ -250,6 +250,14 @@ menu "Storage Support"
         help
           Support for reading and writing to storage.
 
+    config BLKDEV_HAS_BROKEN_UNALIGNED_ACCESS
+        bool "dev->read has broken unaligned accesses"
+        depends on USE_MT_PART_API || USE_LEGACY_PARTITION_API || STORAGE_SUPPORT
+        default n
+        help
+            Enable this if LK's implementation of dev->read does not handle
+            block-unaligned reads correctly.
+
     config USE_PMT_PARTITION
         bool "Use PMT partition table"
         depends on USE_MT_PART_API

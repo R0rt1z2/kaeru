@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
+#include <lib/blkdev_unaligned.h>
 #include <lib/debug.h>
 #include <lib/mt_part.h>
 #include <lib/storage.h>
@@ -70,8 +71,16 @@ ssize_t storage_part_read(const struct part_info* part, void *dst,
     }
 
     uint64_t offset = ((uint64_t)part->start_block * BLOCK_SIZE) + off;
+
+#ifdef CONFIG_BLKDEV_HAS_BROKEN_UNALIGNED_ACCESS
+    if (blkdev_read_unaligned(dev, offset, dst, size))
+        return -1;
+
+    return (ssize_t)size;
+#else
     ssize_t read_sz = dev->read(dev, offset, dst, size, USER_PART);
     return read_sz;
+#endif
 }
 
 // Writes to a partition.
@@ -95,9 +104,17 @@ ssize_t storage_part_write(const struct part_info* part, void *src,
     }
 
     uint64_t offset = ((uint64_t)part->start_block * BLOCK_SIZE) + off;
+
+#ifdef CONFIG_BLKDEV_HAS_BROKEN_UNALIGNED_ACCESS
+    if (blkdev_write_unaligned(dev, offset, src, size))
+        return -1;
+
+    return (ssize_t)size;
+#else
     ssize_t read_sz = dev->write(dev, src, offset, size,
                                  USER_PART);
     return read_sz;
+#endif
 }
 
 // Initialise the storage API.
