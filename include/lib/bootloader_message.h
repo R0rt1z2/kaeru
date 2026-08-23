@@ -151,4 +151,5 @@ bool write_reboot_bootloader(bool overwrite);
 bool write_reboot_recovery(bool overwrite);
 bool set_bootmode_from_message(struct bootloader_message *boot);
 bool read_and_set_bootmode_from_message(void);
+bool take_boot_system_request(void);
 bool cmd_reboot_write_message(const char *arg);

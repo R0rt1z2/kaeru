@@ -104,6 +104,18 @@ bool read_and_set_bootmode_from_message(void) {
     return set_bootmode_from_message(&boot);
 }
 
+bool take_boot_system_request(void) {
+    struct bootloader_message boot;
+
+    if (!read_bootloader_message(&boot))
+        return false;
+
+    if (!misc_command_is_system(boot.command))
+        return false;
+
+    return clear_bootloader_command(true);
+}
+
 bool cmd_reboot_write_message(const char *arg) {
     const char *msg = reboot_target_to_misc_command(arg);
 
