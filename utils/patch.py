@@ -228,12 +228,22 @@ def main() -> None:
             part, image_size, payload_size if not args.loader else loader_size
         )
 
-    # Inject the payload into the end of the 'lk' sub-partition. This
-    # can be either stage1 or kaeru as stated before. Any signature
-    # stays past it.
     blob = payload if not args.loader else loader
     data = bytearray(part.data)
-    data[image_size:image_size] = blob
+    if config.get('FORCE_INJECT_ADDR'):
+        dest_off = payload_dest - base
+        if dest_off < 0 or dest_off + len(blob) > len(data):
+            exit(
+                'ERROR: payload (%d bytes) does not fit in-place at 0x%X'
+                % (len(blob), payload_dest)
+            )
+        print(
+            'Injecting payload in-place at 0x%X (%d bytes)'
+            % (payload_dest, len(blob))
+        )
+        data[dest_off : dest_off + len(blob)] = blob
+    else:
+        data[image_size:image_size] = blob
     part.data = bytes(data)
 
     if args.loader:
