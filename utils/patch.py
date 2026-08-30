@@ -215,6 +215,16 @@ def main() -> None:
             % (signature_size, base + image_size)
         )
 
+    blob = payload if not args.loader else loader
+
+    # Preloaders that round the image size up before locating a trailer read
+    # past it if data_size stops being aligned. Keep the alignment we started
+    # with.
+    padding = -(part.header.data_size + len(blob)) % 16
+    if padding:
+        print('Padding payload by %d byte(s)' % padding)
+        blob += b'\x00' * padding
+
     # Decide if we should increase the code section to make room for
     # the payload, or if we should use a fixed address specified by
     # the configuration file.
@@ -224,11 +234,8 @@ def main() -> None:
     if config.get('FORCE_INJECT_ADDR'):
         payload_dest = to_int(config.get('FORCE_INJECT_ADDR'))
     else:
-        payload_dest = patch_bss(
-            part, image_size, payload_size if not args.loader else loader_size
-        )
+        payload_dest = patch_bss(part, image_size, len(blob))
 
-    blob = payload if not args.loader else loader
     data = bytearray(part.data)
     if config.get('FORCE_INJECT_ADDR'):
         dest_off = payload_dest - base
