@@ -5,6 +5,11 @@
 
 #include <board_ops.h>
 
+#define DEVICE_MODEL "Motorola Moto G06"
+
+#define CMDLINE1_ADDR 0x4C580DCC
+#define CMDLINE2_ADDR 0x4C5817D0
+
 #define VOLUME_UP 0
 #define VOLUME_DOWN 17
 
@@ -20,6 +25,33 @@ long partition_write(const char* part_name, long long offset, uint8_t* data, siz
         return ((long (*)(const char*, long long, uint8_t*, size_t))(addr | 1))(
             part_name, offset, data, size);
     return -1;
+}
+
+static void seccfg_unlock(void) {
+    static SecCfgV4 cfg __attribute__((aligned(16)));
+
+    if (partition_read("seccfg", 0, (uint8_t*)&cfg, sizeof(cfg)) < 0) {
+        printf("Unable to read seccfg partition, skipping unlock\n");
+        return;
+    }
+
+    int ret = seccfg_apply_unlock(&cfg);
+    if (ret < 0) {
+        printf("Invalid seccfg partition, magic: 0x%08X, end_magic: 0x%08X\n",
+               cfg.magic, cfg.end_magic);
+        return;
+    }
+    if (ret == 0) {
+        printf("Device is already unlocked, skipping seccfg write\n");
+        return;
+    }
+
+    if (partition_write("seccfg", 0, (uint8_t*)&cfg, sizeof(cfg)) < 0) {
+        printf("Failed to write seccfg partition, device may not be unlocked\n");
+        return;
+    }
+
+    printf("Successfully unlocked device via seccfg\n");
 }
 
 bool cmdline_append(const char *append_string) {
@@ -39,43 +71,19 @@ static void mt_disp_show_boot_logo(void) {
         ((void (*)(void))(addr | 1))();
 }
 
-static int seccfg_get_lock_state(uint32_t *lock_state) {
-    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0xB1D0, 0xB510, 0x4604, 0xF7FF, 0xFFDD);
-    if (addr)
-        return ((int (*)(uint32_t*))(addr | 1))(lock_state);
-    return -1;
-}
-
-static int seccfg_set_lock_state(uint32_t lock_state) {
-    uint32_t addr = SEARCH_PATTERN(LK_START, LK_END, 0xB538, 0x4605, 0xF7FF, 0xFFAE);
-    if (addr)
-        return ((int (*)(uint32_t))(addr | 1))(lock_state);
-    return -1;
-}
-
-static void seccfg_unlock(void) {
-    uint32_t lock_state = 0;
-
-    int ret = seccfg_get_lock_state(&lock_state);
-    if (ret != 0) {
-        printf("Unable to read seccfg lock state, skipping unlock\n");
+static void handle_recovery_boot(void) {
+    if (get_bootmode() != BOOTMODE_RECOVERY || !is_spoofing_enabled())
         return;
     }
 
     printf("Current seccfg lock state: %d\n", (int)lock_state);
 
-    if (lock_state != LKS_LOCK) {
-        printf("Device is already unlocked, skipping seccfg write\n");
-        return;
+    static const uint32_t cmdline_addrs[] = { CMDLINE1_ADDR, CMDLINE2_ADDR };
+    for (int i = 0; i < ARRAY_SIZE(cmdline_addrs); i++) {
+        printf("Patching cmdline at 0x%08X\n", cmdline_addrs[i]);
+        cmdline_replace((char *)cmdline_addrs[i],
+            "androidboot.verifiedbootstate=", "green", "orange");
     }
-
-    ret = seccfg_set_lock_state(LKS_UNLOCK);
-    if (ret != 0) {
-        printf("Failed to write seccfg lock state, device may not be unlocked\n");
-        return;
-    }
-
-    printf("Successfully unlocked device (%d -> %d)\n", (int)lock_state, LKS_UNLOCK);
 }
 
 void parse_bootloader_messages(void) {
@@ -241,7 +249,7 @@ static void post_env_process(void) {
 }
 
 void board_early_init(void) {
-    printf("Entering early init for Motorola Moto G06\n");
+    printf("Entering early init for %s\n", DEVICE_MODEL);
 
     uint32_t addr = 0;
 
@@ -329,7 +337,7 @@ void board_early_init(void) {
 }
 
 void board_late_init(void) {
-    printf("Entering late init for Motorola Moto G06\n");
+    printf("Entering late init for %s\n", DEVICE_MODEL);
 
     uint32_t addr = 0;
 

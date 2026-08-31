@@ -490,6 +490,12 @@ menu "Device Support"
         help
           Say Y if you want to include support for OmniPod 5 PDM
 
+    config INFINIX_X6532
+        bool "Support Infinix Smart 9"
+        default n
+        help
+          Say Y if you want to include support for Infinix Smart 9 (X6532)
+
     config XIAOMI_LANCELOT
         bool "Support Redmi 9/Redmi 9 Prime"
         default n
@@ -501,67 +507,4 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Redmi 10X 4G/Redmi Note 9
-
-    config XIAOMI_BEGONIA
-        bool "Support Redmi Note 8 Pro"
-        default n
-        help
-          Say Y if you want to include support for Redmi Note 8 Pro
-
-    config SAMSUNG_GTA7LITE
-        bool "Support Galaxy Tab A7 Lite"
-        default n
-        help
-          Say Y if you want to include support for Galaxy Tab A7 Lite
-
-    config LG_MCAYMANLM
-        bool "Support LG Velvet 5G"
-        default n
-        help
-          Say Y if you want to include support for LG Velvet 5G
-
-    config AMAZON_MT8516_COMMON
-        bool
-        select AMZN_BCB_SUPPORT
-        help
-          Select this if you need to include common board code
-          for Amazon MT8516 devices.
-
-    config AMAZON_CUPCAKE
-        bool "Support Echo Input"
-        select AMAZON_MT8516_COMMON
-        default n
-        help
-          Say Y if you want to include support for Echo Input
-
-    config AMAZON_MAVERICK
-        bool "Support Fire HD 10 (2019)"
-        default n
-        help
-          Say Y if you want to include support for Fire HD 10 (2019)
-
-    config AMAZON_DONUT
-        bool "Support Echo Dot 3rd Generation"
-        select AMAZON_MT8516_COMMON
-        default n
-        help
-          Say Y if you want to include support for Echo Dot 3rd Generation
-
-    config AMAZON_DOUGLAS
-        bool "Support Fire HD 8 (2017)"
-        default n
-        help
-          Say Y if you want to include support for Fire HD 8 (2017)
-
-    config AMAZON_ROOK
-        bool "Support Echo Spot 1st Gen (2017)"
-        default n
-        help
-          Say Y if you want to include support for Echo Spot 1st Gen (2017)
-
-    config AMAZON_KARAT
-        bool "Support Fire TV Stick 4K / 4K Max / 4K Plus (2nd Gen)"
-        default n
-        help
-          Say Y if you want to include support for Fire TV Stick 4K / 4K Max / 4K Plus (2nd Gen)
 endmenu
