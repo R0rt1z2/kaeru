@@ -155,6 +155,19 @@ menu "Fastboot Support"
                 hex "fastboot_send_info() address"
         endif
     endmenu
+
+    config FASTBOOT_CMDLIST_ADDRESS
+        hex "fastboot command list address"
+        default 0x0
+        depends on FASTBOOT_STYLE_STANDARD
+        help
+          Address of the global that fastboot_register() pushes each
+          registration onto, i.e. the head pointer of the bootloader's
+          fastboot command list.
+
+          Set it to enable 'fastboot oem help', which walks that list and
+          reports every oem command the bootloader answers to. Leave it at
+          0 if you have not located the global on your target.
 endmenu
 
 menu "Environment Support"

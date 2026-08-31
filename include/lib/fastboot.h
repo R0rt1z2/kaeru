@@ -23,6 +23,10 @@ void fastboot_register(const char* prefix, void (*handle)(const char* arg, void*
                        unsigned char security_enabled);
 void fastboot_publish(const char* name, const char* value);
 
+#if defined(CONFIG_FASTBOOT_CMDLIST_ADDRESS) && CONFIG_FASTBOOT_CMDLIST_ADDRESS
+void cmd_help(const char* arg, void* data, unsigned sz);
+#endif
+
 #ifdef CONFIG_IDMELIB_SUPPORT
 void cmd_idme(const char* arg, void* data, unsigned sz);
 #endif

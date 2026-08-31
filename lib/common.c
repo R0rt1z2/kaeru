@@ -80,6 +80,10 @@ void __attribute__((weak)) common_early_init(void) {
 #warning "Branding is excluded, you are not allowed to share copies of this image."
 #endif
 
+#if defined(CONFIG_FASTBOOT_CMDLIST_ADDRESS) && CONFIG_FASTBOOT_CMDLIST_ADDRESS
+    fastboot_register("oem help", cmd_help, 1);
+#endif
+
 #ifdef CONFIG_ENVIRONMENT_SUPPORT
     fastboot_register("oem env", cmd_env, 1);
 #endif
