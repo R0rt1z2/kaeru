@@ -62,4 +62,5 @@ uint64_t parse_hex64(const char* s, const char** end);
 char* strcpy(char* dest, const char* src);
 char* strncpy(char* dest, const char* src, size_t count);
 int streq(const char *a, const char *b);
+const char* next_token(const char* p, char* out, size_t len);
 void strnarrow(const uint16_t *src, char *dst, int max);

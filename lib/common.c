@@ -84,6 +84,10 @@ void __attribute__((weak)) common_early_init(void) {
     fastboot_register("oem help", cmd_help, 1);
 #endif
 
+#ifdef CONFIG_FASTBOOT_MEM_COMMAND
+    fastboot_register("oem mem", cmd_mem, 1);
+#endif
+
 #ifdef CONFIG_ENVIRONMENT_SUPPORT
     fastboot_register("oem env", cmd_env, 1);
 #endif

@@ -168,6 +168,18 @@ menu "Fastboot Support"
           Set it to enable 'fastboot oem help', which walks that list and
           reports every oem command the bootloader answers to. Leave it at
           0 if you have not located the global on your target.
+
+    config FASTBOOT_MEM_COMMAND
+        bool "Enable 'fastboot oem mem'"
+        default y
+        depends on FASTBOOT_STYLE_STANDARD
+        help
+          Say Y to register 'oem mem read <addr> [len]', which hexdumps
+          memory over fastboot, and 'oem mem write <addr> <value>', which
+          pokes a word into it.
+
+          Boards that want names as well as hex addresses can provide
+          mem_region_find() to resolve them.
 endmenu
 
 menu "Environment Support"

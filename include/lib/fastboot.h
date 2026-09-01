@@ -5,6 +5,9 @@
 
 #pragma once
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #define FASTBOOT_INFO_MAX 59
 
 struct fastboot_cmd {
@@ -25,6 +28,11 @@ void fastboot_publish(const char* name, const char* value);
 
 #if defined(CONFIG_FASTBOOT_CMDLIST_ADDRESS) && CONFIG_FASTBOOT_CMDLIST_ADDRESS
 void cmd_help(const char* arg, void* data, unsigned sz);
+#endif
+
+#ifdef CONFIG_FASTBOOT_MEM_COMMAND
+bool mem_region_find(const char* name, uint32_t* base, uint32_t* size) __attribute__((weak));
+void cmd_mem(const char* arg, void* data, unsigned sz);
 #endif
 
 #ifdef CONFIG_IDMELIB_SUPPORT

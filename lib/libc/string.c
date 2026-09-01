@@ -325,6 +325,19 @@ size_t strcspn(const char* s, const char* reject) {
     return (p - s);
 }
 
+const char* next_token(const char* p, char* out, size_t len) {
+    size_t n, copy;
+
+    p += strspn(p, " ");
+    n = strcspn(p, " ");
+    copy = n < len - 1 ? n : len - 1;
+
+    memcpy(out, p, copy);
+    out[copy] = '\0';
+
+    return p + n;
+}
+
 void hex64(char* out, uint64_t v) {
     static const char digits[] = "0123456789abcdef";
     char tmp[16];
