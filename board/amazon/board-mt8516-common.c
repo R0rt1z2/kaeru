@@ -4,7 +4,6 @@
 //
 
 #include <lib/bcb_amzn/bcblib.h>
-#include <lib/mt_part.h>
 
 #include "include/mt8516-common.h"
 

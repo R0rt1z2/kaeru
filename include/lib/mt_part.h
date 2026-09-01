@@ -44,9 +44,11 @@ struct device_t {
     size_t (*write)(struct device_t *dev, void *src, uint64_t block_off, size_t size, uint32_t part);
 };
 
+#ifdef CONFIG_MT_PART_GET_DEVICE_ADDRESS
 static inline struct device_t* mt_part_get_device(void) {
     return ((struct device_t* (*)(void))(CONFIG_MT_PART_GET_DEVICE_ADDRESS | 1))();
 }
+#endif
 
 #ifdef CONFIG_MT_PART_GET_PARTITION_ADDRESS
 static inline part_t* mt_part_get_partition(const char* name) {

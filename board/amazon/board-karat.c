@@ -4,7 +4,6 @@
 //
 
 #include <board_ops.h>
-#include <lib/mt_part.h>
 
 #define BOARD_NAME "Fire TV Stick 4K / 4K Max / 4K Plus (2nd Gen)"
 

@@ -13,6 +13,7 @@
 #include <lib/common.h>
 #include <lib/debug.h>
 #include <lib/fastboot.h>
+#include <lib/mt_part.h>
 #include <lib/security/seccfg.h>
 #include <lib/recovery.h>
 #include <lib/string.h>
