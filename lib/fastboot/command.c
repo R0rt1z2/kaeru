@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
+#include <lib/debug.h>
 #include <lib/fastboot.h>
 #include <main/main.h>
 
@@ -14,6 +15,9 @@ void fastboot_register_commands(void) {
         const char* prefix = (const char*)((uintptr_t)c->prefix + kaeru_reloc_delta);
         void (*handle)(const char*, void*, unsigned) =
                 (void (*)(const char*, void*, unsigned))((uintptr_t)c->handle + kaeru_reloc_delta);
+
+        printf("Registering fastboot command '%s' at 0x%08X\n", prefix,
+               (unsigned)(uintptr_t)handle);
 
         fastboot_register(prefix, handle, c->security);
     }
