@@ -396,3 +396,5 @@ void cmd_idme(const char *arg, void *data, unsigned sz) {
 
     fastboot_fail("Unknown subcommand");
 }
+
+FASTBOOT_CMD(idme, "oem idme", cmd_idme, 1);

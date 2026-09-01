@@ -6,7 +6,6 @@
 #include <arch/arm.h>
 #include <lib/common.h>
 #include <lib/debug.h>
-#include <lib/environment.h>
 #include <lib/fastboot.h>
 
 #include <wdt/mtk_wdt.h>
@@ -58,41 +57,12 @@ void print_kaeru_info(int (*out)(const char *, ...)) {
 #endif
 }
 
-void cmd_version(const char* arg, void* data, unsigned sz) {
-#ifndef CONFIG_EXCLUDE_BRANDING
-    char buffer[64];
-    npf_snprintf(buffer, sizeof(buffer), "kaeru v%s", KAERU_VERSION);
-    fastboot_info(buffer);
-    fastboot_okay("");
-    print_kaeru_info(video_printf);
-#else
-    (void)arg;
-    (void)data;
-    (void)sz;
-#endif
-}
-
 void __attribute__((weak)) common_early_init(void) {
 #ifndef CONFIG_EXCLUDE_BRANDING
     fastboot_publish("kaeru-version", KAERU_VERSION);
-    fastboot_register("oem kaeru-version", cmd_version, 1);
 #else
 #warning "Branding is excluded, you are not allowed to share copies of this image."
 #endif
 
-#if defined(CONFIG_FASTBOOT_CMDLIST_ADDRESS) && CONFIG_FASTBOOT_CMDLIST_ADDRESS
-    fastboot_register("oem help", cmd_help, 1);
-#endif
-
-#ifdef CONFIG_FASTBOOT_MEM_COMMAND
-    fastboot_register("oem mem", cmd_mem, 1);
-#endif
-
-#ifdef CONFIG_ENVIRONMENT_SUPPORT
-    fastboot_register("oem env", cmd_env, 1);
-#endif
-
-#ifdef CONFIG_IDMELIB_SUPPORT
-    fastboot_register("oem idme", cmd_idme, 1);
-#endif
+    fastboot_register_commands();
 }

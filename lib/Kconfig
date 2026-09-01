@@ -156,6 +156,10 @@ menu "Fastboot Support"
         endif
     endmenu
 
+    config FASTBOOT_HELP_COMMAND
+        def_bool FASTBOOT_CMDLIST_ADDRESS != 0x0
+        depends on FASTBOOT_STYLE_STANDARD
+
     config FASTBOOT_CMDLIST_ADDRESS
         hex "fastboot command list address"
         default 0x0

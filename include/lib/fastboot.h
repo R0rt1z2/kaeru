@@ -19,6 +19,22 @@ struct fastboot_cmd {
     void (*handle)(const char* arg, void* data, unsigned int sz);
 };
 
+struct fastboot_command {
+    const char* prefix;
+    void (*handle)(const char* arg, void* data, unsigned sz);
+    int security;
+};
+
+#define FASTBOOT_CMD(id, str, fn, sec)                                      \
+    static const struct fastboot_command __fastboot_cmd_##id                \
+            __attribute__((used, section(".fastboot_cmds"), aligned(4))) = { \
+                    .prefix = (str),                                        \
+                    .handle = (fn),                                         \
+                    .security = (sec),                                      \
+            }
+
+void fastboot_register_commands(void);
+
 void fastboot_info(const char* reason);
 void fastboot_fail(const char* reason);
 void fastboot_okay(const char* reason);
@@ -26,15 +42,6 @@ void fastboot_register(const char* prefix, void (*handle)(const char* arg, void*
                        unsigned char security_enabled);
 void fastboot_publish(const char* name, const char* value);
 
-#if defined(CONFIG_FASTBOOT_CMDLIST_ADDRESS) && CONFIG_FASTBOOT_CMDLIST_ADDRESS
-void cmd_help(const char* arg, void* data, unsigned sz);
-#endif
+void cmd_version(const char* arg, void* data, unsigned sz);
 
-#ifdef CONFIG_FASTBOOT_MEM_COMMAND
 bool mem_region_find(const char* name, uint32_t* base, uint32_t* size) __attribute__((weak));
-void cmd_mem(const char* arg, void* data, unsigned sz);
-#endif
-
-#ifdef CONFIG_IDMELIB_SUPPORT
-void cmd_idme(const char* arg, void* data, unsigned sz);
-#endif

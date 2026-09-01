@@ -352,7 +352,7 @@ include/config/auto.conf: ;
 endif # $(dot-config)
 
 # Object directories
-objs-y      := arch main drivers
+objs-y      := arch main drivers lib/fastboot
 
 # Libraries
 libs-y      := arch board lib

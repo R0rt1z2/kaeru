@@ -17,6 +17,13 @@ SECTIONS
         *(.rodata .rodata.* .gnu.linkonce.r.*)
     }
 
+    .fastboot_cmds ALIGN(4) :
+    {
+        __fastboot_cmds_start = .;
+        KEEP(*(.fastboot_cmds))
+        __fastboot_cmds_end = .;
+    }
+
     .got :
     {
         __got_start = .;

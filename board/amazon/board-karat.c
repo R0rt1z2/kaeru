@@ -474,6 +474,8 @@ static void cmd_oem_partitions(const char *arg, void *data, unsigned sz) {
     fastboot_okay("");
 }
 
+FASTBOOT_CMD(partitions, "oem partitions", cmd_oem_partitions, 1);
+
 static void cmd_oem_dmesg(const char *arg, void *data, unsigned sz) {
     char line[FASTBOOT_INFO_MAX + 1];
 
@@ -524,6 +526,8 @@ static void cmd_oem_dmesg(const char *arg, void *data, unsigned sz) {
     fastboot_okay("");
 }
 
+FASTBOOT_CMD(dmesg, "oem dmesg", cmd_oem_dmesg, 1);
+
 static void cmd_unlock_critical(const char *arg, void *data, unsigned sz) {
     gd.unlocked_critical = true;
     fastboot_okay("");
@@ -555,8 +559,6 @@ static void fastboot_init_hook(const char *) {
     fastboot_register("fetch:", cmd_fetch, 1);
     fastboot_register("boot", cmd_boot, 1);
     fastboot_register("getvar:", cmd_getvar_wrapper, 1);
-    fastboot_register("oem partitions", cmd_oem_partitions, 1);
-    fastboot_register("oem dmesg", cmd_oem_dmesg, 1);
     fastboot_register("flashing unlock_critical", cmd_unlock_critical, 1);
     fastboot_register("flashing lock_critical", cmd_lock_critical, 1);
 

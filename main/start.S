@@ -44,6 +44,10 @@ main:
     mov     r1, #0
     bl     memset
 .Lbss_done:
+    ldr     r0, =kaeru_reloc_delta
+    adds    r0, r0, r4
+    str     r4, [r0]
+
     bl      kaeru_early_init
 
     pop     {r4, pc}
