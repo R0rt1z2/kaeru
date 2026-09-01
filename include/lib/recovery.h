@@ -15,6 +15,7 @@ struct misc_message {
 
 bootmode_t misc_command_to_bootmode(const char* command);
 bool misc_command_is_sticky(const char* command);
+bool misc_command_is_for_ramdisk(const char* command);
 bool misc_command_is_system(const char* command);
 const char* reboot_target_to_misc_command(const char* target);
 

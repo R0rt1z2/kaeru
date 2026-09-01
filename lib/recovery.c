@@ -32,6 +32,17 @@ bool misc_command_is_system(const char* c) {
     return !strncasecmp(c, "boot-system", 11);
 }
 
+// 'boot-fastboot' is not ours to act on beyond picking the recovery image.
+// It is what tells the recovery ramdisk to start fastbootd instead of the
+// recovery UI, so it has to survive into the boot it selected. AOSP recovery
+// clears the BCB itself once it has read the args out of it.
+bool misc_command_is_for_ramdisk(const char* c) {
+    if (!c || !c[0])
+        return false;
+
+    return !strncasecmp(c, "boot-fastboot", 13);
+}
+
 bool misc_command_is_sticky(const char* c) {
     if (!c || !c[0])
         return false;
