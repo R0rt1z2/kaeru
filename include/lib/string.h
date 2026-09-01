@@ -47,6 +47,8 @@ int strcmp(const char* s1, const char* s2);
 char* strchr(const char* s, int c);
 size_t strlen(const char* str);
 size_t strnlen(char const *s, size_t count);
+size_t strspn(const char* s, const char* accept);
+size_t strcspn(const char* s, const char* reject);
 int strncmp(const char* s1, const char* s2, size_t n);
 int strcasecmp(const char* s1, const char* s2);
 int strncasecmp(const char* s1, const char* s2, size_t n);

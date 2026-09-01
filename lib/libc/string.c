@@ -309,6 +309,22 @@ size_t strnlen(char const *s, size_t count)
 	return sc - s;
 }
 
+size_t strspn(const char* s, const char* accept) {
+    const char* p = s;
+
+    while (*p && strchr(accept, *p))
+        ++p;
+    return (p - s);
+}
+
+size_t strcspn(const char* s, const char* reject) {
+    const char* p = s;
+
+    while (*p && !strchr(reject, *p))
+        ++p;
+    return (p - s);
+}
+
 void hex64(char* out, uint64_t v) {
     static const char digits[] = "0123456789abcdef";
     char tmp[16];
