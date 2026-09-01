@@ -450,32 +450,6 @@ static void cmd_getvar_wrapper(const char *arg, void *data, unsigned sz) {
     cmd_getvar(arg, data, sz);
 }
 
-static void cmd_oem_partitions(const char *arg, void *data, unsigned sz) {
-    int count = storage_part_count();
-    if (!count) {
-        fastboot_fail("Partition table is not available");
-        return;
-    }
-
-    char line[FASTBOOT_INFO_MAX + 1];
-
-    fastboot_info("name                    start     blocks");
-    for (int i = 0; i < count; i++) {
-        const struct part_info *part = storage_part_get(i);
-        if (!part) {
-            break;
-        }
-
-        npf_snprintf(line, sizeof(line), "%-20s %9u %10u", part->name,
-                     part->start_block, part->size_blocks);
-        fastboot_info(line);
-    }
-
-    fastboot_okay("");
-}
-
-FASTBOOT_CMD(partitions, "oem partitions", cmd_oem_partitions, 1);
-
 static void cmd_oem_dmesg(const char *arg, void *data, unsigned sz) {
     char line[FASTBOOT_INFO_MAX + 1];
 
