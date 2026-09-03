@@ -57,3 +57,4 @@ lib-$(CONFIG_AMAZON_SUNSTONE) += amazon/board-sunstone.o
 lib-$(CONFIG_AMAZON_AUSTIN) += amazon/board-austin.o
 lib-$(CONFIG_AMAZON_FORD) += amazon/board-ford.o
 lib-$(CONFIG_XIAOMI_PISSARRO) += xiaomi/board-pissarro.o
+lib-$(CONFIG_XIAOMI_LIGHT) += xiaomi/board-light.o
