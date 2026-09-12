@@ -112,11 +112,13 @@ void device_early_init(void) {
     FORCE_RETURN(FB_LED_GREEN_FUNC_CALLER_ADDR, 0);
 }
 
-void device_late_init(void) {
-    if (mt_get_gpio_in(GPIO_KEY_MUTE) == 1) {
-        printf("Mute button held, booting recovery\n");
-        set_bootmode(BOOTMODE_RECOVERY);
-    }
+void device_boot_keys(bool *up, bool *down) {
+    // Echo Input has no volume rocker, so the mute slider stands in for the
+    // recovery key. It is active high, unlike the action button.
+    *up = mt_get_gpio_in(GPIO_KEY_MUTE) == 1;
+    *down = false;
+
+    printf("Mute button: %d\n", *up);
 }
 
 void device_fastboot_init(void) {

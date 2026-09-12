@@ -26,10 +26,30 @@
 // Which way the rainbow travels around the ring.
 #define LED_SWEEP_REVERSE   0
 
+#define GPIO_MODE_GPIO      0
+#define GPIO_DIR_IN         0
+#define GPIO_PULL_UP        1
+
 static volatile bool led_ring_animating;
 
 static inline int mt_get_gpio_in(uint32_t pin) {
     return ((int (*)(uint32_t))(MT_GET_GPIO_IN_FUNC_ADDR|1))(pin);
+}
+
+static inline void mt_set_gpio_mode(uint32_t pin, uint32_t mode) {
+    ((void (*)(uint32_t, uint32_t))(MT_SET_GPIO_MODE_FUNC_ADDR|1))(pin, mode);
+}
+
+static inline void mt_set_gpio_dir(uint32_t pin, uint32_t dir) {
+    ((void (*)(uint32_t, uint32_t))(MT_SET_GPIO_DIR_FUNC_ADDR|1))(pin, dir);
+}
+
+static inline void mt_set_gpio_pull_enable(uint32_t pin, uint32_t enable) {
+    ((void (*)(uint32_t, uint32_t))(MT_SET_GPIO_PULL_EN_FUNC_ADDR|1))(pin, enable);
+}
+
+static inline void mt_set_gpio_pull_select(uint32_t pin, uint32_t select) {
+    ((void (*)(uint32_t, uint32_t))(MT_SET_GPIO_PULL_SEL_FUNC_ADDR|1))(pin, select);
 }
 
 static inline int issi_write(uint8_t reg, uint8_t val) {
@@ -112,11 +132,32 @@ void device_early_init(void) {
     FORCE_RETURN(ISSI_SET_STATE_FUNC_ADDR, 0);
 }
 
-void device_late_init(void) {
-    if (mt_get_gpio_in(GPIO_KEY_VOLUME_UP) == 0) {
-        printf("Volume up held, booting recovery\n");
-        set_bootmode(BOOTMODE_RECOVERY);
+static void volume_keys_init(void) {
+    static const uint32_t pins[] = { GPIO_KEY_VOLUME_UP, GPIO_KEY_VOLUME_DOWN };
+
+    for (uint32_t i = 0; i < ARRAY_SIZE(pins); i++) {
+        mt_set_gpio_mode(pins[i], GPIO_MODE_GPIO);
+        mt_set_gpio_dir(pins[i], GPIO_DIR_IN);
+        mt_set_gpio_pull_enable(pins[i], 1);
+        mt_set_gpio_pull_select(pins[i], GPIO_PULL_UP);
     }
+
+    // Let the pull-ups drag the lines up before we sample them.
+    mdelay(5);
+}
+
+static inline bool key_pressed(uint32_t pin) {
+    // The buttons short to ground, so a low reads as held.
+    return mt_get_gpio_in(pin) == 0;
+}
+
+void device_boot_keys(bool *up, bool *down) {
+    volume_keys_init();
+
+    *up = key_pressed(GPIO_KEY_VOLUME_UP);
+    *down = key_pressed(GPIO_KEY_VOLUME_DOWN);
+
+    printf("Volume keys: up=%d down=%d\n", *up, *down);
 }
 
 void device_fastboot_init(void) {

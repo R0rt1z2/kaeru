@@ -7,7 +7,35 @@
 
 #include "include/mt8516-common.h"
 
+#define RTC_PDN1                0x802C
+#define RTC_PDN1_FAST_BOOT      0x2000
+#define RTC_PDN1_RECOVERY_MASK  0x0030
+#define RTC_PDN1_RECOVERY_VAL   0x0010
+
+#define WDT_NONRST_REG          0x10007024
+#define WDT_NONRST_RECOVERY     (1 << 1)
+#define WDT_NONRST_FASTBOOT     (1 << 2)
+#define WDT_NONRST_AMZN         (1 << 5)
+
+#define BOOTMODE_AMZN           0x61
+
+#define BOOT_ARG_MAGIC          0x504C504C
+
+#define IDME_BOOTMODE_RECOVERY  3
+#define IDME_BOOTMODE_FASTBOOT  6
+
+enum mode_reason {
+    MODE_REASON_NONE = 0,
+    MODE_REASON_MISC = 1,
+    MODE_REASON_RTC = 2,
+    MODE_REASON_KEY = 3,
+    MODE_REASON_FACTORY = 4,
+    MODE_REASON_IDME = 5,
+};
+
 static struct {
+    enum mode_reason reason;
+    uint32_t rtc_pdn1;
     bool unlocked_critical;
     uint64_t misc_offset;
     struct bcb bcb;
@@ -318,8 +346,145 @@ static uint32_t get_active_slot(void) {
     return gd.booted_slot;
 }
 
+static const char *modereason2str(enum mode_reason reason) {
+    switch (reason) {
+        case MODE_REASON_MISC:
+            return "BCB";
+        case MODE_REASON_RTC:
+            return "RTC";
+        case MODE_REASON_KEY:
+            return "Keys";
+        case MODE_REASON_FACTORY:
+            return "Factory";
+        case MODE_REASON_IDME:
+            return "IDME";
+        default:
+            return "None";
+    }
+}
+
+static inline bool read_rtc_mode(uint32_t mask) {
+    // This comes from the saved RTC_PDN1 we got
+    // from real_boot_mode_select().
+    return !!(gd.rtc_pdn1 & mask);
+}
+
+static inline bool read_boot_flag(uint32_t mask) {
+    return !!(READ32(WDT_NONRST_REG) & mask);
+}
+
+static void clear_boot_flag(uint32_t mask) {
+    WRITE32(WDT_NONRST_REG, READ32(WDT_NONRST_REG) & ~mask);
+}
+
+static void clear_rtc_mode(uint32_t clr_bits) {
+    rtc_writeif_unlock();
+    pmic_write(RTC_PDN1, pmic_read(RTC_PDN1) & ~clr_bits);
+    rtc_write_trigger();
+}
+
+static void real_boot_mode_select(void) {
+    // We use this opportunity to grab RTC_PDN1 for use later,
+    // as RTC driver init will clear out the recovery bits,
+    // which is not what we want when we have to detect
+    // RTC recovery mode.
+    gd.rtc_pdn1 = pmic_read(RTC_PDN1);
+
+    // Set bootmode to BOOTMODE_NORMAL for good measure.
+    set_bootmode(BOOTMODE_NORMAL);
+}
+
+static void boot_mode_select(void) {
+    // Clear out the reset flag from the PMIC. We really don't care
+    // about the return, but not calling this function could mess
+    // things up.
+    mtk_detect_pmic_just_rst();
+
+    // The preloader hands us its boot mode in the boot arg block LK keeps
+    // a pointer to. Act on it before anything else, forcing fastboot on a
+    // factory boot and recovery on an ATE factory boot.
+    uint32_t *arg = *(uint32_t **)BOOT_ARG_PTR_ADDR;
+    uint32_t pl_mode = (arg && arg[0] == BOOT_ARG_MAGIC) ? arg[1] : BOOTMODE_NORMAL;
+    if (pl_mode == BOOTMODE_FACTORY) {
+        set_bootmode(BOOTMODE_FASTBOOT);
+        gd.reason = MODE_REASON_FACTORY;
+        return;
+    } else if (pl_mode == BOOTMODE_ATEFACT) {
+        set_bootmode(BOOTMODE_RECOVERY);
+        gd.reason = MODE_REASON_FACTORY;
+        return;
+    } else if (pl_mode == BOOTMODE_ADVMETA || pl_mode == BOOTMODE_ALARM ||
+               pl_mode == BOOTMODE_FASTBOOT) {
+        set_bootmode(pl_mode);
+        gd.reason = MODE_REASON_FACTORY;
+        return;
+    }
+
+    // Act on any boot command left in misc before anything else, so a
+    // key press can still override it below.
+    read_and_set_bootmode_from_message();
+    if (get_bootmode() != BOOTMODE_NORMAL)
+        gd.reason = MODE_REASON_MISC;
+
+    // Amazon removed the ability to enter fastboot / recovery mode with
+    // the volume keys, we restore that here. Require an exclusive hold so
+    // holding both does nothing.
+#ifdef HAVE_BOOT_KEYS
+    bool up = false, down = false;
+    device_boot_keys(&up, &down);
+    if (up && !down) {
+        set_bootmode(BOOTMODE_RECOVERY);
+        gd.reason = MODE_REASON_KEY;
+    } else if (down && !up) {
+        set_bootmode(BOOTMODE_FASTBOOT);
+        gd.reason = MODE_REASON_KEY;
+    }
+#endif
+
+    // If our bootmode is STILL normal after all that, give a chance for
+    // RTC to select the boot mode, for compatibility with stock OS.
+    if (get_bootmode() == BOOTMODE_NORMAL) {
+        if (read_rtc_mode(RTC_PDN1_FAST_BOOT) ||
+            read_boot_flag(WDT_NONRST_FASTBOOT)) {
+            clear_rtc_mode(RTC_PDN1_FAST_BOOT);
+            clear_boot_flag(WDT_NONRST_FASTBOOT);
+            set_bootmode(BOOTMODE_FASTBOOT);
+            gd.reason = MODE_REASON_RTC;
+        } else if ((gd.rtc_pdn1 & RTC_PDN1_RECOVERY_MASK) ==
+                       RTC_PDN1_RECOVERY_VAL ||
+                   read_boot_flag(WDT_NONRST_RECOVERY)) {
+            clear_rtc_mode(RTC_PDN1_RECOVERY_MASK);
+            clear_boot_flag(WDT_NONRST_RECOVERY);
+            set_bootmode(BOOTMODE_RECOVERY);
+            gd.reason = MODE_REASON_RTC;
+        } else if (read_boot_flag(WDT_NONRST_AMZN)) {
+            // Amazon have a mode of their own on this bit. We have no use for
+            // it, but pass it through so stock behaviour is preserved.
+            clear_boot_flag(WDT_NONRST_AMZN);
+            set_bootmode((bootmode_t)BOOTMODE_AMZN);
+            gd.reason = MODE_REASON_RTC;
+        }
+    }
+
+    // Last of all, honour the bootmode Amazon keep in IDME. Stock LK reads
+    // this after everything else too, so it stays the lowest priority.
+    if (get_bootmode() == BOOTMODE_NORMAL) {
+        int idme_mode = idme_boot_mode();
+
+        if (idme_mode == IDME_BOOTMODE_FASTBOOT) {
+            set_bootmode(BOOTMODE_FASTBOOT);
+            gd.reason = MODE_REASON_IDME;
+        } else if (idme_mode == IDME_BOOTMODE_RECOVERY) {
+            set_bootmode(BOOTMODE_RECOVERY);
+            gd.reason = MODE_REASON_IDME;
+        }
+    }
+}
+
 static void fastboot_init_hook(const char *) {
     int active_slot = get_active_slot();
+
+    fastboot_publish("boot-reason", modereason2str(gd.reason));
 
     // Register our custom command(s).
     fastboot_register("flash:", cmd_flash_wrapper, 1);
@@ -351,6 +516,20 @@ static const char *get_boot_part_hook(void) {
     return get_boot_part();
 }
 
+static void bootimg_cmdline_hook(const char *fmt, const char *tag,
+                                 const char *cmdline) {
+    printf(fmt, tag, cmdline);
+
+    int bits = cmdline_kernel_bits(cmdline);
+    if (bits == 64) {
+        printf("Boot image requests a 64-bit kernel, forcing it\n");
+        WRITE32(KERNEL_64BIT_FLAG_ADDR, 1);
+    } else if (bits == 32) {
+        printf("Boot image requests a 32-bit kernel, forcing it\n");
+        WRITE32(KERNEL_64BIT_FLAG_ADDR, 0);
+    }
+}
+
 void board_early_init(void) {
     printf("Entering early init for %s\n", BOARD_NAME);
 
@@ -376,6 +555,7 @@ void board_early_init(void) {
     NOP(FB_REBOOT_CMD_REGISTER_CALLER, 2);     // fastboot reboot
     NOP(FB_REBOOT_BL_CMD_REGISTER_CALLER, 2);  // fastboot reboot-bootloader
     NOP(FB_SET_ACTIVE_CMD_REGISTER_CALLER, 2); // fastboot set_active
+    NOP(FB_IDME_CMD_REGISTER_CALLER, 2);       // fastboot oem idme
 
     // Replace Amazon's BCB load function to work around a nasty
     // Preloader "feature" that bricks with the default BCB values.
@@ -390,6 +570,16 @@ void board_early_init(void) {
     // partition instead of dealing with SAR shenanigans.
     PATCH_CALL(GET_BOOT_PART_FUNC_CALLER_ADDR, &get_boot_part_hook, TARGET_THUMB);
 
+    // Stock LK always boots a 32-bit kernel. Hook the spot where it reads the
+    // boot image command line so we can honor a 'bootopt=64...' request and
+    // force the 64-bit kernel flag before the kernel is prepared.
+    PATCH_CALL(BOOTIMG_CMDLINE_PRINT_CALL_ADDR, &bootimg_cmdline_hook,
+               TARGET_THUMB);
+
+    // Override LK's default boot mode handling.
+    PATCH_CALL(LK_BOOT_MODE_SELECT_CALL_ADDR, &real_boot_mode_select,
+               TARGET_THUMB);
+
 #ifdef HAVE_EARLY_INIT
     device_early_init();
 #endif
@@ -397,6 +587,9 @@ void board_early_init(void) {
 
 void board_late_init(void) {
     printf("Entering late init for %s\n", BOARD_NAME);
+
+    boot_mode_select();
+    printf("Boot mode reason: %s\n", modereason2str(gd.reason));
 
     // Disable dm-verity, we won't be needing it anymore :)
     cmdline_append("androidboot.veritymode=disabled");

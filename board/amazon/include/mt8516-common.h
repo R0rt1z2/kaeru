@@ -44,6 +44,30 @@ static inline void mdelay(unsigned long msecs) {
     ((void (*)(unsigned long))(MDELAY_FUNC_ADDR|1))(msecs);
 }
 
+static inline uint32_t pmic_read(uint32_t reg) {
+    return ((uint32_t (*)(uint32_t))(PMIC_READ_FUNC_ADDR|1))(reg);
+}
+
+static inline void pmic_write(uint32_t reg, uint32_t val) {
+    ((void (*)(uint32_t, uint32_t))(PMIC_WRITE_FUNC_ADDR|1))(reg, val);
+}
+
+static inline void rtc_writeif_unlock(void) {
+    ((void (*)(void))(RTC_WRITEIF_UNLOCK_FUNC_ADDR|1))();
+}
+
+static inline void rtc_write_trigger(void) {
+    ((void (*)(void))(RTC_WRITE_TRIGGER_FUNC_ADDR|1))();
+}
+
+static inline bool mtk_detect_pmic_just_rst(void) {
+    return ((bool (*)(void))(MTK_DETECT_PMIC_JUST_RST_ADDR|1))();
+}
+
+static inline int idme_boot_mode(void) {
+    return ((int (*)(void))(IDME_BOOT_MODE_FUNC_ADDR|1))();
+}
+
 // Optional hooks that a device can implement if required.
 #ifdef HAVE_EARLY_INIT
 void device_early_init(void);
@@ -59,4 +83,8 @@ void device_fastboot_init(void);
 
 #ifdef HAVE_FASTBOOT_CMD_REBOOT
 void device_fastboot_cmd_reboot(const char *arg, void *data, unsigned sz);
+#endif
+
+#ifdef HAVE_BOOT_KEYS
+void device_boot_keys(bool *up, bool *down);
 #endif
