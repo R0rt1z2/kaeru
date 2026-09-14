@@ -19,4 +19,12 @@ void board_late_init(void) {
     
     // Spoof VBMeta to locked
     WRITE16(0x482616dc, 0xBF00);
+
+    // Force if Power + Vol up = bootloader
+    bootmode_t mode = get_bootmode();
+    
+    if (mode == BOOTMODE_RECOVERY) {
+        set_bootmode(BOOTMODE_FASTBOOT);
+        video_printf("\n>>> VOL+ DETECTED: FORCING FASTBOOT <<<\n\n");
+    } 
 }
