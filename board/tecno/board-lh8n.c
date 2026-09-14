@@ -13,8 +13,12 @@ void board_late_init(void) {
     FORCE_RETURN(0x48251c70, 0);
 
     // If booting to Normal System (Not Recovery/TWRP):
-    if (get_bootmode() != BOOTMODE_RECOVERY) {
-        WRITE16(0x48251e6e, 0x2300);    // Spoof verifiedbootstate to green
-        WRITE16(0x482616dc, 0xBF00);    // Spoof androidboot.vbmeta.device_state to locked
+    if (mode != BOOTMODE_RECOVERY) {
+        WRITE16(0x48251e6e, 0x2300);     // Spoof boot state to green
+
+        WRITE16(0x482616dc, 0xBF00);    // Spoof VBMeta to locked
+
     }
+    // If booting to TWRP (mode == BOOTMODE_RECOVERY):
+    // We leave the boot state as orange and unlocked.
 }
