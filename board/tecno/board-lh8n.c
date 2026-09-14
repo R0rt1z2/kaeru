@@ -1,40 +1,22 @@
 //
 // SPDX-FileCopyrightText: 2026 naden01 <naden.irsyad01@gmail.com>
+// SPDX-FileCopyrightText: 2026 KanagawaYamada <albert.wesley.dion@gmail.com>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
 #include <board_ops.h>
 
 void board_early_init(void) {
-    printf("Entering early init for Tecno Pova 5 Pro 5G\n");
+    /* No early initialization required for LH8n */
 }
 
 void board_late_init(void) {
-    printf("Entering late init for Tecno Pova 5 Pro 5G\n");
+    // Disable Orange State Warning
+    FORCE_RETURN(0x48251c70, 0);
 
-    uint32_t addr = 0;
-
-    // Suppresses the bootloader unlock warning shown during boot on
-    // unlocked devices. In addition to the visual warning, it also
-    // introduces an unnecessary 5-second delay.
-    //
-    // This patch get rid of the delay and the warning by forcing the
-    // function that holds the logic to always return 0 and therefore
-    // not executing the code that shows the warning.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB508, 0x4B0E, 0x447B);
-    if (addr) {
-        printf("Found orange_state_warning at 0x%08X\n", addr);
-        FORCE_RETURN(addr, 0);
-    }
-
-    // Disables the warning shown during boot when the device is unlocked and
-    // the dm-verity state is corrupted. This behaves like the previous lock
-    // state warnings, visual only, with no real impact.
-    //
-    // Same approach: patch the function to always return 0.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0xB530, 0xB083, 0xAB02);
-    if (addr) {
-        printf("Found dm_verity_corruption at 0x%08X\n", addr);
-        FORCE_RETURN(addr, 0);
-    }
+    // Spoof boot state to green
+    WRITE16(0x48251e6e, 0x2300);
+    
+    // Spoof VBMeta to locked
+    WRITE16(0x482616dc, 0xBF00);
 }
