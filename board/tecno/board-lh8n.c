@@ -17,13 +17,12 @@ void board_late_init(void) {
     bootmode_t mode = get_bootmode();
 
     // If booting to Normal System (Not Recovery/TWRP):
-    // Spoof verifiedbootstate to green and vbmeta to locked
-    // to pass Play Integrity.
     if (mode != BOOTMODE_RECOVERY) {
-        WRITE16(0x48251e6e, 0x2300);
-        WRITE16(0x482616dc, 0xBF00);
+        WRITE16(0x48251e6e, 0x2300);     // Spoof boot state to green
+
+        WRITE16(0x482616dc, 0xBF00);    // Spoof VBMeta to locked
+
     }
     // If booting to TWRP (mode == BOOTMODE_RECOVERY):
     // We leave the boot state as orange and unlocked.
-    // Spoofing locked state while booting TWRP will cause it to hang!
 }
