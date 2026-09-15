@@ -592,4 +592,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Fire Max 11 (2023)
+
+    config TECNO_LH8N
+        bool "Support TECNO-LH8n"
+        default n
+        help
+          Say Y if you want to include support for TECNO-LH8n
 endmenu
