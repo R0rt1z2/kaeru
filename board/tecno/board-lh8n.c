@@ -5,15 +5,79 @@
 //
 
 #include <board_ops.h>
+#include <lib/fastboot.h>
 
 void board_early_init(void) {}
 
+static void video_clean_screen(void) {
+    ((void (*)(void))(0x4823cb74 | 1))();
+}
+
+static void video_set_cursor(int row, int col) {
+    ((void (*)(int, int))(0x4823ca20 | 1))(row, col);
+}
+
+static void mt_disp_update(void) {
+    ((void (*)(uint32_t, uint32_t, uint32_t, uint32_t))(0x48200e8c | 1))(0, 0, 1080, 2460);
+}
+
+static void cmd_uca(const char* arg, void* data, unsigned sz) {
+    // 1. Send text to the PC Terminal over USB (Synced with phone screen)
+    fastboot_info("Petualang pemberani penakluk dongeng,");
+    fastboot_info("seorang elf vampir yang gelap namun bercahaya.");
+    fastboot_info("");
+    fastboot_info("Halo! aku Akayuki Mikouca yang akan");
+    fastboot_info("menemanimu dari kegelapan menuju cahaya.");
+    fastboot_info("");
+    fastboot_info("Baru disini? Kenalan Yuk!");
+    fastboot_info("");
+    fastboot_info("YT: @ayamikouca");
+
+    // 2. Render text directly onto the phone's physical screen
+    video_clean_screen();
+    video_set_cursor(10, 0); // Start at row 10
+    video_printf("Petualang pemberani penakluk dongeng,\n");
+    video_printf("seorang elf vampir yang gelap namun bercahaya.\n\n");
+    video_printf("Halo! aku Akayuki Mikouca yang akan\n");
+    video_printf("menemanimu dari kegelapan menuju cahaya.\n\n");
+    video_printf("Baru disini? Kenalan Yuk!\n\n");
+    video_printf("YT: @ayamikouca\n");
+    mt_disp_update(); // Push framebuffer to display hardware
+
+    fastboot_okay("");
+}
+
+static void cmd_yamada(const char* arg, void* data, unsigned sz) {
+    // 1. Send text to the PC Terminal over USB (Synced with phone screen)
+    fastboot_info("1 + 1 = 2");
+    fastboot_info("");
+    fastboot_info("Hi, my name is Kanagawa Yamada.");
+    fastboot_info("You can call me Yamada,");
+    fastboot_info("VTeacher from Indonesia");
+    fastboot_info("");
+    fastboot_info("YT: @KanagawaYamada");
+
+    // 2. Render text directly onto the phone's physical screen
+    video_clean_screen();
+    video_set_cursor(10, 0); // Start at row 10
+    video_printf("1 + 1 = 2\n\n");
+    video_printf("Hi, my name is Kanagawa Yamada.\n");
+    video_printf("You can call me Yamada,\n");
+    video_printf("VTeacher from Indonesia\n\n");
+    video_printf("YT: @KanagawaYamada\n");
+    mt_disp_update(); // Push framebuffer to display hardware
+
+    fastboot_okay("");
+}
+
 void board_late_init(void) {
+    // Register custom fastboot commands
+    fastboot_register("oem uca", cmd_uca, 1);
+    fastboot_register("oem yamada", cmd_yamada, 1);
+
     // ---------------------------------------------------------
     // DYNAMIC PATCHING (OTA SURVIVABLE)
     // ---------------------------------------------------------
-    // Instead of using hardcoded memory addresses which break on OTA updates,
-    // we use Kaeru's SEARCH_PATTERN to dynamically scan the bootloader in RAM.
     
     // Disable Orange State Warning dynamically
     uint32_t orange_addr = SEARCH_PATTERN(CONFIG_BOOTLOADER_BASE, CONFIG_BOOTLOADER_BASE + CONFIG_BOOTLOADER_SIZE,
