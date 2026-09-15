@@ -6,6 +6,7 @@
 
 #include <board_ops.h>
 #include <lib/fastboot.h>
+#include <lib/common.h>
 
 void board_early_init(void) {}
 
@@ -22,16 +23,18 @@ static void mt_disp_update(void) {
 }
 
 static void cmd_aria(const char* arg, void* data, unsigned sz) {
+    // 1. Send text to the PC Terminal over USB (Synced with phone screen)
     fastboot_info("After all... even though we're friends,");
     fastboot_info("Aria the idol is sure to bring you way");
     fastboot_info("more surprises down the road.");
 
+    // 2. Render text directly onto the phone's physical screen
     video_clean_screen();
-    video_set_cursor(10, 0);
+    video_set_cursor(10, 0); // Start at row 10
     video_printf("After all... even though we're friends,\n");
     video_printf("Aria the idol is sure to bring you way\n");
     video_printf("more surprises down the road.\n");
-    mt_disp_update();
+    mt_disp_update(); // Push framebuffer to display hardware
 
     fastboot_okay("");
 }
@@ -121,34 +124,48 @@ void board_late_init(void) {
     video_printf("Angel of Delusion | ReDreaming Angel\n");
     mt_disp_update();
 
+    // ---------------------------------------------------------
+    // DYNAMIC PATCHING (OTA SURVIVABLE)
+    // ---------------------------------------------------------
+    
+    // Disable Orange State Warning dynamically
     uint32_t orange_addr = SEARCH_PATTERN(CONFIG_BOOTLOADER_BASE, CONFIG_BOOTLOADER_BASE + CONFIG_BOOTLOADER_SIZE,
                                           0xb508, 0xf7ea, 0xff7f, 0xf7ea, 0xff77, 0x2100);
     if (orange_addr) {
         FORCE_RETURN(orange_addr, 0);
     }
 
-    bootmode_t mode = get_bootmode();
-
-    if (mode == BOOTMODE_RECOVERY) {
+    // Hardware Volume Key Boot Mode Overrides
+    // If the user is PHYSICALLY HOLDING Vol+ (Key 0) during boot
+    if (mtk_detect_key(0)) { 
+        // Vol+ detected -> Force Bootloader (Fastboot)
         set_bootmode(BOOTMODE_FASTBOOT);
-        video_set_cursor(40, 0); 
-        video_printf("\n>>> VOL+ DETECTED: FORCING BOOTLOADER <<<\n\n");
+        video_set_cursor(40, 0);
+        video_printf("\n>>> PHYSICAL VOL+ DETECTED: FORCING BOOTLOADER <<<\n\n");
         mt_disp_update();
     }
 
-    mode = get_bootmode();
+    // Refresh mode in case it was modified
+    bootmode_t mode = get_bootmode();
 
+    // If booting to Normal System (Not Recovery/TWRP):
+    // Spoof verifiedbootstate to green and vbmeta to locked
     if (mode != BOOTMODE_RECOVERY) {
+        // Dynamically search for the Green State check and spoof it
         uint32_t green_addr = SEARCH_PATTERN(CONFIG_BOOTLOADER_BASE, CONFIG_BOOTLOADER_BASE + CONFIG_BOOTLOADER_SIZE,
                                              0x4b18, 0x447b, 0x681b, 0x681b, 0x2b03, 0xd807);
         if (green_addr) {
-            WRITE16(green_addr + 6, 0x2300);
+            WRITE16(green_addr + 6, 0x2300); // Spoof boot state to green
         }
 
+        // Dynamically search for the VBMeta device_state generator and spoof it
         uint32_t lock_addr = SEARCH_PATTERN(CONFIG_BOOTLOADER_BASE, CONFIG_BOOTLOADER_BASE + CONFIG_BOOTLOADER_SIZE,
                                             0x2801, 0xd0f5, 0xb9a0, 0x9b09);
         if (lock_addr) {
-            WRITE16(lock_addr + 8, 0xBF00);
+            WRITE16(lock_addr + 8, 0xBF00);  // Spoof VBMeta to locked
         }
     }
+    // If booting to TWRP (mode == BOOTMODE_RECOVERY):
+    // We leave the boot state as orange and unlocked.
+    // Spoofing locked state while booting TWRP will cause it to hang!
 }
