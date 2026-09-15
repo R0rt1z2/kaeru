@@ -79,7 +79,7 @@ void board_late_init(void) {
     video_set_cursor(15, 0);
     video_printf(" Hold Your Dreams Don't Let Them Go \n");
     video_printf("====================================\n");
-    video_printf("Angel of Delusion | ReDreaming Angel\n");
+    video_printf("Angels of Delusion  ReDreaming Angel\n");
     mt_disp_update();
 
     // ---------------------------------------------------------
