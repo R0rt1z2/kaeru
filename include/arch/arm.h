@@ -41,10 +41,15 @@ typedef enum { TARGET_THUMB, TARGET_ARM } arm_mode_t;
         uint32_t cur = (addr) + 4;                                                 \
         uint32_t tgt = ((uint32_t)(func)) & ~1;                                    \
         int32_t off = tgt - cur;                                                   \
-        uint16_t hi = (off >> 12) & 0x7FF;                                         \
+        uint32_t _S = (off >> 24) & 1;                                             \
+        uint32_t _I1 = (off >> 23) & 1;                                            \
+        uint32_t _I2 = (off >> 22) & 1;                                            \
+        uint32_t _J1 = (!(_I1 ^ _S)) & 1;                                          \
+        uint32_t _J2 = (!(_I2 ^ _S)) & 1;                                          \
+        uint16_t hi = (off >> 12) & 0x3FF;                                         \
         uint16_t lo = (off >> 1) & 0x7FF;                                          \
-        uint16_t hi_inst = 0xF000 | hi;                                            \
-        uint16_t lo_inst = ((mode) == TARGET_ARM) ? (0xE800 | lo) : (0xF800 | lo); \
+        uint16_t hi_inst = 0xF000 | (_S << 10) | hi;                               \
+        uint16_t lo_inst = ((mode) == TARGET_ARM) ? (0xC000 | (_J1 << 13) | (_J2 << 11) | (lo & ~1)) : (0xD000 | (_J1 << 13) | (_J2 << 11) | lo); \
         volatile uint16_t* p = (volatile uint16_t*)(addr);                         \
         *p = hi_inst;                                                              \
         *(p + 1) = lo_inst;                                                        \
@@ -56,10 +61,15 @@ typedef enum { TARGET_THUMB, TARGET_ARM } arm_mode_t;
         uint32_t cur = (addr) + 4;                         \
         uint32_t tgt = ((uint32_t)(func)) & ~1;            \
         int32_t off = tgt - cur;                           \
-        uint16_t hi = (off >> 12) & 0x7FF;                 \
+        uint32_t _S = (off >> 24) & 1;                     \
+        uint32_t _I1 = (off >> 23) & 1;                    \
+        uint32_t _I2 = (off >> 22) & 1;                    \
+        uint32_t _J1 = (!(_I1 ^ _S)) & 1;                  \
+        uint32_t _J2 = (!(_I2 ^ _S)) & 1;                  \
+        uint16_t hi = (off >> 12) & 0x3FF;                 \
         uint16_t lo = (off >> 1) & 0x7FF;                  \
-        uint16_t hi_inst = 0xF000 | hi;                    \
-        uint16_t lo_inst = 0xB800 | lo;                    \
+        uint16_t hi_inst = 0xF000 | (_S << 10) | hi;       \
+        uint16_t lo_inst = 0x9000 | (_J1 << 13) | (_J2 << 11) | lo; \
         volatile uint16_t* p = (volatile uint16_t*)(addr); \
         *p = hi_inst;                                      \
         *(p + 1) = lo_inst;                                \
