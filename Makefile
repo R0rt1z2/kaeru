@@ -189,12 +189,7 @@ NM		= $(CROSS_COMPILE)nm
 STRIP		= $(CROSS_COMPILE)strip
 OBJCOPY		= $(CROSS_COMPILE)objcopy
 OBJDUMP		= $(CROSS_COMPILE)objdump
-AWK		= awk
-INSTALLKERNEL  := installkernel
-PERL		= perl
 
-CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
-		  -Wbitwise -Wno-return-void $(CF)
 CFLAGS_KERNEL	=
 AFLAGS_KERNEL	=
 
@@ -223,13 +218,9 @@ KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__
 
-# Read KERNELRELEASE from include/config/kernel.release (if it exists)
-KERNELRELEASE = $(shell cat include/config/kernel.release 2> /dev/null)
-KERNELVERSION = $(VERSION)$(if $(PATCHLEVEL),.$(PATCHLEVEL)$(if $(SUBLEVEL),.$(SUBLEVEL)))$(EXTRAVERSION)
-
 export ARCH SRCARCH CONFIG_SHELL HOSTCC HOSTCFLAGS CROSS_COMPILE AS LD CC
 export CPP AR NM STRIP OBJCOPY OBJDUMP
-export MAKE AWK GENKSYMS INSTALLKERNEL PERL UTS_MACHINE
+export MAKE
 export HOSTCXX HOSTCXXFLAGS
 
 export KBUILD_CPPFLAGS NOSTDINC_FLAGS LINUXINCLUDE OBJCOPYFLAGS LDFLAGS
@@ -312,7 +303,6 @@ ifeq ($(config-targets),1)
 # Read arch specific Makefile to set KBUILD_DEFCONFIG as needed.
 # KBUILD_DEFCONFIG may point out an alternative default configuration
 # used for 'make defconfig'
-#include $(srctree)/arch/$(SRCARCH)/Makefile
 export KBUILD_DEFCONFIG KBUILD_KCONFIG
 
 config: scripts_basic outputmakefile FORCE
@@ -386,14 +376,7 @@ kaeru: $(kaeru-all) arch/$(ARCH)/linker.lds FORCE
 # make sure no implicit rule kicks in
 $(sort $(kaeru-all)): $(kaeru-dirs) ;
 
-# Handle descending into subdirectories listed in $(vmlinux-dirs)
-# Preset locale variables to speed up the build process. Limit locale
-# tweaks to this spot to avoid wrong language settings when running
-# make menuconfig etc.
-# Error messages still appears in the original language
-
-#PHONY += $(vmlinux-dirs)
-#$(vmlinux-dirs): prepare scripts
+# Handle descending into subdirectories listed in $(kaeru-dirs)
 PHONY += $(kaeru-dirs)
 $(kaeru-dirs): scripts_basic
 	$(Q)$(MAKE) $(build)=$@
@@ -501,30 +484,9 @@ help:
 	@echo  'Other generic targets:'
 	@echo  '  all		  - Build all targets marked with [*]'
 	@echo  '* kaeru	  	  - Build the application'
+	@echo  '* stage1	  - Build the first stage loader'
 	@echo  '  dir/            - Build all files in dir and below'
 	@echo  '  dir/file.[oisS] - Build specified target only'
-	@echo  '  dir/file.lst    - Build specified mixed source/assembly target only'
-	@echo  '                    (requires a recent binutils and recent build (System.map))'
-	@echo  '  tags/TAGS	  - Generate tags file for editors'
-	@echo  '  cscope	  - Generate cscope index'
-	@echo  '  gtags           - Generate GNU GLOBAL index'
-	@echo  '  kernelrelease	  - Output the release version string'
-	@echo  '  kernelversion	  - Output the version stored in Makefile'
-	 echo  ''
-	@echo  'Static analysers'
-	@echo  '  checkstack      - Generate a list of stack hogs'
-	@echo  '  namespacecheck  - Name space analysis on compiled kernel'
-	@echo  '  versioncheck    - Sanity check on version.h usage'
-	@echo  '  includecheck    - Check for duplicate included header files'
-	@echo  '  export_report   - List the usages of all exported symbols'
-	@echo  '  headers_check   - Sanity check on exported headers'
-#	@$(MAKE) -f $(srctree)/scripts/Makefile.help checker-help
-	@echo  ''
-#	@echo  'Kernel packaging:'
-#	@$(MAKE) $(build)=$(package-dir) help
-	@echo  ''
-#	@echo  'Documentation targets:'
-#	@$(MAKE) -f $(srctree)/Documentation/DocBook/Makefile dochelp
 	@echo  ''
 	@echo  '  make V=0|1 [targets] 0 => quiet build (default), 1 => verbose build'
 	@echo  '  make V=2   [targets] 2 => give reason for rebuild of target'
