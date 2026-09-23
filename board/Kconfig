@@ -1,34 +1,4 @@
 menu "Device Support"
-    config BQ_FREEZERHD
-        bool "Support BQ Aquaris M10 HD"
-        default n
-        help
-          Say Y if you want to include support for BQ Aquaris M10 HD
-
-    config FPLUS_T1100
-        bool "Support FPLUS T1100"
-        default n
-        help
-          Say Y if you want to include support for FPLUS T1100
-
-    config HUAWEI_MADRID
-        bool "Support Huawei Y6 2019"
-        default n
-        help
-          Say Y if you want to include support for Huawei Y6 2019
-
-    config LENOVO_AKITA_ROW_CALL
-        bool "Support Lenovo Tab M8 HD (2nd Gen) LTE"
-        default n
-        help
-          Say Y if you want to include support for Lenovo Tab M8 HD (2nd Gen) LTE (TB-8505X)
-
-    config MEIZU_M3NOTE
-        bool "Support Meizu M3 Note"
-        default n
-        help
-          Say Y if you want to include support for Meizu M3 Note
-
     config MOTOROLA_PENANGF
         bool "Support Motorola G13 / G23"
         default n
@@ -47,65 +17,17 @@ menu "Device Support"
         help
           Say Y if you want to include support for Nokia 2.2
 
-    config OPPO_OP4BFB
-        bool "Support OPPO A11K/A12"
-        default n
-        help
-          Say Y if you want to include support for OPPO A11K/A12
-
-    config OUKITEL_RT6
-        bool "Support Oukitel RT6"
-        default n
-        help
-          Say Y if you want to include support for Oukitel RT6
-
-    config REALME_SALAA
-        bool "Support Realme 7"
-        default n
-        help
-          Say Y if you want to include support for Realme 7
-
-    config REALME_NASHC
-        bool "Support Realme 8"
-        default n
-        help
-          Say Y if you want to include support for Realme 8
-
     config XIAOMI_NIKEL
         bool "Support Redmi Note 4"
         default n
         help
           Say Y if you want to include support for Redmi Note 4
 
-    config BQ_BROLLY
-        bool "Support BQ Edison 3"
-        default n
-        help
-          Say Y if you want to include support for BQ Edison 3
-
-    config REALME_MONET
-        bool "Support Realme C3/Narzo 10A"
-        default n
-        help
-          Say Y if you want to include support for Realme C3/Narzo 10A
-
     config SONY_CANOPY
         bool "Support Sony Xperia XA1 / Ultra / Plus"
         default n
         help
           Say Y if you want to include support for Sony Xperia XA1 / Ultra / Plus
-
-    config ZTE_P662F02
-        bool "Support ZTE Blade A7 2020"
-        default n
-        help
-          Say Y if you want to include support for ZTE Blade A7 2020
-
-    config NOKIA_IRONMAN
-        bool "Support Nokia 2.3"
-        default n
-        help
-          Say Y if you want to include support for Nokia 2.3
 
     config MOTOROLA_LAMU
         bool "Support Motorola G15 / G05"
@@ -119,83 +41,17 @@ menu "Device Support"
         help
           Say Y if you want to include support for Energy Phone Colors
 
-    config HUAWEI_KOBE2LTE
-        bool "Support Huawei MatePad T8 (LTE)"
-        default n
-        help
-          Say Y if you want to include support for Huawei MatePad T8 LTE
-
-    config HUAWEI_KOBE2WIFI
-        bool "Support Huawei MatePad T8 (Wi-Fi)"
-        default n
-        help
-          Say Y if you want to include support for Huawei MatePad T8 Wi-Fi
-
     config BQ_AQUARIS_M8
         bool "Support BQ Aquaris M8"
         default n
         help
           Say Y if you want to include support for BQ Aquaris M8
 
-    config INFINIX_X666
-        bool "Support Infinix HOT 20 5G"
-        default n
-        help
-          Say Y if you want to include support for Infinix HOT 20 5G
-
-    config RABBIT_R1
-        bool "Support Rabbit R1"
-        default n
-        help
-          Say Y if you want to include support for Rabbit R1
-
     config OPPO_LEADE
         bool "Support Oppo A5s"
         default n
         help
           Say Y if you want to include support for Oppo A5s
-
-    config VOLLA_MIMAMEID
-        bool "Support Volla Phone 22/22 Pro"
-        default n
-        help
-          Say Y if you want to include support for Volla Phone 22/22 Pro
-
-    config JOYAR_100071483
-        bool "Support Onn Surf 3 8-inch"
-        default n
-        help
-          Say Y if you want to include support for Onn Surf 3 8-inch
-
-    config ALCATEL_5028Y
-        bool "Support Alcatel 1S 2020"
-        default n
-        help
-          Say Y if you want to include support for Alcatel 1S 2020
-
-    config XIAOMI_ANGELICAN
-        bool "Support Xiaomi Redmi 9C NFC"
-        default n
-        help
-          Say Y if you want to include support for Xiaomi Redmi 9C NFC
-
-    config XIAOMI_DANDELION
-        bool "Support Xiaomi Redmi 9A/Redmi 10A/10A Sport/9AT/9i/9A Sport"
-        default n
-        help
-          Say Y if you want to include support for Xiaomi Redmi 9A/Redmi 10A/10A Sport/9AT/9i/9A Sport
-
-    config HUAWEI_MODENA1
-        bool "Support Huawei Enjoy 10e"
-        default n
-        help
-          Say Y if you want to include support for Huawei Enjoy 10e
-
-    config BLACKVIEW_BV9200
-        bool "Support Blackview BV9200"
-        default n
-        help
-          Say Y if you want to include support for Blackview BV9200
 
     config XIAOMI_ROSEMARY
         bool "Support Redmi 10S / POCO M5s"
@@ -208,55 +64,6 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Lenovo Tab M10HD (2nd Gen) LTE
-
-    config LENOVO_AMAR_ROW_WIFI
-        bool "Support Lenovo Tab M10HD (2nd Gen) WiFI"
-        default n
-        help
-          Say Y if you want to include support for Lenovo Tab M10HD (2nd Gen) WiFI
-
-    config HUAWEI_KANSAS
-        bool "Support Huawei Y5 2019 / Honor 8S"
-        default n
-        help
-          Say Y if you want to include support for Huawei Y5 2019 / Honor 8S
-
-    config INFINIX_X6812
-        bool "Support Infinix X6812"
-        default n
-        help
-          Say Y if you want to include support for Infinix X6812
-
-    config HONOR_KINGKONG
-        bool "Support Honor X30 Max"
-        default n
-        help
-          Say Y if you want to include support for Honor X30 Max
-
-    config MOTOROLA_MALTA_FAMILY
-        bool
-        help
-        Internal config to enable Malta family board support
-
-    config MOTOROLA_MALTA
-        bool "Support Motorola Moto E7 (malta)"
-        select MOTOROLA_MALTA_FAMILY
-        default n
-
-    config MOTOROLA_MALTA_64
-        bool "Support Motorola Moto E7 64-bit (malta_64)"
-        select MOTOROLA_MALTA_FAMILY
-        default n
-
-    config MOTOROLA_MALTA_L
-        bool "Support Motorola Moto E7 Power (malta_l)"
-        select MOTOROLA_MALTA_FAMILY
-        default n
-
-    config MOTOROLA_MALTA_L_64
-        bool "Support Motorola Moto E7 Power 64-bit (malta_l_64)"
-        select MOTOROLA_MALTA_FAMILY
-        default n
 
     config HONOR_GINA
         bool "Support Honor 60 SE"
@@ -299,12 +106,6 @@ menu "Device Support"
         help
           Say Y if you want to include support for Echo Show 8 1st Gen (2019)
 
-    config MOTOROLA_BORAG
-        bool "Support Motorola E22"
-        default n
-        help
-          Say Y if you want to include support for Motorola E22
-
     config ENERGY_ADAD
         bool "Support Energy Phone Pro 3"
         default n
@@ -330,12 +131,6 @@ menu "Device Support"
         help
           Say Y if you want to include support for NUU A1
 
-    config HONOR_CARTIER5G
-        bool "Support Honor 90 Lite"
-        default n
-        help
-          Say Y if you want to include support for Honor 90 Lite
-
     config MOTOROLA_LAMULG
         bool "Support Motorola E15"
         default n
@@ -353,12 +148,6 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Huawei Y5/Y6 2017
-
-    config INNIOASIS_Y1
-        bool "Support Innioasis Y1"
-        default n
-        help
-          Say Y if you want to include support for Innioasis Y1
 
     config MOTOROLA_BORAGO
         bool "Support Motorola E22i"
@@ -476,12 +265,6 @@ menu "Device Support"
         help
           Say Y if you want to include support for Oukitel WP56
 
-    config LAVA_T81N
-        bool "Support Lava T81N"
-        default n
-        help
-          Say Y if you want to include support for lava T81N
-
     config OPPO_CPH2015
         bool "Support OPPO A31"
         default n
@@ -493,12 +276,6 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for oppo A15/A15s
-
-    config LAVA_LXX503
-        bool "Support Lava Blaze 5G"
-        default n
-        help
-          Say Y if you want to include support for Lava Blaze 5G
 
     config HUAWEI_DURA2
         bool "Support Huawei Y5p"

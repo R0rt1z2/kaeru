@@ -18,13 +18,10 @@ void kaeru_late_init(void) {
     ((void (*)(const struct app_descriptor*))(CONFIG_APP_ADDRESS | 1))(NULL);
 }
 
-// If support for stage1 is enabled, we are now running in the heap
-// and we were called by the previous stage.
+// We are now running in the heap, having been loaded and called by
+// stage1 (the first stage loader).
 //
-// If support for stage1 is disabled, then we are essentially being
-// called from the original bl platform_init() call.
-//
-// Regardless of the caller, we want to patch the '.apps' entry in
+// We want to patch the '.apps' entry in
 // the rodata section of the bootloader to point to our late init
 // function, so that we can take control before mt_boot_init() runs.
 void kaeru_early_init(void) {

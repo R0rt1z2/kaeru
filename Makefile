@@ -398,8 +398,6 @@ PHONY += $(kaeru-dirs)
 $(kaeru-dirs): scripts_basic
 	$(Q)$(MAKE) $(build)=$@
 
-ifeq ($(CONFIG_STAGE1_SUPPORT),y)
-
 quiet_cmd_stage1 = LD      $@.o
 cmd_stage1 = $(LD) $(filter %.o,$^) -o $@.o --script=arch/$(ARCH)/linker.lds
 
@@ -413,10 +411,6 @@ stage1/built-in.o: scripts_basic
 	$(Q)$(MAKE) $(build)=stage1
 
 CLEAN_FILES += stageone stage1.o
-else
-PHONY += stage1
-stage1: ;
-endif
 
 ###
 # Cleaning is done on three levels.

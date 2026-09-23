@@ -74,8 +74,4 @@ make distclean >/dev/null 2>&1 || true
 make "${DEVICE}_defconfig"
 make -j"$(nproc)"
 
-if grep -q "^CONFIG_STAGE1_SUPPORT=y" "$CONFIG_PATH"; then
-    python3 "$UTILS_DIR/patch.py" "$CONFIG_PATH" "$BOOTLOADER" kaeru -l stageone -o "$OUTPUT"
-else
-    python3 "$UTILS_DIR/patch.py" "$CONFIG_PATH" "$BOOTLOADER" kaeru -o "$OUTPUT"
-fi
+python3 "$UTILS_DIR/patch.py" "$CONFIG_PATH" "$BOOTLOADER" kaeru -l stageone -o "$OUTPUT"
