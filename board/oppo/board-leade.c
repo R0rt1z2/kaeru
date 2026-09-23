@@ -67,6 +67,9 @@ static void spoof_lock_state(void) {
     }
 }
 
+// kaeru bootloader lock spoofing control command.
+FASTBOOT_CMD(bldr_spoof, "oem bldr_spoof", cmd_spoof_bootloader_lock, 0);
+
 void board_early_init(void) {
     printf("Entering early init for Oppo A5s\n");
 
@@ -107,8 +110,6 @@ void board_early_init(void) {
     } else if (mtk_detect_key(VOLUME_DOWN)) {
         set_bootmode(BOOTMODE_RECOVERY);
     }
-
-    fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 0);
 }
 
 void board_late_init(void) {

@@ -128,6 +128,9 @@ static void post_env_process(void) {
     PATCH_MEM(0x4C47175A, 0x2301);
 }
 
+// kaeru bootloader lock spoofing control command.
+FASTBOOT_CMD(bldr_spoof, "oem bldr_spoof", cmd_spoof_bootloader_lock, 0);
+
 void board_early_init(void) {
     printf("Entering early init for Motorola G24\n");
 
@@ -204,7 +207,6 @@ void board_early_init(void) {
     // Register our custom flash and erase commands to replace the original ones.
     fastboot_register("flash:", cmd_flash, 1);
     fastboot_register("erase:", cmd_erase, 1);
-    fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 0);
     fastboot_publish("brom-usbdl-disabled", is_brom_cmd_disabled() == 1 ? "yes" : "no");
 }
 

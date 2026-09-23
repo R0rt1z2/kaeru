@@ -117,6 +117,10 @@ void s1boot_bootimage_shim(void) {
     }
 }
 
+// Power the device off directly from fastboot.
+FASTBOOT_CMD(shutdown, "oem shutdown", cmd_shutdown, 1);
+FASTBOOT_CMD(poweroff, "oem poweroff", cmd_shutdown, 1);
+
 void board_early_init(void) {
     printf("Entering early init for Sony Xperia XA1 / Ultra / Plus\n");
 
@@ -203,16 +207,6 @@ void board_late_init(void) {
         NOP(0x46029D82, 2);
         NOP(0x46029D8A, 2);
         rgb_led_set(255, 0, 204);
-
-        // There is no easy way to power off the device from fastboot mode.
-        // Holding the power button simply reboots the device, forcing you to
-        // boot into the OS to shut it down properly. This is not ideal, so
-        // we add a fastboot command that allows powering off directly.
-        //
-        // This was shamelessly borrowed from Motorola’s (or Huaqin’s) LK image.
-        // It simply calls mt_power_off().
-        fastboot_register("oem shutdown", cmd_shutdown, 1);
-        fastboot_register("oem poweroff", cmd_shutdown, 1);
 
         // Show the current boot mode on the screen for clarity.
         show_bootmode(BOOTMODE_FASTBOOT);

@@ -95,6 +95,9 @@ void parse_bootloader_messages(void) {
         set_bootmode(mode);
 }
 
+// Reboot straight into recovery.
+FASTBOOT_CMD(reboot_recovery, "oem reboot-recovery", cmd_reboot_recovery, 1);
+
 void board_early_init(void) {
     printf("Entering early init for Galaxy Tab A7 Lite\n");
 
@@ -167,7 +170,6 @@ void board_early_init(void) {
 
     // Register our custom fastboot commands.
     fastboot_register("reboot-recovery", cmd_reboot_recovery, 1);
-    fastboot_register("oem reboot-recovery", cmd_reboot_recovery, 1);
     fastboot_register("reboot-fastboot", cmd_reboot_fastboot, 1);
 }
 

@@ -240,6 +240,9 @@ static void post_env_process(void) {
     }
 }
 
+// kaeru bootloader lock spoofing control command.
+FASTBOOT_CMD(bldr_spoof, "oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
+
 void board_early_init(void) {
     printf("Entering early init for Motorola Moto G06\n");
 
@@ -323,8 +326,6 @@ void board_early_init(void) {
         printf("Found fastboot string at 0x%08X\n", (uint32_t)(uintptr_t)s);
         s[0] = '\0';
     }
-
-    fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
     fastboot_publish("brom-usbdl-disabled", is_brom_cmd_disabled() == 1 ? "yes" : "no");
 }
 

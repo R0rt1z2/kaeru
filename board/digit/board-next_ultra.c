@@ -175,6 +175,9 @@ void spoof_lock_state(void) {
     }
 }
 
+// kaeru bootloader lock spoofing control command.
+FASTBOOT_CMD(bldr_spoof, "oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
+
 void board_early_init(void) {
     printf("Entering early init for Digitnext_Ultra\n");
     uint32_t addr = 0;
@@ -189,8 +192,6 @@ void board_early_init(void) {
         printf("Found env_init_done at 0x%08X\n", addr);
         PATCH_CALL(addr, (void*)spoof_lock_state, TARGET_THUMB);
     }
-
-    fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
 }
 
 
