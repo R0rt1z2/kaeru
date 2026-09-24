@@ -1,0 +1,5 @@
+config SONY_CANOPY
+    bool "Support Sony Xperia XA1 / Ultra / Plus"
+    default n
+    help
+      Say Y if you want to include support for Sony Xperia XA1 / Ultra / Plus

@@ -1,0 +1,119 @@
+config AMAZON_MT8163_COMMON
+    bool
+    help
+      Select this if you need to include common board code
+      for Amazon MT8163 devices.
+
+config AMAZON_MT8163_AB
+    bool
+    select AMAZON_MT8163_COMMON
+    select AMZN_BCB_SUPPORT
+    help
+      Select this if you need to include slot handling for
+      A/B Amazon MT8163 devices.
+
+config AMAZON_BISCUIT
+    bool "Support Echo Dot 2nd Gen (2016)"
+    select AMAZON_MT8163_AB
+    default n
+    help
+      Say Y if you want to include support for Echo Dot 2nd Gen (2016)
+
+config AMAZON_RADAR
+    bool "Support Echo 2nd Gen (2017)"
+    select AMAZON_MT8163_AB
+    default n
+    help
+      Say Y if you want to include support for Echo 2nd Gen (2017)
+
+config AMAZON_CROWN
+    bool "Support Echo Show 8 1st Gen (2019)"
+    select AMAZON_MT8163_COMMON
+    default n
+    help
+      Say Y if you want to include support for Echo Show 8 1st Gen (2019)
+
+config AMAZON_CHECKERS
+    bool "Support Echo Show 5 1st Gen (2019)"
+    select AMAZON_MT8163_COMMON
+    default n
+    help
+      Say Y if you want to include support for Echo Show 5 1st Gen (2019)
+
+config AMAZON_CRONOS
+    bool "Support Echo Show 5 2nd Gen (2021)"
+    select AMAZON_MT8163_COMMON
+    default n
+    help
+      Say Y if you want to include support for Echo Show 5 2nd Gen (2021)
+
+config AMAZON_MT8516_COMMON
+    bool
+    select AMZN_BCB_SUPPORT
+    help
+      Select this if you need to include common board code
+      for Amazon MT8516 devices.
+
+config AMAZON_CUPCAKE
+    bool "Support Echo Input"
+    select AMAZON_MT8516_COMMON
+    default n
+    help
+      Say Y if you want to include support for Echo Input
+
+config AMAZON_MAVERICK
+    bool "Support Fire HD 10 (2019)"
+    default n
+    help
+      Say Y if you want to include support for Fire HD 10 (2019)
+
+config AMAZON_DONUT
+    bool "Support Echo Dot 3rd Generation"
+    select AMAZON_MT8516_COMMON
+    default n
+    help
+      Say Y if you want to include support for Echo Dot 3rd Generation
+
+config AMAZON_DOUGLAS
+    bool "Support Fire HD 8 (2017)"
+    default n
+    help
+      Say Y if you want to include support for Fire HD 8 (2017)
+
+config AMAZON_ROOK
+    bool "Support Echo Spot 1st Gen (2017)"
+    default n
+    help
+      Say Y if you want to include support for Echo Spot 1st Gen (2017)
+
+config AMAZON_KARAT
+    bool "Support Fire TV Stick 4K / 4K Max / 4K Plus (2nd Gen)"
+    default n
+    help
+      Say Y if you want to include support for Fire TV Stick 4K / 4K Max / 4K Plus (2nd Gen)
+
+config AMAZON_SUNSTONE
+    bool "Support Fire Max 11 (2023)"
+    default n
+    help
+      Say Y if you want to include support for Fire Max 11 (2023)
+
+config AMAZON_MT8127_COMMON
+    bool
+    help
+      Select this if you need to include common board code
+      for Amazon MT8127 devices.
+
+config AMAZON_AUSTIN
+    bool "Support Fire 7 (7th Gen)"
+    select AMAZON_MT8127_COMMON
+    default n
+    help
+      Say Y if you want to include support for Fire 7 (2017)
+
+config AMAZON_FORD
+    bool "Support Fire (ford)"
+    select AMAZON_MT8127_COMMON
+    default n
+    help
+      Say Y if you want to include support for Fire (2015)

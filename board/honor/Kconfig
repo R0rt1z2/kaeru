@@ -1,0 +1,5 @@
+config HONOR_GINA
+    bool "Support Honor 60 SE"
+    default n
+    help
+      Say Y if you want to include support for Honor 60 SE

@@ -1,0 +1,5 @@
+config LG_MCAYMANLM
+    bool "Support LG Velvet 5G"
+    default n
+    help
+      Say Y if you want to include support for LG Velvet 5G

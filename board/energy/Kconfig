@@ -1,0 +1,11 @@
+config ENERGY_PHONE_COLORS
+    bool "Support Energy Phone Colors"
+    default n
+    help
+      Say Y if you want to include support for Energy Phone Colors
+
+config ENERGY_ADAD
+    bool "Support Energy Phone Pro 3"
+    default n
+    help
+      Say Y if you want to include support for Energy Phone Pro 3

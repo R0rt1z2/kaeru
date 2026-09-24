@@ -1,0 +1,9 @@
+lib-$(CONFIG_MOTOROLA_PENANGF) += motorola/board-penangf.o
+lib-$(CONFIG_MOTOROLA_FOGOROW) += motorola/board-fogorow.o
+lib-$(CONFIG_MOTOROLA_LAMU) += motorola/board-lamu.o
+lib-$(CONFIG_MOTOROLA_LAMULG) += motorola/board-lamu.o
+lib-$(CONFIG_MOTOROLA_BORAGO) += motorola/board-borag.o
+lib-$(CONFIG_MOTOROLA_LAGOS) += motorola/board-lagos.o
+lib-$(CONFIG_MOTOROLA_LAMUC) += motorola/board-lamu.o
+lib-$(CONFIG_MOTOROLA_HAWAIIP) += motorola/board-hawaiip.o
+lib-$(CONFIG_MOTOROLA_ELLIS) += motorola/board-ellis.o

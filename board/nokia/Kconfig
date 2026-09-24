@@ -1,0 +1,5 @@
+config NOKIA_WASP
+    bool "Support Nokia 2.2"
+    default n
+    help
+      Say Y if you want to include support for Nokia 2.2

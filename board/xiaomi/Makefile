@@ -1,0 +1,11 @@
+lib-$(CONFIG_XIAOMI_NIKEL) += xiaomi/board-nikel.o
+lib-$(CONFIG_XIAOMI_ROSEMARY) += xiaomi/board-rosemary.o
+lib-$(CONFIG_XIAOMI_EARTH) += xiaomi/board-earth.o
+lib-$(CONFIG_XIAOMI_FLEUR) += xiaomi/board-fleur.o
+lib-$(CONFIG_XIAOMI_RUBY) += xiaomi/board-ruby.o
+lib-$(CONFIG_XIAOMI_FIRE) += xiaomi/board-fire.o
+lib-$(CONFIG_XIAOMI_LANCELOT) += xiaomi/board-lancelot.o
+lib-$(CONFIG_XIAOMI_MERLIN) += xiaomi/board-merlin.o
+lib-$(CONFIG_XIAOMI_BEGONIA) += xiaomi/board-begonia.o
+lib-$(CONFIG_XIAOMI_PISSARRO) += xiaomi/board-pissarro.o
+lib-$(CONFIG_XIAOMI_LIGHT) += xiaomi/board-light.o

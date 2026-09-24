@@ -1,0 +1,5 @@
+config DIGIT_NEXT_ULTRA
+    bool "Support Digit Next Ultra"
+    default n
+    help
+      Say Y if you want to include support for Digit Next Ultra
