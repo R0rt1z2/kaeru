@@ -389,4 +389,10 @@ menu "Device Support"
         default n
         help
           Say Y if you want to include support for Fire (2015)
+
+    config XIAOMI_PISSARRO
+        bool "Support Redmi Note 11 Pro+ 5G"
+        default n
+        help
+          Say Y if you want to include support for Redmi Note 11 Pro+ 5G
 endmenu
