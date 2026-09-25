@@ -9,3 +9,4 @@ lib-$(CONFIG_XIAOMI_MERLIN) += xiaomi/board-merlin.o
 lib-$(CONFIG_XIAOMI_BEGONIA) += xiaomi/board-begonia.o
 lib-$(CONFIG_XIAOMI_PISSARRO) += xiaomi/board-pissarro.o
 lib-$(CONFIG_XIAOMI_LIGHT) += xiaomi/board-light.o
+lib-$(CONFIG_XIAOMI_DANDELION) += xiaomi/board-dandelion.o
