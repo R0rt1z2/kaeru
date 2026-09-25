@@ -1,0 +1,11 @@
+config MEIZU_M711H
+    bool "Support Meizu M6"
+    default n
+    help
+      Say Y if you want to include support for Meizu M6
+
+config MEIZU_MX6
+    bool "Support Meizu MX6"
+    default n
+    help
+      Say Y if you want to include support for Meizu MX6

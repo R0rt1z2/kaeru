@@ -1,0 +1,5 @@
+config VIVO_Y7S
+    bool "Support Vivo Y7s"
+    default n
+    help
+      Say Y if you want to include support for Vivo Y7s

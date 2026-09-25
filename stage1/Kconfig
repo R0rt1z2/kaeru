@@ -1,17 +1,4 @@
-menu "Stage 1 Support"
-
-config STAGE1_SUPPORT
-	bool "Enable support for kaeru stage 1"
-	default n
-	help
-	  Enable support for loading kaeru in multiple stages.
-	  This allows to inject a small initial stage that then loads the full kaeru stage 2.
-	  This is useful for devices with very limited bootloader space or where corruption
-	  happens because of big board files.
-
-if STAGE1_SUPPORT
-
-menu "Stage1 Options"
+menu "Stage 1 Options"
     config USE_MT_PART_API
         bool "Use mt_part_* APIs for storage accesses"
         default n
@@ -72,9 +59,5 @@ menu "Stage1 Options"
     config PARTITION_GET_SIZE_BY_NAME_ADDRESS
         hex "partition_get_size_by_name() address"
         depends on !USE_MT_PART_API && !USE_LEGACY_PARTITION_API
-
-endmenu
-
-endif
 
 endmenu

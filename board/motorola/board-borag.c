@@ -17,6 +17,9 @@ void cmd_signature(const char* arg, void* data, unsigned sz) {
     fastboot_okay("");
 }
 
+// Reboot straight into bootrom (emergency download) mode.
+FASTBOOT_CMD(reboot_emergency, "oem reboot-emergency", cmd_reboot_emergency, 1);
+
 void board_early_init(void) {
     printf("Entering early init for Motorola E22\n");
 
@@ -55,8 +58,6 @@ void board_early_init(void) {
         printf("Found get_hw_sbc at 0x%08X\n", addr);
         FORCE_RETURN(addr, 0);
     }
-
-    fastboot_register("oem reboot-emergency", cmd_reboot_emergency, 1);
 }
 
 void board_late_init(void) {

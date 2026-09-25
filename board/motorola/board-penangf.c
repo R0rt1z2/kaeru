@@ -389,6 +389,9 @@ void spoof_lock_state(void) {
     PATCH_MEM(0x4C461BBA, 0x2301);
 }
 
+// kaeru bootloader lock spoofing control command.
+FASTBOOT_CMD(bldr_spoof, "oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
+
 void board_early_init(void) {
     printf("Entering early init for Motorola G13 / G23\n");
 
@@ -462,7 +465,6 @@ void board_early_init(void) {
     // Register our custom flash and erase commands to replace the original ones.
     fastboot_register("flash:", cmd_flash, 1);
     fastboot_register("erase:", cmd_erase, 1);
-    fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 1);
     fastboot_register("oem help", cmd_help, 1);
 }
 

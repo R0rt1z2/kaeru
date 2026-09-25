@@ -1,0 +1,54 @@
+config MOTOROLA_PENANGF
+    bool "Support Motorola G13 / G23"
+    default n
+    help
+      Say Y if you want to include support for Motorola G13 / G23
+
+config MOTOROLA_FOGOROW
+    bool "Support Motorola G24"
+    default n
+    help
+      Say Y if you want to include support for Motorola G24
+
+config MOTOROLA_LAMU
+    bool "Support Motorola G15 / G05"
+    default n
+    help
+      Say Y if you want to include support for Motorola G15 / G05
+
+config MOTOROLA_LAMULG
+    bool "Support Motorola E15"
+    default n
+    help
+      Say Y if you want to include support for Motorola E15
+
+config MOTOROLA_BORAGO
+    bool "Support Motorola E22i"
+    default n
+    help
+      Say Y if you want to include support for Motorola E22i
+
+config MOTOROLA_LAGOS
+    bool "Support Motorola G06"
+    default n
+    help
+      Say Y if you want to include support for Motorola G06
+
+config MOTOROLA_LAMUC
+    bool "Support Motorola G17 / G17 Power"
+    default n
+    help
+      Say Y if you want to include support for Motorola G17 / G17 Power
+
+config MOTOROLA_HAWAIIP
+    bool "Support Motorola G22"
+    default n
+    help
+      Say Y if you want to include support for Motorola G22
+
+config MOTOROLA_ELLIS
+    bool "Support Motorola Moto G Pure 2021"
+    select MEDIATEK_MT6765
+    default n
+    help
+      Say Y if you want to include support for Motorola Moto G Pure 2021

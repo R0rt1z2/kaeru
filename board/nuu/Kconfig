@@ -1,0 +1,11 @@
+config NUU_NUU_A1
+    bool "Support NUU A1"
+    default n
+    help
+      Say Y if you want to include support for NUU A1
+
+config NUU_N5004LA
+    bool "Support OmniPod 5 PDM"
+    default n
+    help
+      Say Y if you want to include support for OmniPod 5 PDM

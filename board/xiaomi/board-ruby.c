@@ -155,6 +155,9 @@ static void spoof_lock_state(void) {
     }
 }
 
+// kaeru bootloader lock spoofing control command.
+FASTBOOT_CMD(bldr_spoof, "oem bldr_spoof", cmd_spoof_bootloader_lock, 0);
+
 void board_early_init(void) {
     printf("Entering early init for Redmi Note 12 Pro/Pro+/Discovery 5G/Pro+ 5G\n");
 
@@ -214,9 +217,6 @@ void board_early_init(void) {
 
         PATCH_CALL(hook, (void *)stub, TARGET_THUMB);
     }
-
-    // Register our custom fastboot commands.
-    fastboot_register("oem bldr_spoof", cmd_spoof_bootloader_lock, 0);
 }
 
 void board_late_init(void) {

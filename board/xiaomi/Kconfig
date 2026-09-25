@@ -1,0 +1,65 @@
+config XIAOMI_NIKEL
+    bool "Support Redmi Note 4"
+    default n
+    help
+      Say Y if you want to include support for Redmi Note 4
+
+config XIAOMI_ROSEMARY
+    bool "Support Redmi 10S / POCO M5s"
+    default n
+    help
+      Say Y if you want to include support for Redmi 10S / POCO M5s
+
+config XIAOMI_EARTH
+    bool "Support Redmi 12C / POCO C55"
+    default n
+    help
+      Say Y if you want to include support for Redmi 12C / POCO C55
+
+config XIAOMI_FLEUR
+    bool "Support Redmi Note 11S 4G"
+    default n
+    help
+      Say Y if you want to include support for Redmi Note 11S 4G
+
+config XIAOMI_RUBY
+    bool "Support Redmi Note 12 Pro/Pro+/Discovery 5G/Pro+ 5G"
+    default n
+    help
+      Say Y if you want to include support for Redmi Note 12 Pro/Pro+/Discovery 5G/Pro+ 5G
+
+config XIAOMI_FIRE
+    bool "Support Redmi 12 4G"
+    default n
+    help
+      Say Y if you want to include support for Redmi 12 4G
+
+config XIAOMI_LANCELOT
+    bool "Support Redmi 9/Redmi 9 Prime"
+    default n
+    help
+      Say Y if you want to include support for Redmi 9/Redmi 9 Prime
+
+config XIAOMI_MERLIN
+    bool "Support Redmi 10X 4G/Redmi Note 9"
+    default n
+    help
+      Say Y if you want to include support for Redmi 10X 4G/Redmi Note 9
+
+config XIAOMI_BEGONIA
+    bool "Support Redmi Note 8 Pro"
+    default n
+    help
+      Say Y if you want to include support for Redmi Note 8 Pro
+
+config XIAOMI_PISSARRO
+    bool "Support Redmi Note 11 Pro+ 5G"
+    default n
+    help
+      Say Y if you want to include support for Redmi Note 11 Pro+ 5G
+
+config XIAOMI_LIGHT
+    bool "Support POCO M4 5G / Redmi 10 5G / Redmi 11 Prime 5G / Redmi Note 11E/11R"
+    default n
+    help
+      Say Y if you want to include support for POCO M4 5G / Redmi 10 5G / Redmi 11 Prime 5G / Redmi Note 11E/11R

@@ -170,24 +170,16 @@ class DeviceSetup:
         return None
 
     def check_existing_device(self, codename, vendor):
-        kconfig_path = self.BOARDS_DIR / 'Kconfig'
-        makefile_path = self.BOARDS_DIR / 'Makefile'
-        
-        if kconfig_path.exists():
-            kconfig_content = kconfig_path.read_text()
-            if f'CONFIG_{vendor}_{codename}' in kconfig_content:
-                self.log(
-                    'ERROR',
-                    f'Device {vendor}_{codename} already exists in board/Kconfig',
-                )
-                return False
+        symbol = re.compile(rf'\b{vendor}_{codename}\b')
 
-        if makefile_path.exists():
-            makefile_content = makefile_path.read_text()
-            if f'CONFIG_{vendor}_{codename}' in makefile_content:
+        for path in sorted(self.BOARDS_DIR.glob('*/Kconfig')) + sorted(
+            self.BOARDS_DIR.glob('*/Makefile')
+        ):
+            if symbol.search(path.read_text()):
                 self.log(
                     'ERROR',
-                    f'Device {vendor}_{codename} already exists in board/Makefile',
+                    f'Device {vendor}_{codename} already exists in '
+                    f'{path.relative_to(self.ROOT_DIR)}',
                 )
                 return False
 
@@ -214,76 +206,87 @@ class DeviceSetup:
 
         return False
 
-    def add_device_to_kconfig(self, vendor, codename, model):
-        self.log('STEP', 'Adding device entry to board/Kconfig')
-
+    def register_vendor_kconfig(self, vendor_path):
         kconfig_path = self.BOARDS_DIR / 'Kconfig'
         if not kconfig_path.exists():
-            self.log('ERROR', 'Kconfig file not found')
+            self.log('ERROR', 'board/Kconfig file not found')
             return False
 
-        kconfig_content = kconfig_path.read_text()
+        source_line = f'source "board/{vendor_path}/Kconfig"'
+        lines = kconfig_path.read_text().splitlines()
+        if source_line in lines:
+            return True
 
-        match = re.search(r'^endmenu', kconfig_content, re.MULTILINE)
-        if not match:
-            self.log(
-                'ERROR',
-                'Could not find end of Device Support section in Kconfig',
-            )
+        sources = [i for i, l in enumerate(lines) if l.startswith('source ')]
+        if not sources:
+            self.log('ERROR', 'Could not find vendor sources in board/Kconfig')
             return False
 
-        device_section_end = match.start()
-        self.log(
-            'DEBUG',
-            f'Found Device Support section endmenu at position: {device_section_end}',
-        )
+        # Keep the vendor list sorted alphabetically
+        index = sources[-1] + 1
+        for i in sources:
+            if lines[i] > source_line:
+                index = i
+                break
 
-        vendor_upper = self.to_upper(vendor)
+        lines.insert(index, source_line)
+        kconfig_path.write_text('\n'.join(lines) + '\n')
+
+        self.log('DEBUG', f'Registered board/{vendor_path}/Kconfig')
+        return True
+
+    def add_device_to_kconfig(self, vendor, codename, model):
+        vendor_path = self.sanitize_vendor_path(vendor)
+        vendor_dir = self.BOARDS_DIR / vendor_path
+        kconfig_path = vendor_dir / 'Kconfig'
+
+        self.log('STEP', f'Adding device entry to board/{vendor_path}/Kconfig')
+
+        vendor_dir.mkdir(parents=True, exist_ok=True)
+
+        vendor_upper = self.sanitize_config_name(vendor)
         codename_upper = self.to_upper(codename)
 
-        new_entry = f"""
-    config {vendor_upper}_{codename_upper}
-        bool "Support {model}"
-        default n
-        help
-          Say Y if you want to include support for {model}
+        new_entry = f"""config {vendor_upper}_{codename_upper}
+    bool "Support {model}"
+    default n
+    help
+      Say Y if you want to include support for {model}
 """
 
-        new_content = (
-            kconfig_content[:device_section_end]
-            + new_entry
-            + kconfig_content[device_section_end:]
-        )
+        content = kconfig_path.read_text() if kconfig_path.exists() else ''
+        if content.strip():
+            new_entry = content.rstrip('\n') + '\n\n' + new_entry
 
-        kconfig_path.write_text(new_content)
+        kconfig_path.write_text(new_entry)
 
-        self.log('SUCCESS', 'Device entry added to board/Kconfig')
+        if not self.register_vendor_kconfig(vendor_path):
+            return False
+
+        self.log('SUCCESS', f'Device entry added to board/{vendor_path}/Kconfig')
         return True
 
     def add_device_to_makefile(self, vendor, codename):
-        self.log('STEP', 'Adding device entry to board/Makefile')
-
-        makefile_path = self.BOARDS_DIR / 'Makefile'
-
         vendor_path = self.sanitize_vendor_path(vendor)
-        vendor_upper = self.to_upper(vendor)
+        makefile_path = self.BOARDS_DIR / vendor_path / 'Makefile'
+
+        self.log('STEP', f'Adding device entry to board/{vendor_path}/Makefile')
+
+        vendor_upper = self.sanitize_config_name(vendor)
         codename_upper = self.to_upper(codename)
 
-        if makefile_path.exists() and makefile_path.stat().st_size > 0:
-            with open(makefile_path, 'r+') as f:
-                content = f.read()
-                if not content.endswith('\n'):
-                    f.write('\n')
-                    self.log(
-                        'DEBUG', 'Added missing newline at the end of Makefile'
-                    )
+        content = makefile_path.read_text() if makefile_path.exists() else ''
+        if content and not content.endswith('\n'):
+            content += '\n'
+            self.log('DEBUG', 'Added missing newline at the end of Makefile')
 
-        with open(makefile_path, 'a') as f:
-            f.write(
-                f'lib-$(CONFIG_{vendor_upper}_{codename_upper}) += {vendor_path}/board-{codename}.o\n'
-            )
+        content += (
+            f'lib-$(CONFIG_{vendor_upper}_{codename_upper}) += '
+            f'{vendor_path}/board-{codename}.o\n'
+        )
+        makefile_path.write_text(content)
 
-        self.log('SUCCESS', 'Device entry added to board/Makefile')
+        self.log('SUCCESS', f'Device entry added to board/{vendor_path}/Makefile')
         return True
 
     def create_board_file(self, vendor, codename, model, copyright):
@@ -349,7 +352,7 @@ void board_late_init(void) {{
             self.log('ERROR', 'Failed to generate defconfig using parse.py')
             return False
 
-        vendor_upper = self.to_upper(vendor)
+        vendor_upper = self.sanitize_config_name(vendor)
         codename_upper = self.to_upper(codename)
 
         with open(defconfig_path, 'a') as f:
@@ -428,7 +431,7 @@ void board_late_init(void) {{
         self.log('INFO', f'  SoC: {soc_internal}')
         self.log('INFO', f'  Copyright: {copyright}')
 
-        vendor_upper = self.to_upper(vendor)
+        vendor_upper = self.sanitize_config_name(vendor)
         codename_upper = self.to_upper(codename)
 
         if not self.check_existing_device(codename_upper, vendor_upper):

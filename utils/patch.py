@@ -156,8 +156,7 @@ def main() -> None:
     )
 
     # This refers to stage1, which is used to load the actual kaeru payload.
-    # Right now only ARMv7 based LKs can boot kaeru without it, but the idea
-    # is to enforce this everywhere, so it'll eventually become mandatory.
+    # It is now mandatory for every device.
     parser.add_argument(
         '-l', '--loader', help='First stage loader for the payload'
     )

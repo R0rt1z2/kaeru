@@ -1,0 +1,5 @@
+config TECNO_LH8N
+    bool "Support Tecno Pova 5 Pro 5G"
+    default n
+    help
+      Say Y if you want to include support for Tecno Pova 5 Pro 5G
