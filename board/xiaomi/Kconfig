@@ -63,3 +63,9 @@ config XIAOMI_LIGHT
     default n
     help
       Say Y if you want to include support for POCO M4 5G / Redmi 10 5G / Redmi 11 Prime 5G / Redmi Note 11E/11R
+
+config XIAOMI_DANDELION
+    bool "Support Redmi 9A/Redmi 10A/Redmi 9AT/Redmi 9i/Redmi 9A Sport"
+    default n
+    help
+      Say Y if you want to include support for Redmi 9A/Redmi 10A/Redmi 9AT/Redmi 9i/Redmi 9A Sport
