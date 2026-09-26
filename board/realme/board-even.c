@@ -9,11 +9,6 @@
 #define VOLUME_UP 17
 #define VOLUME_DOWN 1
 
-static int dprintf(const char* fmt, ...) {
-    return ((int (*)(const char*))(0x4C441E28 | 1))(fmt);
-}
-
-
 void board_early_init(void) {
     printf("Entering early init for realme C25/S/Narzo 50A\n");
 
@@ -41,13 +36,13 @@ void board_early_init(void) {
     // xrefs because the body sits in an unanalyzed code gap; once located, branch
     // past the sec_set_device_lock call so first-boot doesn't force-lock the device.
     FORCE_RETURN(0x4c47a9e8, 1);
-    dprintf("get_sboot_state Patched\n");
+    printf("get_sboot_state Patched\n");
 
     // get_lock_state (FUN_4c47bbd8) stores (lock_state != 3) as the locked flag
     // (`subs r3,#3` then `movne r3,#1`). Overwrite the `subs r3,#3` at 0x4c47bbf0
     // with `movs r3,#1` so it always reports locked.
     PATCH_MEM(0x4c47bbf0, 0x2301);
-    dprintf("get_lock_state Patched\n");
+    printf("get_lock_state Patched\n");
 
     // fastboot_init (FUN_4c42f098) publishes the getvar values from three
     // separate helpers, NOT from get_lock_state. Force the two return-value
@@ -58,7 +53,7 @@ void board_early_init(void) {
     // 0x4c42ede8), but their deny branches are NOP'd above, so forcing it is safe.
     FORCE_RETURN(0x4c47d4fc, 0);
     FORCE_RETURN(0x4c47d4ac, 1);
-    dprintf("fastboot getvar Patched\n");
+    printf("fastboot getvar Patched\n");
 
     // androidboot.verifiedbootstate= is written into the kernel cmdline by
     // FUN_4c4558dc: it reads a global boot-state value and dispatches via tbb
@@ -70,7 +65,7 @@ void board_early_init(void) {
     //   NOP 0x4c4558e8  bhi (bounds check, now harmless)
     PATCH_MEM(0x4c4558e6, 0x2300);
     NOP(0x4c4558e8, 1);
-    dprintf("verified_boot_state Patched\n");
+    printf("verified_boot_state Patched\n");
 
     // avb boot/recovery verify (FUN_4c46e37c) writes the same boot-state global
     // and would undo the green above: it inits the state to 3 (red) and, on an
@@ -85,7 +80,7 @@ void board_early_init(void) {
     // (iVar4) is zeroed and discarded when auth isn't required.
     PATCH_MEM(0x4c46e3d0, 0x2200);
     PATCH_MEM(0x4c46e4fa, 0x2300);
-    dprintf("avb_boot_state_green Patched\n");
+    printf("avb_boot_state_green Patched\n");
 
     // fastboot command dispatch (FUN_4c42ecc0) runs two per-command security
     // gates that deny execution depending on the (spoofed) lock state. NOP the
@@ -96,7 +91,7 @@ void board_early_init(void) {
     NOP(0x4c42edbe, 1);
     NOP(0x4c42ede2, 1);
     NOP(0x4c42edec, 1);
-    dprintf("fastboot_handler Patched\n");
+    printf("fastboot_handler Patched\n");
 
     // Security policy extractors over the SEC_POLICY table (FUN_4c418908):
     // FUN_4c418a3c = (val & 3) >> 1 (dl_policy) and FUN_4c418a48 = val & 1
@@ -104,13 +99,13 @@ void board_early_init(void) {
     // flash restrictions, matching the RMX2156 port.
     FORCE_RETURN(0x4c418a3c, 0);
     FORCE_RETURN(0x4c418a48, 0);
-    dprintf("policy Patched\n");
+    printf("policy Patched\n");
 
     // avb_append_options_2 (0x4c467a30) computes an "is_unlocked" flag and stores
     // it at 0x4c467a5c; the value written on entry is 0 (locked). NOP-ing the store
     // keeps avb reporting locked always.
     NOP(0x4c467a5c, 1);
-    dprintf("avb_append_options Patched\n");
+    printf("avb_append_options Patched\n");
 
 #endif
 
