@@ -6,8 +6,15 @@
 
 #include <board_ops.h>
 
+#define VOLUME_UP 0
+#define VOLUME_DOWN 17
+
 static int is_brom_cmd_disabled(void) {
     return (*(volatile uint32_t*)(0x11CE0060) >> 8) & 1;
+}
+
+static void mt_disp_show_boot_logo(void) {
+    ((void (*)(void))(0x4C4057BC | 1))();
 }
 
 int is_partition_protected(const char* partition) {
@@ -212,6 +219,28 @@ void board_early_init(void) {
 
 void board_late_init(void) {
     printf("Entering late init for Motorola G24\n");
+
+    // The stock bootloader has the worst key combo handling I've ever seen.
+    // It works whenever it feels like it, making it a nightmare to enter
+    // recovery or fastboot mode through key combos.
+    //
+    // This patch restores expected behavior:
+    // - Volume Up -> Recovery
+    // - Volume Down -> Fastboot
+    if (mtk_detect_key(VOLUME_UP)) {
+        mt_disp_show_boot_logo();
+        set_bootmode(BOOTMODE_RECOVERY);
+    } else if (mtk_detect_key(VOLUME_DOWN)) {
+        set_bootmode(BOOTMODE_FASTBOOT);
+    }
+
+    bootmode_t mode = get_bootmode();
+    if (mode != BOOTMODE_NORMAL && mode != BOOTMODE_FASTBOOT
+        && mode != BOOTMODE_POWEROFF_CHARGING &&  !is_unknown_mode(mode)) {
+        // Show the current boot mode on screen when not performing a normal boot.
+        // This is standard behavior in many LK images, but not in this one by default.
+        show_bootmode(mode);
+    }
 
     // Suppresses the bootloader unlock warning shown during boot on
     // unlocked devices. In addition to the visual warning, it also
