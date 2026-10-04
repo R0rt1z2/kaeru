@@ -4,9 +4,10 @@ void mtk_wdt_reset(void) {
     /* first kick the watchdog to ensure it's alive */
     writel(MTK_WDT_RESTART_KEY, MTK_WDT_RESTART);
 
-    /* configure for immediate reset: enable external signal and IRQ mode
-     * but DON'T enable the watchdog timer itself, we want SW reset */
-    writel(MTK_WDT_MODE_KEY | MTK_WDT_MODE_EXTEN | MTK_WDT_MODE_IRQ, MTK_WDT_MODE);
+    /* configure for a hardware reset: external signal plus auto restart so
+     * the device comes back without waiting on the power key. IRQ mode must
+     * stay clear, otherwise SWRST only raises an interrupt and we just hang */
+    writel(MTK_WDT_MODE_KEY | MTK_WDT_MODE_EXTEN | MTK_WDT_MODE_AUTO_RESTART, MTK_WDT_MODE);
 
     /* trigger the actual software reset */
     writel(MTK_WDT_SWRST_KEY, MTK_WDT_SWRST);
