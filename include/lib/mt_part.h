@@ -28,6 +28,7 @@ typedef struct {
 typedef struct {
     unsigned long start_sect;
     unsigned long nr_sects;
+    unsigned long part_attr;
     unsigned int part_id;
     char *name;
     void *info;
