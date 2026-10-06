@@ -1,3 +1,9 @@
+config HUAWEI_DURA
+    bool "Support Huawei Y5 Prime 2018"
+    default n
+    help
+      Say Y if you want to include support for Huawei Y5 Prime 2018
+
 config HUAWEI_MAYA
     bool "Support Huawei Y5/Y6 2017"
     default n
