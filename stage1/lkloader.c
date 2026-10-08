@@ -83,8 +83,13 @@ ssize_t load_kaeru_partition(void* buffer, size_t buffer_size) {
 
             free(hdr);
 
+            if (data_size > buffer_size) {
+                LOG("kaeru data exceeds buffer size\n");
+                return -1;
+            }
+
             ssize_t kaeru_read = partition_read(part_name, data_start, buffer, (size_t)data_size);
-            if (kaeru_read <= 0)
+            if (kaeru_read != (ssize_t)data_size)
                 return -1;
 
             return (ssize_t)data_size;
