@@ -83,9 +83,12 @@ void parse_bootloader_messages(void) {
     printf("Found '%s', forcing %s\n", misc_msg.command, bootmode2str(mode));
 
     // Clear the command so the next boot does not loop back into this mode,
-    // unless it is a sticky one, where looping back is the whole point.
-    if (!misc_command_is_sticky(misc_msg.command)) {
-        memset(&misc_msg, 0, sizeof(misc_msg));
+    // unless it is a sticky one, where looping back is the whole point, or
+    // 'boot-fastboot', which the recovery ramdisk reads for itself. Only the
+    // command goes, recovery still needs its args.
+    if (!misc_command_is_sticky(misc_msg.command) &&
+        !misc_command_is_for_ramdisk(misc_msg.command)) {
+        memset(misc_msg.command, 0, sizeof(misc_msg.command));
         partition_write("misc", 0, (uint8_t*)&misc_msg, sizeof(misc_msg));
     }
 
