@@ -332,7 +332,11 @@ const char* next_token(const char* p, char* out, size_t len) {
     n = strcspn(p, " ");
     copy = n < len - 1 ? n : len - 1;
 
-    memcpy(out, p, copy);
+    // Byte at a time on purpose. Tokens start wherever the command put
+    // them, and the optimised memcpy faults on unaligned pointers.
+    for (size_t i = 0; i < copy; i++) {
+        out[i] = p[i];
+    }
     out[copy] = '\0';
 
     return p + n;
