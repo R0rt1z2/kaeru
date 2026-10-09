@@ -1,11 +1,12 @@
 //
-// SPDX-FileCopyrightText: 2025 Shomy <shomy@shomy.is-a.dev>
-//                         2025 Roger Ortiz <roger@r0rt1z2.com>
+// SPDX-FileCopyrightText: 2025-2026 Shomy <shomy@shomy.is-a.dev>
+//                         2025-2026 Roger Ortiz <roger@r0rt1z2.com>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
 #include <lib/common.h>
 #include <lib/string.h>
+#include <lib/image.h>
 #include <stage1/lkloader.h>
 #include <stage1/memory.h>
 
@@ -29,59 +30,42 @@ ssize_t load_kaeru_partition(void* buffer, size_t buffer_size) {
     LOG("Partition '%s' size: 0x%X bytes\n", part_name, (uint32_t)lk_size);
 
     size_t pos = 0;
-    uint8_t min_hdr[MIN_HEADER_SIZE];
+    img_hdr_t hdr;
 
-    while (pos + sizeof(min_hdr) <= lk_size) {
-        ssize_t read = partition_read(part_name, pos, min_hdr, sizeof(min_hdr));
-        if (read != sizeof(min_hdr))
+    while (pos + sizeof(img_hdr_t) <= lk_size) {
+        ssize_t read = partition_read(part_name, pos, (uint8_t*)&hdr, sizeof(img_hdr_t));
+        if (read != (ssize_t)sizeof(img_hdr_t))
             break;
 
-        uint32_t magic = LE32(min_hdr);
-        if (magic != LK_MAGIC)
+        if (hdr.magic != IMG_MAGIC)
             break;
 
-        const char* pname = (const char*)(min_hdr + 8);
-        uint32_t ext_magic = LE32(min_hdr + 48);
-        uint8_t is_ext = (ext_magic == LK_EXT_MAGIC);
+        uint8_t is_ext = (hdr.ext_magic == IMG_EXT_MAGIC);
 
-        uint32_t hsz = is_ext ? LE32(min_hdr + 52) : DEFAULT_HEADER_SIZE;
-        if (hsz < DEFAULT_HEADER_SIZE)
-            hsz = DEFAULT_HEADER_SIZE;
+        uint32_t hsz = is_ext ? hdr.hdr_sz : IMG_HDR_SZ;
+        if (hsz < IMG_HDR_SZ)
+            hsz = IMG_HDR_SZ;
 
         if (pos + hsz > lk_size) {
             LOG("Header size exceeds partition bounds\n");
             break;
         }
 
-        uint8_t* hdr = malloc(hsz);
-        if (!hdr)
-            return -1;
 
-        read = partition_read(part_name, pos, hdr, hsz);
-        if (read != hsz) {
-            free(hdr);
-            break;
-        }
+        uint64_t data_size = is_ext ? ((uint64_t)hdr.dsz_ext << 32) | hdr.dsz : hdr.dsz;
+        uint32_t align = is_ext ? hdr.align_sz : DEFAULT_ALIGNMENT;
 
-        uint64_t data_size = is_ext ?
-            (((uint64_t)LE32(hdr + 72) << 32) | LE32(hdr + 4)) :
-            LE32(hdr + 4);
-
-        uint32_t align = is_ext ? LE32(hdr + 68) : DEFAULT_ALIGNMENT;
         if (!align)
             align = DEFAULT_ALIGNMENT;
 
-        if (strncmp(pname, "kaeru", 5) == 0 && pname[5] == '\0') {
+        if (strncmp(hdr.name, "kaeru", 5) == 0 && hdr.name[5] == '\0') {
             LOG("Found kaeru partition!\n");
 
             size_t data_start = pos + hsz;
             if (data_start + data_size > lk_size) {
                 LOG("kaeru data exceeds partition bounds\n");
-                free(hdr);
                 break;
             }
-
-            free(hdr);
 
             if (data_size > buffer_size) {
                 LOG("kaeru data exceeds buffer size\n");
@@ -95,17 +79,18 @@ ssize_t load_kaeru_partition(void* buffer, size_t buffer_size) {
             return (ssize_t)data_size;
         }
 
-        LOG("Skipping partition: %s\n", pname);
+        LOG("Skipping partition: %s\n", hdr.name);
 
         size_t next = pos + hsz + data_size;
         size_t rem = next % align;
         if (rem)
             next += (align - rem);
 
-        free(hdr);
-
         if (next <= pos)
             return -1;
+
+        if (is_ext && hdr.img_list_end)
+            break;
 
         pos = next;
     }
