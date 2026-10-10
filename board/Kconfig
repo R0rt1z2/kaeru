@@ -1,5 +1,6 @@
 menu "Device Support"
 
+source "board/acer/Kconfig"
 source "board/amazon/Kconfig"
 source "board/bq/Kconfig"
 source "board/digit/Kconfig"
