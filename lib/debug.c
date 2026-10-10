@@ -47,7 +47,19 @@ int printf(const char* fmt, ...) {
 }
 
 int video_printf(const char* fmt, ...) {
-    return ((int (*)(const char*))(CONFIG_VIDEO_PRINTF_ADDRESS | 1))(fmt);
+    char buf[256];
+    va_list args;
+    va_start(args, fmt);
+
+    // We can't hand our va_list to LK, so format here and only pass
+    // it the result. Forwarding fmt alone loses every argument past
+    // the second one.
+    int ret = npf_vsnprintf(buf, sizeof(buf), fmt, args);
+
+    va_end(args);
+
+    ((void (*)(const char*, ...))(CONFIG_VIDEO_PRINTF_ADDRESS | 1))("%s", buf);
+    return ret;
 }
 
 #ifdef CONFIG_FRAMEBUFFER_SUPPORT
