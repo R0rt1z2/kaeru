@@ -50,13 +50,22 @@ const struct part_info* storage_part_get(int index) {
     return &ctx.part.parts[index];
 }
 
+// Checks that 'size' bytes at 'off' stay inside the partition. Done in 64
+// bits, since partitions past 4GiB would otherwise wrap their own size.
+static int storage_part_in_bounds(const struct part_info* part,
+                                  uint64_t off, size_t size) {
+    uint64_t part_size = (uint64_t)part->size_blocks * BLOCK_SIZE;
+
+    return off <= part_size && size <= part_size - off;
+}
+
 // Reads from a partition.
 ssize_t storage_part_read(const struct part_info* part, void *dst,
                           uint64_t off, size_t size) {
     if (!part || !dst || !size)
         return -1;
 
-    if (size > part->size_blocks * BLOCK_SIZE)
+    if (!storage_part_in_bounds(part, off, size))
         return -1;
 
     if (!ctx.initialized) {
@@ -89,7 +98,7 @@ ssize_t storage_part_write(const struct part_info* part, void *src,
     if (!part || !src || !size)
         return -1;
 
-    if (size > part->size_blocks * BLOCK_SIZE)
+    if (!storage_part_in_bounds(part, off, size))
         return -1;
 
     if (!ctx.initialized) {
