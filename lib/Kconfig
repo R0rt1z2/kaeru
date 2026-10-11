@@ -156,6 +156,28 @@ menu "Fastboot Support"
         endif
     endmenu
 
+    config FASTBOOT_OEM_TABLE
+        bool "Register oem commands via the LK's in-memory command table"
+        depends on FASTBOOT_STYLE_COMBINED
+        default n
+        help
+          Say Y for customized LKs (e.g. Motorola) that keep their oem
+          commands in a fixed array with no register function.
+
+    if FASTBOOT_OEM_TABLE
+        config FASTBOOT_OEM_CMD_HEAD
+            hex "Command table head-pointer address"
+            default 0x0
+            help
+              Global holding the start pointer of the oem command array.
+
+        config FASTBOOT_OEM_CMD_TAIL
+            hex "Command table tail-pointer address"
+            default 0x0
+            help
+              Global holding the end pointer. Leave both at 0 to skip.
+    endif
+
     config FASTBOOT_HELP_COMMAND
         def_bool FASTBOOT_CMDLIST_ADDRESS != 0x0
         depends on FASTBOOT_STYLE_STANDARD

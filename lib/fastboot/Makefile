@@ -3,5 +3,6 @@ obj-y += cmd_version.o
 obj-$(CONFIG_FASTBOOT_HELP_COMMAND) += cmd_help.o
 obj-$(CONFIG_FASTBOOT_MEM_COMMAND) += cmd_mem.o
 obj-$(CONFIG_ENVIRONMENT_SUPPORT) += cmd_env.o
+obj-$(CONFIG_FASTBOOT_OEM_TABLE) += oem_table.o
 obj-$(CONFIG_IDMELIB_SUPPORT) += cmd_idme.o
 obj-$(CONFIG_STORAGE_SUPPORT) += cmd_partitions.o

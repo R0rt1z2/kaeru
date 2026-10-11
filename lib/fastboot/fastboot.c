@@ -5,6 +5,10 @@
 
 #include <lib/fastboot.h>
 
+#ifdef CONFIG_FASTBOOT_OEM_TABLE
+#include <lib/oem_table.h>
+#endif
+
 #if defined(CONFIG_FASTBOOT_STYLE_COMBINED)
 
 static void (*const _send_response)(const char* status, const char* fmt, ...) =
@@ -28,9 +32,13 @@ void fastboot_info(const char* reason) {
 void fastboot_register(const char* prefix,
                        void (*handle)(const char* arg, void* data, unsigned sz),
                        unsigned char security_enabled) {
+    (void)security_enabled;
+#ifdef CONFIG_FASTBOOT_OEM_TABLE
+    oem_table_add_command(prefix, handle);
+#else
     (void)prefix;
     (void)handle;
-    (void)security_enabled;
+#endif
 }
 
 void fastboot_publish(const char* name, const char* value) {
