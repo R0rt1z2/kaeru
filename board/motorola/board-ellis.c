@@ -5,86 +5,33 @@
 
 #include <board_ops.h>
 
-static void* malloc(size_t size) {
-    return ((void* (*)(size_t))(CONFIG_MALLOC_ADDRESS | 1))(size);
-}
+static void cmd_device_mode(const char* arg, void* data, unsigned sz) {
+    (void)data;
+    (void)sz;
 
-// Motorola's OEM command dispatcher passes (arg_count, arg_array) rather
-// than the standard (arg, data, sz) used by vanilla MediaTek bootloaders.
-// This means OEM commands must be defined separately from common ones.
-static int cmd_kaeru_version(int arg_count, const char** args) {
-    (void)arg_count;
-    (void)args;
-
-    char buf[64];
-    npf_snprintf(buf, sizeof(buf), "kaeru v%s", KAERU_VERSION);
-    fastboot_info(buf);
-    print_kaeru_info(video_printf);
-    return 0;
-}
-
-static int cmd_device_mode(int arg_count, const char** args) {
-    const char* subcmd = (arg_count > 1) ? args[1] : NULL;
-
-    if (!subcmd) {
+    if (!arg || !*arg) {
         char* mode = get_env("kaeru.device_mode");
         char buf[64];
         npf_snprintf(buf, sizeof(buf), "device_mode=%s", mode ? mode : "unlocked");
         fastboot_info(buf);
         fastboot_info("");
         fastboot_info("Usage: fastboot oem device-mode <engineering|unlocked>");
-        return 0;
-    }
-
-    if (strcmp(subcmd, "engineering") == 0) {
-        set_env("kaeru.device_mode", "engineering");
-        fastboot_info("Device mode set to engineering.");
-        fastboot_info("Reboot for changes to take effect.");
-        return 0;
-    }
-
-    if (strcmp(subcmd, "unlocked") == 0) {
-        set_env("kaeru.device_mode", "unlocked");
-        fastboot_info("Device mode set to unlocked.");
-        fastboot_info("Reboot for changes to take effect.");
-        return 0;
-    }
-
-    fastboot_info("Unknown mode. Valid options: engineering, unlocked");
-    return 3;
-}
-
-// Yes, we malloc a whole new table and copy everything just to add one
-// command. Hooking the jump table directly crashes LK, so here we are.
-static void fastboot_inject(const char* name, void* handler) {
-    volatile uint32_t* got_start = (volatile uint32_t*)0x48143524;
-    volatile uint32_t* got_end = (volatile uint32_t*)0x48143194;
-
-    uint32_t old_start = *got_start;
-    uint32_t old_end = *got_end;
-    int old_size = old_end - old_start;
-    int new_size = old_size + 20;
-
-    uint32_t* new_table = (uint32_t*)malloc(new_size);
-    if (!new_table)
+        fastboot_okay("");
         return;
+    }
 
-    memcpy(new_table, (void*)old_start, old_size);
+    if (strcmp(arg, "engineering") == 0 || strcmp(arg, "unlocked") == 0) {
+        set_env("kaeru.device_mode", (char*)arg);
+        fastboot_info("Device mode updated.");
+        fastboot_info("Reboot for changes to take effect.");
+        fastboot_okay("");
+        return;
+    }
 
-    uint32_t* entry = (uint32_t*)((uint8_t*)new_table + old_size);
-    entry[0] = 0;
-    entry[1] = 1;
-    entry[2] = 0;
-    entry[3] = (uint32_t)name;
-    entry[4] = (uint32_t)handler | 1;
-
-    *got_start = (uint32_t)new_table;
-    *got_end = (uint32_t)new_table + new_size;
-
-    arch_clean_invalidate_cache_range((uint32_t)got_start, sizeof(uint32_t));
-    arch_clean_invalidate_cache_range((uint32_t)got_end, sizeof(uint32_t));
-    arch_clean_invalidate_cache_range((uint32_t)new_table, new_size);
+    fastboot_fail("Unknown mode. Valid options: engineering, unlocked");
 }
+
+FASTBOOT_CMD(device_mode, "oem device-mode", cmd_device_mode, 1);
 
 void sp_init_hook(void) {
     char* mode = get_env("kaeru.device_mode");
@@ -118,7 +65,4 @@ void board_early_init(void) {
 
 void board_late_init(void) {
     printf("Entering late init for Motorola Moto G Pure 2021\n");
-
-    fastboot_inject("kaeru-version", cmd_kaeru_version);
-    fastboot_inject("device-mode", cmd_device_mode);
 }
