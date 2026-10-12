@@ -7,13 +7,8 @@
 
 #define BOARD_NAME "Fire TV Stick 4K / 4K Max / 4K Plus (2nd Gen)"
 
-#define DUMP_CHUNK 0x100000
-#define USB_CHUNK  0xFC00
-
 #define MEM_READ_DEFAULT 0x100
 #define MEM_READ_MAX     0x400
-
-#define MAX_FETCH_SIZE 0x100000
 
 #define BOOT_ARG_PTR             0x4CEAFFB4
 #define BOOT_ARG_USB_EXTCONN_OFF 0x180
@@ -56,10 +51,6 @@ static const char *modereason2str(enum mode_reason reason) {
         default:
             return NULL;
     }
-}
-
-static inline int usb_write(const void *buf, unsigned len) {
-    return ((int (*)(const void *, unsigned))(0x4CE27174 | 1))(buf, len);
 }
 
 static inline void cmdline_append(const char *arg) {
@@ -114,10 +105,6 @@ static inline void bootimg_parse_bootopt(const char *cmdline) {
 
 static inline void boot_linux(void) {
     ((void (*)(void))(0x4CE26928 | 1))();
-}
-
-static inline void cmd_getvar(const char *arg, void *data, unsigned sz) {
-    ((void (*)(const char *, void *, unsigned))(0x4CE27A2C | 1))(arg, data, sz);
 }
 
 static inline void cmd_flash(const char *arg, void *data, unsigned sz) {
@@ -218,52 +205,6 @@ static void cmd_erase_wrapper(const char *arg, void *data, unsigned sz) {
     cmd_erase(arg, data, sz);
 }
 
-static bool usb_write_all(const uint8_t *buf, uint32_t len) {
-    while (len) {
-        uint32_t n = len > USB_CHUNK ? USB_CHUNK : len;
-
-        if (usb_write(buf, n) < 0) {
-            return false;
-        }
-
-        buf += n;
-        len -= n;
-    }
-
-    return true;
-}
-
-static void send_range(const struct part_info *part, void *buf, uint64_t off,
-                       uint32_t len) {
-    char hdr[16];
-    npf_snprintf(hdr, sizeof(hdr), "DATA%08x", len);
-
-    if (usb_write(hdr, 12) < 0) {
-        return;
-    }
-
-    while (len) {
-        uint32_t n = len > DUMP_CHUNK ? DUMP_CHUNK : len;
-
-        if (storage_part_read(part, buf, off, n) != (ssize_t)n) {
-            printf("dump: read of %s failed at 0x%08X\n", part->name,
-                   (unsigned)off);
-            return;
-        }
-
-        if (!usb_write_all(buf, n)) {
-            printf("dump: write of %s failed at 0x%08X\n", part->name,
-                   (unsigned)off);
-            return;
-        }
-
-        off += n;
-        len -= n;
-    }
-
-    fastboot_okay("");
-}
-
 bool mem_region_find(const char *name, uint32_t *base, uint32_t *size) {
     for (uint32_t i = 0; i < ARRAY_SIZE(mem_regions); i++) {
         if (strcmp(name, mem_regions[i].name) == 0) {
@@ -274,94 +215,6 @@ bool mem_region_find(const char *name, uint32_t *base, uint32_t *size) {
     }
 
     return false;
-}
-
-static void send_mem(uint32_t base, uint32_t len, void *stage) {
-    if (!stage) {
-        fastboot_fail("No download buffer to stage through");
-        return;
-    }
-
-    char hdr[16];
-    npf_snprintf(hdr, sizeof(hdr), "DATA%08x", len);
-
-    if (usb_write(hdr, 12) < 0) {
-        return;
-    }
-
-    for (uint32_t off = 0; off < len; ) {
-        uint32_t n = (len - off) > DUMP_CHUNK ? DUMP_CHUNK : (len - off);
-
-        memcpy(stage, (const void *)(uintptr_t)(base + off), n);
-
-        if (!usb_write_all(stage, n)) {
-            printf("dump: write of 0x%08X failed at 0x%08X\n", base, off);
-            return;
-        }
-
-        off += n;
-    }
-
-    fastboot_okay("");
-}
-
-static void cmd_fetch(const char *arg, void *data, unsigned sz) {
-    const char *p = arg;
-    advance_partition_name(&p);
-
-    char name[PART_NAME_MAX + 1];
-    size_t i = 0;
-    while (p[i] && p[i] != ':' && i < PART_NAME_MAX) {
-        name[i] = p[i];
-        i++;
-    }
-    name[i] = '\0';
-
-    if (!data) {
-        fastboot_fail("No download buffer to stage through");
-        return;
-    }
-
-    uint32_t mem_base;
-    uint32_t mem_size;
-    bool is_mem = mem_region_find(name, &mem_base, &mem_size);
-
-    const struct part_info *part = NULL;
-    if (!is_mem) {
-        part = storage_part_find(name);
-        if (!part) {
-            fastboot_fail("Partition not found");
-            return;
-        }
-    }
-
-    uint64_t total = is_mem ? mem_size
-                            : (uint64_t)part->size_blocks * BLOCK_SIZE;
-    uint64_t off = 0;
-    uint64_t len = total;
-
-    if (p[i] == ':') {
-        const char *end;
-        off = parse_hex64(p + i + 1, &end);
-        len = (*end == ':') ? parse_hex64(end + 1, NULL) : total - off;
-    }
-
-    if (off > total || len > total - off) {
-        fastboot_fail("Requested range is outside the partition");
-        return;
-    }
-
-    if (len > MAX_FETCH_SIZE) {
-        fastboot_fail("Requested more than max-fetch-size");
-        return;
-    }
-
-    if (is_mem) {
-        send_mem(mem_base + (uint32_t)off, (uint32_t)len, data);
-        return;
-    }
-
-    send_range(part, data, off, (uint32_t)len);
 }
 
 static void cmd_boot(const char *arg, void *data, unsigned sz) {
@@ -413,40 +266,6 @@ static void cmd_boot(const char *arg, void *data, unsigned sz) {
     video_printf(" => Booting downloaded image (%u bytes)...          \n", sz);
 
     boot_linux();
-}
-
-static void cmd_getvar_wrapper(const char *arg, void *data, unsigned sz) {
-    const char *var = arg;
-    advance_partition_name(&var);
-
-    if (strcmp(var, "max-fetch-size") == 0) {
-        fastboot_okay("0x100000");
-        return;
-    }
-
-    if (strncmp(var, "partition-size:", 15) == 0) {
-        char value[19];
-        uint32_t mem_base;
-        uint32_t mem_size;
-
-        if (mem_region_find(var + 15, &mem_base, &mem_size)) {
-            hex64(value, mem_size);
-            fastboot_okay(value);
-            return;
-        }
-
-        const struct part_info *part = storage_part_find(var + 15);
-        if (!part) {
-            fastboot_fail("Partition not found");
-            return;
-        }
-
-        hex64(value, (uint64_t)part->size_blocks * BLOCK_SIZE);
-        fastboot_okay(value);
-        return;
-    }
-
-    cmd_getvar(arg, data, sz);
 }
 
 static void cmd_oem_dmesg(const char *arg, void *data, unsigned sz) {
@@ -529,9 +348,7 @@ static void fastboot_init_hook(const char *) {
     fastboot_register("flash:", cmd_flash_wrapper, 1);
     fastboot_register("erase:", cmd_erase_wrapper, 1);
     fastboot_register("reboot", cmd_reboot_wrapper, 1);
-    fastboot_register("fetch:", cmd_fetch, 1);
     fastboot_register("boot", cmd_boot, 1);
-    fastboot_register("getvar:", cmd_getvar_wrapper, 1);
     fastboot_register("flashing unlock_critical", cmd_unlock_critical, 1);
     fastboot_register("flashing lock_critical", cmd_lock_critical, 1);
 

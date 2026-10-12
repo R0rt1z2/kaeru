@@ -5,10 +5,6 @@
 
 #include <board_ops.h>
 
-#define DUMP_CHUNK     0x100000
-#define USB_CHUNK      0xFC00
-#define MAX_FETCH_SIZE 0x100000
-
 #define KEY_VOLUME_UP 0
 
 #define BOOT_ARG          0x562AC990
@@ -57,10 +53,6 @@ static inline void mt_power_off(void) {
 
 static inline int video_get_rows(void) {
     return ((int (*)(void))(0x5603514C | 1))();
-}
-
-static inline int usb_write(const void *buf, unsigned len) {
-    return ((int (*)(const void *, unsigned))(0x5602A000 | 1))(buf, len);
 }
 
 static inline void cmdline_append(const char *arg) {
@@ -118,10 +110,6 @@ static inline void cmd_reboot(const char *arg, void *data, unsigned sz) {
 
 static inline void cmd_reboot_bootloader(const char *arg, void *data, unsigned sz) {
     ((void (*)(const char *, void *, unsigned))(0x5602B87C | 1))(arg, data, sz);
-}
-
-static inline void cmd_getvar(const char *arg, void *data, unsigned sz) {
-    ((void (*)(const char *, void *, unsigned))(0x5602B7A0 | 1))(arg, data, sz);
 }
 
 static bool advance_partition_name(const char** partition) {
@@ -191,98 +179,6 @@ static void cmd_unlock_critical(const char *arg, void *data, unsigned sz) {
 static void cmd_lock_critical(const char *arg, void *data, unsigned sz) {
     gd.unlocked_critical = false;
     fastboot_okay("");
-}
-
-static bool usb_write_all(const uint8_t *buf, uint32_t len) {
-    while (len) {
-        uint32_t n = len > USB_CHUNK ? USB_CHUNK : len;
-
-        if (usb_write(buf, n) < 0) {
-            return false;
-        }
-
-        buf += n;
-        len -= n;
-    }
-
-    return true;
-}
-
-static void send_range(const struct part_info *part, void *buf, uint64_t off,
-                       uint32_t len) {
-    char hdr[16];
-    npf_snprintf(hdr, sizeof(hdr), "DATA%08x", (unsigned)len);
-
-    if (usb_write(hdr, 12) < 0) {
-        return;
-    }
-
-    while (len) {
-        uint32_t n = len > DUMP_CHUNK ? DUMP_CHUNK : len;
-
-        if (storage_part_read(part, buf, off, n) != (ssize_t)n) {
-            printf("dump: read of %s failed at 0x%08X\n", part->name,
-                   (unsigned)off);
-            return;
-        }
-
-        if (!usb_write_all(buf, n)) {
-            printf("dump: write of %s failed at 0x%08X\n", part->name,
-                   (unsigned)off);
-            return;
-        }
-
-        off += n;
-        len -= n;
-    }
-
-    fastboot_okay("");
-}
-
-static void cmd_fetch(const char *arg, void *data, unsigned sz) {
-    const char *p = arg;
-    advance_partition_name(&p);
-
-    char name[PART_NAME_MAX + 1];
-    size_t i = 0;
-    while (p[i] && p[i] != ':' && i < PART_NAME_MAX) {
-        name[i] = p[i];
-        i++;
-    }
-    name[i] = '\0';
-
-    if (!data) {
-        fastboot_fail("No download buffer to stage through");
-        return;
-    }
-
-    const struct part_info *part = storage_part_find(name);
-    if (!part) {
-        fastboot_fail("Partition not found");
-        return;
-    }
-
-    uint64_t total = (uint64_t)part->size_blocks * BLOCK_SIZE;
-    uint64_t off = 0;
-    uint64_t len = total;
-
-    if (p[i] == ':') {
-        const char *end;
-        off = parse_hex64(p + i + 1, &end);
-        len = (*end == ':') ? parse_hex64(end + 1, NULL) : total - off;
-    }
-
-    if (off > total || len > total - off) {
-        fastboot_fail("Requested range is outside the partition");
-        return;
-    }
-
-    if (len > MAX_FETCH_SIZE) {
-        fastboot_fail("Requested more than max-fetch-size");
-        return;
-    }
-
-    send_range(part, data, off, (uint32_t)len);
 }
 
 static void dump_log(uint32_t base, uint32_t max) {
@@ -355,32 +251,6 @@ static void cmd_oem_shutdown(const char *arg, void *data, unsigned sz) {
 FASTBOOT_CMD(shutdown, "oem shutdown", cmd_oem_shutdown, 1);
 FASTBOOT_CMD(poweroff, "oem poweroff", cmd_oem_shutdown, 1);
 
-static void cmd_getvar_wrapper(const char *arg, void *data, unsigned sz) {
-    const char *var = arg;
-    advance_partition_name(&var);
-
-    if (strcmp(var, "max-fetch-size") == 0) {
-        fastboot_okay("0x100000");
-        return;
-    }
-
-    if (strncmp(var, "partition-size:", 15) == 0) {
-        char value[19];
-
-        const struct part_info *part = storage_part_find(var + 15);
-        if (!part) {
-            fastboot_fail("Partition not found");
-            return;
-        }
-
-        hex64(value, (uint64_t)part->size_blocks * BLOCK_SIZE);
-        fastboot_okay(value);
-        return;
-    }
-
-    cmd_getvar(arg, data, sz);
-}
-
 static void blank_string(char *s, const char *name) {
     if (!s) {
         printf("Could not find the %s string\n", name);
@@ -435,8 +305,6 @@ static void fastboot_init_hook(const char *) {
     fastboot_register("flash:", cmd_flash_wrapper, 1);
     fastboot_register("erase:", cmd_erase_wrapper, 1);
     fastboot_register("reboot", cmd_reboot_wrapper, 1);
-    fastboot_register("fetch:", cmd_fetch, 1);
-    fastboot_register("getvar:", cmd_getvar_wrapper, 1);
     fastboot_register("flashing unlock_critical", cmd_unlock_critical, 1);
     fastboot_register("flashing lock_critical", cmd_lock_critical, 1);
 
