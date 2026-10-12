@@ -1,9 +1,9 @@
 lib-$(CONFIG_AMAZON_MT8516_COMMON) += amazon/board-mt8516-common.o
 lib-$(CONFIG_AMAZON_MT8163_COMMON) += amazon/board-mt8163-common.o
+lib-$(CONFIG_AMAZON_MT8183_COMMON) += amazon/board-mt8183-common.o
 lib-$(CONFIG_AMAZON_MT8163_AB) += amazon/board-mt8163-echo.o
 lib-$(CONFIG_AMAZON_MT8127_COMMON) += amazon/board-mt8127-common.o
 lib-$(CONFIG_AMAZON_CUPCAKE) += amazon/board-cupcake.o
-lib-$(CONFIG_AMAZON_MAVERICK) += amazon/board-maverick.o
 lib-$(CONFIG_AMAZON_DONUT) += amazon/board-donut.o
 lib-$(CONFIG_AMAZON_DOUGLAS) += amazon/board-douglas.o
 lib-$(CONFIG_AMAZON_ROOK) += amazon/board-rook.o

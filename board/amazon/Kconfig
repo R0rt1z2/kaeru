@@ -61,11 +61,32 @@ config AMAZON_CUPCAKE
     help
       Say Y if you want to include support for Echo Input
 
+config AMAZON_MT8183_COMMON
+    bool
+    help
+      Select this if you need to include common board code
+      for Amazon MT8183 devices.
+
 config AMAZON_MAVERICK
     bool "Support Fire HD 10 (2019)"
+    select AMAZON_MT8183_COMMON
     default n
     help
       Say Y if you want to include support for Fire HD 10 (2019)
+
+config AMAZON_ATHENA
+    bool "Support Echo Show 8 2nd Gen (2021)"
+    select AMAZON_MT8183_COMMON
+    default n
+    help
+      Say Y if you want to include support for Echo Show 8 2nd Gen (2021)
+
+config AMAZON_TRONA
+    bool "Support Fire HD 10 / Fire HD 10 Plus (2021)"
+    select AMAZON_MT8183_COMMON
+    default n
+    help
+      Say Y if you want to include support for Fire HD 10 / Fire HD 10 Plus (2021)
 
 config AMAZON_DONUT
     bool "Support Echo Dot 3rd Generation"
