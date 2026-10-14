@@ -23,6 +23,8 @@ const char* bootmode2str(bootmode_t mode) {
             return "ATEFACT";
         case BOOTMODE_ALARM:
             return "ALARM";
+        case BOOTMODE_KERNEL_POWEROFF_CHARGING:
+            return "KERNEL POWEROFF CHARGING";
         case BOOTMODE_POWEROFF_CHARGING:
             return "POWEROFF CHARGING";
         case BOOTMODE_FASTBOOT:
@@ -45,6 +47,7 @@ bool is_unknown_mode(bootmode_t mode) {
         case BOOTMODE_ADVMETA:
         case BOOTMODE_ATEFACT:
         case BOOTMODE_ALARM:
+        case BOOTMODE_KERNEL_POWEROFF_CHARGING:
         case BOOTMODE_POWEROFF_CHARGING:
         case BOOTMODE_FASTBOOT:
         case BOOTMODE_ERECOVERY:

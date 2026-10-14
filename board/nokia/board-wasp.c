@@ -22,7 +22,10 @@ enum mode_reason {
     MODE_REASON_MISC = 2,
     MODE_REASON_KEY = 3,
     MODE_REASON_RTC = 4,
+    MODE_REASON_CHARGER = 5,
 };
+
+#define BOOT_REASON_CHARGER 1
 
 static struct {
     enum mode_reason reason;
@@ -39,6 +42,8 @@ static const char* modereason2str(enum mode_reason reason) {
             return "Volume Keys";
         case MODE_REASON_RTC:
             return "RTC";
+        case MODE_REASON_CHARGER:
+            return "Charger";
         default:
             return "None";
     }
@@ -77,6 +82,12 @@ static uint32_t wdt_boot_reason(void) {
     return 0;
 }
 
+static uint32_t boot_reason(void) {
+    uint32_t base = READ32(0x48172D28);
+    if (!base) return 0;
+    return READ32(base + 0x58C8);
+}
+
 static void cmd_reboot(const char* arg, void* data, unsigned sz) {
     if (arg && arg[0] && !cmd_reboot_write_message(arg)) {
         fastboot_fail("unknown reboot target or failed to write misc");
@@ -96,8 +107,14 @@ static void real_boot_mode_select(void) {
     // RTC recovery mode.
     rtc_read(RTC_PDN1, &gd.rtc_pdn1);
 
-    // Set bootmode to BOOTMODE_NORMAL for good measure.
-    set_bootmode(BOOTMODE_NORMAL);
+    // Stock boot_mode_select (which we replaced) set KPOC on a charger boot
+    // so kernel_charging_boot() later in platform_init arms off-mode charging.
+    // Restore it here. The charger is re-checked downstream.
+    if (boot_reason() == BOOT_REASON_CHARGER) {
+        set_bootmode(BOOTMODE_KERNEL_POWEROFF_CHARGING);
+    } else {
+        set_bootmode(BOOTMODE_NORMAL);
+    }
 }
 
 static void boot_mode_select(void) {
@@ -110,6 +127,13 @@ static void boot_mode_select(void) {
     // the boot args. Act on it before anything else, like stock LK does.
     if (preloader_boot_mode()) {
         gd.reason = MODE_REASON_PRELOADER;
+        return;
+    }
+
+    // Keep the KPOC mode real_boot_mode_select() already set. The selection
+    // below is only meaningful for a real boot.
+    if (get_bootmode() == BOOTMODE_KERNEL_POWEROFF_CHARGING) {
+        gd.reason = MODE_REASON_CHARGER;
         return;
     }
 
@@ -293,7 +317,8 @@ void board_late_init(void) {
     printf("Boot mode reason: %s\n", modereason2str(gd.reason));
 
     bootmode_t mode = get_bootmode();
-    if (mode != BOOTMODE_NORMAL && mode != BOOTMODE_POWEROFF_CHARGING && !is_unknown_mode(mode)) {
+    if (mode != BOOTMODE_NORMAL && mode != BOOTMODE_POWEROFF_CHARGING &&
+        mode != BOOTMODE_KERNEL_POWEROFF_CHARGING && !is_unknown_mode(mode)) {
         show_bootmode(mode);
     }
 
