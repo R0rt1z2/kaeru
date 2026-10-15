@@ -1,0 +1,5 @@
+config ACER_T482L
+    bool "Support Acer One 8 T4-82L"
+    default n
+    help
+      Say Y if you want to include support for Acer One 8 T4-82L
