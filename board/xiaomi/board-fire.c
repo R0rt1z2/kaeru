@@ -127,6 +127,17 @@ void board_early_init(void) {
 
     uint32_t addr = 0;
 
+    // Newer LKs from HyperOS2 have 3 security checks
+    // that make LK crash if the older vulnerable preloader
+    // doesn't pass boottag correctly, nop them out.
+    addr = SEARCH_PATTERN(LK_START, LK_END, 0xE92D, 0x4FF0, 0x4682, 0xF8DF);
+    if (addr) {
+        printf("Found sec_rom_info checks at 0x%08X\n", addr);
+        NOP(addr + 0x9E, 2);
+        NOP(addr + 0xB4, 2);
+        NOP(addr + 0xCA, 2);
+    }
+
     // Regardless of whether spoofing is enabled, we always need to disable
     // image authentication. The user may just be using this custom LK to
     // unlock (bypassing Xiaomi's RPMB lock), or they may be spoofing where
