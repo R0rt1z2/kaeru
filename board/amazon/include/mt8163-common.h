@@ -52,8 +52,9 @@ static inline void thread_sleep(unsigned long msecs) {
 #endif
 
 #ifdef CONFIG_AMAZON_MT8163_AB
-static inline const char* get_boot_part(void) {
-    return ((const char* (*)(void))(GET_BOOT_PART_FUNC_ADDR|1))();
+// Stock LK's get_boot_part(slot): "boot_a" for 0, "boot_b" for 1.
+static inline const char* get_boot_part(int slot) {
+    return ((const char* (*)(int))(GET_BOOT_PART_FUNC_ADDR|1))(slot);
 }
 #endif
 

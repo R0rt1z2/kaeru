@@ -497,14 +497,17 @@ static uint32_t get_active_slot(void) {
     return gd.booted_slot;
 }
 
-static const char *get_boot_part_hook(void) {
+// LK calls get_boot_part() with the slot get_active_slot() returned in
+// r0. Take it as the argument and pass it on: get_bootmode() clobbers r0,
+// and calling the stock function without it always yielded "boot_a".
+static const char *get_boot_part_hook(int slot) {
     if (get_bootmode() == BOOTMODE_RECOVERY) {
         // Override the name of the boot partition to
         // the recovery one regardless of slot.
         return RECOVERY_PARTITION;
     }
 
-    return get_boot_part();
+    return get_boot_part(slot);
 }
 
 static void cmd_set_active(const char *arg, void *data, unsigned sz) {
