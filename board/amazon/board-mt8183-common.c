@@ -264,6 +264,11 @@ static void real_boot_mode_select(void) {
     // RTC recovery mode.
     pwrap_read(RTC_PDN1, &gd.rtc_pdn1);
 
+    // Consume the fast boot bit now, off the latched copy, so a boot claimed
+    // by another signal can't leave it set and strand the next one in fastboot.
+    if (gd.rtc_pdn1 & RTC_PDN1_FAST_BOOT)
+        clear_rtc_mode(RTC_PDN1_FAST_BOOT);
+
     // Set bootmode to BOOTMODE_NORMAL for good measure.
     set_bootmode(BOOTMODE_NORMAL);
 
@@ -333,14 +338,13 @@ static void boot_mode_select(void) {
     // If our bootmode is STILL normal after all that, give a chance for
     // RTC to select the boot mode, for compatibility with stock OS.
     if (get_bootmode() == BOOTMODE_NORMAL) {
-        if (read_rtc_mode(RTC_PDN1_FAST_BOOT)) {
-            clear_rtc_mode(RTC_PDN1_FAST_BOOT);
-            set_bootmode(BOOTMODE_FASTBOOT);
-            gd.reason = MODE_REASON_RTC;
-        } else if ((gd.rtc_pdn1 & RTC_PDN1_RECOVERY_MASK) ==
-                   RTC_PDN1_RECOVERY_VAL) {
-            clear_rtc_mode(RTC_PDN1_RECOVERY_MASK);
+        // Check recovery before fast boot: a reboot to recovery can set both
+        // bits, and fast boot would otherwise win. Both are already consumed.
+        if ((gd.rtc_pdn1 & RTC_PDN1_RECOVERY_MASK) == RTC_PDN1_RECOVERY_VAL) {
             set_bootmode(BOOTMODE_RECOVERY);
+            gd.reason = MODE_REASON_RTC;
+        } else if (read_rtc_mode(RTC_PDN1_FAST_BOOT)) {
+            set_bootmode(BOOTMODE_FASTBOOT);
             gd.reason = MODE_REASON_RTC;
         }
     }
