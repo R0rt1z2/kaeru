@@ -460,6 +460,14 @@ void board_early_init(void) {
     FORCE_RETURN(FASTBOOT_KEY_CHECK_ADDR, 0);
 #endif
 
+#ifdef AMZN_FW_AUTH_PASS_FUNCS
+    // Force coprocessor firmware (VPU, spmfw, ...) signature verify and anti-
+    // rollback checks to pass, otherwise LK ASSERTs and halts the boot.
+    static const uint32_t fw_auth[] = { AMZN_FW_AUTH_PASS_FUNCS };
+    for (uint32_t i = 0; i < ARRAY_SIZE(fw_auth); i++)
+        FORCE_RETURN(fw_auth[i], 0);
+#endif
+
 #ifdef HAVE_EARLY_INIT
     device_early_init();
 #endif

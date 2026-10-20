@@ -53,3 +53,8 @@
 
 #define LOAD_DTB_FUNC_ADDR              0x560347B8
 #define RECOVERY_DTBO_APPLIED_FUNC_ADDR 0x56042494
+
+#define AMZN_FW_AUTH_PASS_FUNCS \
+    0x5602DF5C,  /* RSA signature verify */ \
+    0x5602E414,  /* VPU anti-rollback version */ \
+    0x5602E424   /* spmfw anti-rollback version */
