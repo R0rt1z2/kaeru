@@ -2,6 +2,7 @@ menu "Device Support"
 
 source "board/amazon/Kconfig"
 source "board/bq/Kconfig"
+source "board/cubot/Kconfig"
 source "board/digit/Kconfig"
 source "board/energy/Kconfig"
 source "board/honor/Kconfig"
