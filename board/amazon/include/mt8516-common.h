@@ -32,8 +32,8 @@ static inline void cmd_oem_reboot_recovery(const char *arg, void *data, unsigned
     ((void (*)(const char *, void *, unsigned))(FB_CMD_REBOOT_RECOVERY_FUNC_ADDR|1))(arg, data, sz);
 }
 
-static inline const char* get_boot_part(void) {
-    return ((const char* (*)(void))(GET_BOOT_PART_FUNC_ADDR|1))();
+static inline const char* get_boot_part(int slot) {
+    return ((const char* (*)(int))(GET_BOOT_PART_FUNC_ADDR|1))(slot);
 }
 
 static inline void cmdline_append(const char *arg) {

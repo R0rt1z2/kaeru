@@ -506,14 +506,14 @@ static void fastboot_init_hook(const char *) {
 #endif
 }
 
-static const char *get_boot_part_hook(void) {
+static const char *get_boot_part_hook(int slot) {
     if (get_bootmode() == BOOTMODE_RECOVERY) {
         // Override the name of the boot partition to
         // the recovery one regardless of slot.
         return RECOVERY_PARTITION;
     }
 
-    return get_boot_part();
+    return get_boot_part(slot);
 }
 
 static void bootimg_cmdline_hook(const char *fmt, const char *tag,

@@ -497,14 +497,14 @@ static uint32_t get_active_slot(void) {
     return gd.booted_slot;
 }
 
-static const char *get_boot_part_hook(void) {
+static const char *get_boot_part_hook(int slot) {
     if (get_bootmode() == BOOTMODE_RECOVERY) {
         // Override the name of the boot partition to
         // the recovery one regardless of slot.
         return RECOVERY_PARTITION;
     }
 
-    return get_boot_part();
+    return get_boot_part(slot);
 }
 
 static void cmd_set_active(const char *arg, void *data, unsigned sz) {
