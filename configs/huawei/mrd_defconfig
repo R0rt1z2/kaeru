@@ -1,0 +1,71 @@
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Huawei Y6 2019 (MRD-LX1) — MT6761 (Helio A22)
+#
+# Port notes:
+# Stock LK analyzed statically (ARM bootstrap + Thumb body, load address
+# 0x48000000). All addresses below were identified by behavior
+# (call-graph + instruction pattern analysis of the stock LK image),
+# mirroring the field set of the MT6761 "t482l" port (PR #94).
+#
+# Field-by-field status:
+#   CONFIRMED (call-graph / pattern verified in the stock image):
+#     BOOTLOADER_BASE/SIZE  — LK header
+#     PLATFORM_INIT(_CALLER) — single caller of the platform init fn
+#     INIT_STORAGE(_CALLER)  — single caller + storage-driver bl chain
+#     DPRINTF/MALLOC/FREE    — hot call targets, verified bodies
+#     FASTBOOT_*             — fastboot string printers/register/publish
+#     MTK_DETECT_KEY         — keycode cmps 0x47/8/0x11
+#     PARTITION_GET_INDEX    — 0x4804ef0c: name->index loop over the
+#                              24-byte pt entries, strncmp vs entry name
+#                              ptr, 18 callers incl. the flash handler
+#     PARTITION_GET_OFFSET   — 0x4804f054: idx*24 entry walk,
+#                              umull(start, blocksize) -> 64-bit offset
+#     PARTITION_GET_SIZE     — 0x4804ef74: idx*24 entry walk, returns
+#                              entry size; used as the 3rd step of the
+#                              LK's own flash: handler (idx,offset,size)
+#     MT_PART_GET_DEVICE     — 0x48051dbc: returns *device_global
+#                              (0x48174a82); device struct:
+#                              [4]=init flag [0x10]=write [0x14]=read
+#     THREAD_CREATE/RESUME, VIDEO_PRINTF, APP, LK_LOG_STORE — pattern
+#                              matches, plausible call contexts
+#   NEEDS VERIFY:
+#     BOOTMODE_ADDRESS — a .bss int (bootmode enum) that the LK reads
+#       in its boot-mode-select path and fastboot path. No unique
+#       static signature found without a decompiler. Locate it starting
+#       from the fastboot continue path (0x4802EBE0-0x4802EC34: the fn
+#       checking the "fastboot active" flag and dispatching to the
+#       fastboot loop vs. normal boot); the bootmode int global is read
+#       near there. Candidate from the early-boot flow: 0x4817747c
+#       (.bss, read from the main boot flow at 0x48003d2a and from
+#       fastboot-region code at 0x4802edfc) — used below, UNVERIFIED.
+#
+CONFIG_HUAWEI_MRD=y
+CONFIG_MEDIATEK_MT6761=y
+CONFIG_BOOTLOADER_BASE=0x48000000
+CONFIG_BOOTLOADER_SIZE=0x174E90
+CONFIG_APP_ADDRESS=0x4802CA1C
+CONFIG_BOOTMODE_ADDRESS=0x4817747C
+CONFIG_DPRINTF_ADDRESS=0x48038BCC
+CONFIG_FASTBOOT_FAIL_ADDRESS=0x4802D99C
+CONFIG_FASTBOOT_INFO_ADDRESS=0x4802D940
+CONFIG_FASTBOOT_OKAY_ADDRESS=0x4802DB14
+CONFIG_FASTBOOT_PUBLISH_ADDRESS=0x4802D69C
+CONFIG_FASTBOOT_REGISTER_ADDRESS=0x4802D660
+CONFIG_FREE_ADDRESS=0x48039C94
+CONFIG_INIT_STORAGE_ADDRESS=0x4800A564
+CONFIG_INIT_STORAGE_CALLER=0x4800764A
+CONFIG_LK_LOG_STORE_ADDRESS=0x4804AE3E
+CONFIG_MALLOC_ADDRESS=0x4803A514
+CONFIG_MTK_DETECT_KEY_ADDRESS=0x48008BA0
+CONFIG_USE_LEGACY_PARTITION_API=y
+CONFIG_PARTITION_GET_INDEX_ADDRESS=0x4804EF0C
+CONFIG_PARTITION_GET_OFFSET_ADDRESS=0x4804F054
+CONFIG_PARTITION_GET_SIZE_ADDRESS=0x4804EF74
+CONFIG_PLATFORM_INIT_ADDRESS=0x4800720C
+CONFIG_PLATFORM_INIT_CALLER=0x480279F4
+CONFIG_THREAD_CREATE_ADDRESS=0x48027D7C
+CONFIG_THREAD_RESUME_ADDRESS=0x48027F10
+CONFIG_VIDEO_PRINTF_ADDRESS=0x480384F4
+CONFIG_MT_PART_GET_DEVICE_ADDRESS=0x48051DBC
