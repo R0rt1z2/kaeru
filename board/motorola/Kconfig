@@ -52,3 +52,9 @@ config MOTOROLA_ELLIS
     default n
     help
       Say Y if you want to include support for Motorola Moto G Pure 2021
+
+config MOTOROLA_LYRIQ
+    bool "Support Motorola Edge 40"
+    default n
+    help
+      Say Y if you want to include support for Motorola Edge 40

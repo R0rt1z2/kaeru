@@ -7,3 +7,4 @@ lib-$(CONFIG_MOTOROLA_LAGOS) += motorola/board-lagos.o
 lib-$(CONFIG_MOTOROLA_LAMUC) += motorola/board-lamu.o
 lib-$(CONFIG_MOTOROLA_HAWAIIP) += motorola/board-hawaiip.o
 lib-$(CONFIG_MOTOROLA_ELLIS) += motorola/board-ellis.o
+lib-$(CONFIG_MOTOROLA_LYRIQ) += motorola/board-lyriq.o
