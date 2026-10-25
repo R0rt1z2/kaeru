@@ -401,6 +401,15 @@ void board_early_init(void) {
     // everyone else eio mode. Make that check always pass.
     FORCE_RETURN(VERITY_CHECK_FUNC_ADDR, 1);
 
+#ifdef VBSTATE_FORCE_ADDRS
+    // Both sites that write LK's boot state store 0, so verifiedbootstate
+    // ends up green no matter how the device booted. Store 1 at each instead
+    // so the kernel gets orange.
+    static const uint32_t vbstate_sites[] = { VBSTATE_FORCE_ADDRS };
+    for (uint32_t i = 0; i < ARRAY_SIZE(vbstate_sites); i++)
+        PATCH_MEM(vbstate_sites[i], 0x2201);
+#endif
+
     // Not every LK here honors 'bootopt=', and none of them do it for
     // recovery. Hook where both command lines get printed so we pick the
     // kernel arch ourselves.
