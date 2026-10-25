@@ -17,7 +17,7 @@
 #define KAERU_VERSION "3.0.0D"
 #endif
 
-#define BUILD_LABEL "build 4B"
+#define BUILD_LABEL "build 4C"
 
 #define VOLUME_UP   1
 #define VOLUME_DOWN 17
@@ -320,7 +320,17 @@ static void cmd_misc(const char* arg, void* data, unsigned sz) {
         }
 
         memset(misc_msg.command, 0, sizeof(misc_msg.command));
-        memcpy(misc_msg.command, rest, len);
+
+        // Byte at a time on purpose, like next_token(): rest points into the
+        // fastboot command buffer wherever the "oem misc set " prefix left it
+        // (cmdbuf+12, i.e. an odd address), and the optimised memcpy in
+        // arch/arm/memcpy.S does a word load from that source and faults.
+        // That fault never returned a status, so the host saw
+        // "Status read failed" instead of an OKAY/FAIL. Read and clear only
+        // touch the stack copy, which is why they never tripped it.
+        for (size_t i = 0; i < len; i++) {
+            misc_msg.command[i] = rest[i];
+        }
 
         ret = misc_write(&misc_msg);
         if (ret < 0) {
