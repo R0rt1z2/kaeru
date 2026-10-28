@@ -61,6 +61,12 @@ void board_early_init(void) {
     // not just boot and recovery. Without this, custom logos, modem
     // images, and other signed partitions would be rejected.
     FORCE_RETURN(0x48018518, 0);
+
+    // Every image flashed over fastboot is checked before it gets written,
+    // and unsigned ones come back as "Preflash validation failed".
+    //
+    // Force the pre flash validation check so they all get accepted.
+    FORCE_RETURN(0x4806618C, 1);
 }
 
 void board_late_init(void) {
