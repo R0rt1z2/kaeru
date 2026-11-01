@@ -11,17 +11,6 @@
 // lr and r0-r3 pass through untouched; ip is call-clobbered so trashing it is safe.
 #define VENEER_SIZE 12u
 
-// On-screen bootloader glyph scale. LK's glyph renderer (FUN_48243cf4)
-// takes the scale in r0; both video_printf and logo renderer hardcode a value 2
-// We bump this value to 3 for a slight larger text.
-#define BOOT_TEXT_FONT_SCALE 3
-
-// Fixed-size screen printf (disp_printf). Unlike video_printf it renders with a
-// hardcoded scale (no r0 scale argument), so we redirect its entry to
-// video_printf (CONFIG_VIDEO_PRINTF_ADDRESS), which does use the
-// scale from the two sites rewritten in board_late_init.
-#define DISP_PRINTF_ADDRESS 0x482438ECu
-
 static void install_veneer(uint32_t slot, void* target) {
     WRITE32(slot + 0, 0xC004F8DFu);           // "ldr.w ip, [pc, #4]"
     WRITE16(slot + 4, 0x4760u);               // "bx ip"
@@ -120,28 +109,22 @@ FASTBOOT_CMD(bldr_spoof, "oem bldr_spoof", cmd_spoof_bootloader_lock, 0);
 void board_early_init(void) {
     printf("Entering early init for Redmi Note 13 5G (gold)\n");
 
-    uint32_t addr = 0;
-
-    // Force "veritymode=disabled". The stock vbmeta's cmdline says "enforcing",
-    // which makes Android init mount dm-verity against the stock hashtrees and
-    // bootloop on a custom system. Overwrite the rodata string with "disabled".
-    WRITE32(0x48330E90, 0x61736964);   
-    WRITE32(0x48330E94, 0x64656C62);   
-    WRITE8(0x48330E98, 0x00);          
+    uint32_t addr = 0;     
     
-    // Enlarge the AVB20 bump-allocator pool from 140MB to 384MB.
+    // Enlarge the AVB20 bump-allocator pool from 140MB to 320MB.
     // The LK verifies the slot TWICE (boot + recovery), each reading
-    // boot(64MB) + vendor_boot(64MB) = 128MB, ~256MB total; the stock 140MB
-    // pool OOM'd on the second pass. 0x18000000 = 384MB fixes it.
+    // boot(64MB) + vendor_boot(64MB) = 128MB, ~256MB total. The stock 140MB
+    // pool OOMs on the second pass, and 256MB OOMs on metadata overhead.
     addr = SEARCH_PATTERN(LK_START, LK_END, 0xF04F, 0x6B0C);   
     if (addr) {
         printf("Found avb heap size (remaining) at 0x%08X\n", addr);
-        PATCH_MEM(addr + 2, 0x5BC0);                        // #0x18000000 (384MB)
+        PATCH_MEM(addr + 2, 0x5BA0);                        
     }
+    
     addr = SEARCH_PATTERN(LK_START, LK_END, 0xF04F, 0x620C);   
     if (addr) {
         printf("Found avb heap size (mblock) at 0x%08X\n", addr);
-        PATCH_MEM(addr + 2, 0x52C0);                        // #0x18000000 (384MB)
+        PATCH_MEM(addr + 2, 0x52A0);                        
     }
 
     // Skip the AVB data-hash digest comparison. vendor_boot is patched by
@@ -202,11 +185,6 @@ void board_early_init(void) {
         FORCE_RETURN(ccci, 0);
     }
 
-    // See DISP_PRINTF_ADDRESS: make the fixed-size screen printf (boot-mode
-    // banner, warning lines, fastboot status text) flow through video_printf's
-    // scale-aware renderer so BOOT_TEXT_FONT_SCALE actually enlarges it.
-    install_veneer(DISP_PRINTF_ADDRESS, (void*)CONFIG_VIDEO_PRINTF_ADDRESS);
-
     // The environment isn't initialized when board_early_init runs, so get_env
     // would return NULL and our spoof helpers can't read their settings yet.
     // env_init_done runs right after ENV init completes; we hijack it to run
@@ -233,24 +211,5 @@ void board_late_init(void) {
     if (addr) {
         printf("Found dm_verity_corruption at 0x%08X\n", addr);
         FORCE_RETURN(addr, 0);
-    }
-
-    // Bump the on-screen bootloader text size (see BOOT_TEXT_FONT_SCALE).
-    // Two renderers pass a hardcoded glyph scale of 2 to FUN_48243cf4:
-    //
-    // Rewrite both "movs r0,#2" immediates (the halfword right after "mov r1,rX")
-    // with BOOT_TEXT_FONT_SCALE.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0x4621, 0x2002, 0xF011, 0xFDB2);
-    if (addr) {
-        printf("Found video_printf font scale at 0x%08X\n", addr);
-        PATCH_MEM(addr + 2, 0x2000 | BOOT_TEXT_FONT_SCALE);
-    }
-    
-    // Rewrite the hardcoded glyph scale ("movs r0, #2") in the multi-line logo
-    // renderer to BOOT_TEXT_FONT_SCALE so the lk texts render slightly larger.
-    addr = SEARCH_PATTERN(LK_START, LK_END, 0x4631, 0x2002, 0xF011, 0xFCE2);
-    if (addr) {
-        printf("Found multi-line text font scale at 0x%08X\n", addr);
-        PATCH_MEM(addr + 2, 0x2000 | BOOT_TEXT_FONT_SCALE);
     }
 }
