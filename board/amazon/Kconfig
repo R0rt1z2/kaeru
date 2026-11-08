@@ -88,6 +88,19 @@ config AMAZON_TRONA
     help
       Say Y if you want to include support for Fire HD 10 / Fire HD 10 Plus (2021)
 
+config AMAZON_MT8168_COMMON
+    bool
+    help
+      Select this if you need to include common board code
+      for Amazon MT8168 devices.
+
+config AMAZON_ONYX
+    bool "Support Fire HD 8 / Fire HD 8 Plus (2020)"
+    select AMAZON_MT8168_COMMON
+    default n
+    help
+      Say Y if you want to include support for Fire HD 8 / Fire HD 8 Plus (2020)
+
 config AMAZON_DONUT
     bool "Support Echo Dot 3rd Generation"
     select AMAZON_MT8516_COMMON
