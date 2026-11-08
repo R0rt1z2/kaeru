@@ -221,9 +221,7 @@ void cmd_help(const char *arg, void *data, unsigned sz) {
 int is_partition_protected(const char* partition) {
     if (!partition || *partition == '\0') return 1;
 
-    while (*partition && ISSPACE(*partition)) {
-        partition++;
-    }
+    partition = skip_spaces(partition);
 
     if (*partition == '\0') return 1;
 

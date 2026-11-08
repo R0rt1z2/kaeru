@@ -27,14 +27,6 @@ static inline void lk_getvar(const char* arg, void* data, unsigned sz) {
     ((void (*)(const char*, void*, unsigned))(CONFIG_FASTBOOT_GETVAR_ADDRESS | 1))(arg, data, sz);
 }
 
-static const char* skip_spaces(const char* s) {
-    while (*s && ISSPACE(*s)) {
-        s++;
-    }
-
-    return s;
-}
-
 static bool usb_write_all(const uint8_t* buf, uint32_t len) {
     while (len) {
         uint32_t n = len > USB_CHUNK ? USB_CHUNK : len;

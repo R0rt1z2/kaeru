@@ -325,6 +325,14 @@ size_t strcspn(const char* s, const char* reject) {
     return (p - s);
 }
 
+const char* skip_spaces(const char* s) {
+    while (*s && ISSPACE(*s)) {
+        s++;
+    }
+
+    return s;
+}
+
 const char* next_token(const char* p, char* out, size_t len) {
     size_t n, copy;
 

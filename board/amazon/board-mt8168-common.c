@@ -87,18 +87,6 @@ static void read_boot_keys(bool *up, bool *down) {
     *down = mtk_detect_key(KEY_VOLUME_DOWN);
 }
 
-static bool advance_partition_name(const char** partition) {
-    if (!partition || !*partition) {
-        return false;
-    }
-
-    while (**partition != '\0' && ISSPACE(**partition)) {
-        (*partition)++;
-    }
-
-    return (**partition != '\0');
-}
-
 static bool is_partition_protected(const char* partition, bool erase) {
     // These partitions are critical, flashing them incorrectly can lead to a
     // hard brick. To prevent accidental damage, we mark them as protected and
@@ -128,8 +116,7 @@ static void critical_op_fail(const char *msg) {
 }
 
 static void cmd_flash_wrapper(const char *arg, void *data, unsigned sz) {
-    const char *part = arg;
-    advance_partition_name(&part);
+    const char *part = skip_spaces(arg);
 
     if (is_partition_protected(part, false)) {
         critical_op_fail("You are attempting to flash to a critical partition.");
@@ -140,8 +127,7 @@ static void cmd_flash_wrapper(const char *arg, void *data, unsigned sz) {
 }
 
 static void cmd_erase_wrapper(const char *arg, void *data, unsigned sz) {
-    const char *part = arg;
-    advance_partition_name(&part);
+    const char *part = skip_spaces(arg);
 
     if (is_partition_protected(part, true)) {
         critical_op_fail("You are attempting to erase a critical partition.");
