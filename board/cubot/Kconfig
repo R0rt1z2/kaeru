@@ -1,0 +1,5 @@
+config CUBOT_MARLON
+    bool "Support CUBOT Marlon (P50 EEA)"
+    default n
+    help
+      Say Y if you want to include support for CUBOT Marlon / P50 EEA (board: v956, MT6765)
