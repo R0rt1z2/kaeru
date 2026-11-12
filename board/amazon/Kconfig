@@ -101,6 +101,26 @@ config AMAZON_ONYX
     help
       Say Y if you want to include support for Fire HD 8 / Fire HD 8 Plus (2020)
 
+config AMAZON_MT8169_COMMON
+    bool
+    help
+      Select this if you need to include common board code
+      for Amazon MT8169 devices.
+
+config AMAZON_RASPITE
+    bool "Support Fire HD 8 / Fire HD 8 Plus (12th Gen)"
+    select AMAZON_MT8169_COMMON
+    default n
+    help
+      Say Y if you want to include support for Fire HD 8 / Fire HD 8 Plus (12th Gen)
+
+config AMAZON_TUNGSTEN
+    bool "Support Fire HD 10 (13th Gen)"
+    select AMAZON_MT8169_COMMON
+    default n
+    help
+      Say Y if you want to include support for Fire HD 10 (13th Gen)
+
 config AMAZON_DONUT
     bool "Support Echo Dot 3rd Generation"
     select AMAZON_MT8516_COMMON
