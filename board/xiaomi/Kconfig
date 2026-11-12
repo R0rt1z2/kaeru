@@ -63,3 +63,11 @@ config XIAOMI_LIGHT
     default n
     help
       Say Y if you want to include support for POCO M4 5G / Redmi 10 5G / Redmi 11 Prime 5G / Redmi Note 11E/11R
+
+config XIAOMI_GOLD
+    bool "Support Redmi Note 13 5G / Redmi 13R Pro / POCO X6 Neo"
+    default n
+    help
+      Say Y if you want to include support for Redmi Note 13 5G / Redmi 13R Pro / POCO X6 Neo
+
+
