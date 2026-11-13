@@ -15,3 +15,9 @@ config HUAWEI_DURA2
     default n
     help
       Say Y if you want to include support for Huawei Y5p
+
+config HUAWEI_MRD
+    bool "Support Huawei Y6 2019 (MRD-LX1)"
+    default n
+    help
+      Say Y if you want to include support for Huawei Y6 2019 (MRD-LX1)
