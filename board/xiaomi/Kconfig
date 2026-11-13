@@ -46,6 +46,12 @@ config XIAOMI_MERLIN
     help
       Say Y if you want to include support for Redmi 10X 4G/Redmi Note 9
 
+config XIAOMI_SELENE
+    bool "Support Redmi 10 2022"
+    default n
+    help
+      Say Y if you want to include support for Redmi 10 2022 / Redmi Note 11 4G
+
 config XIAOMI_BEGONIA
     bool "Support Redmi Note 8 Pro"
     default n
