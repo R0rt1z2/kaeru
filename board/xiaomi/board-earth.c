@@ -38,16 +38,6 @@ static void spoof_lock_state(void) {
         PATCH_CALL(addr, (void *)get_lock_state, TARGET_THUMB);
     }
 
-    int spoofing = is_spoofing_enabled();
-    fastboot_publish("is-spoofing", spoofing ? "1" : "0");
-
-    if (!spoofing) {
-        printf("Bootloader lock status spoofing disabled.\n");
-        return;
-    }
-
-    printf("Bootloader lock status spoofing enabled, applying patches.\n");
-
     // When we spoof the lock state to appear "locked", fastboot
     // starts rejecting commands with "not support on security" and
     // "not allowed in locked state" errors. Since the device is
@@ -70,6 +60,17 @@ static void spoof_lock_state(void) {
         // Jump directly to the command handler
         PATCH_MEM(addr + 0x19A, 0xE008);
     }
+
+    int spoofing = is_spoofing_enabled();
+    fastboot_publish("is-spoofing", spoofing ? "1" : "0");
+
+    if (!spoofing) {
+        printf("Bootloader lock status spoofing disabled.\n");
+        return;
+    }
+
+    printf("Bootloader lock status spoofing enabled, applying patches.\n");
+    
 
     // AVB adds device state info to the kernel cmdline, but it
     // keeps showing "unlocked" even when we want it to say "locked".
