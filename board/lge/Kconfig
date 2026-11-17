@@ -1,0 +1,5 @@
+config LGE_W7
+    bool "Support K40s"
+    default n
+    help
+      Say Y if you want to include support for K40s
