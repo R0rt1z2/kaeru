@@ -121,18 +121,6 @@ static void clear_rtc_mode(uint32_t clr_bits) {
     rtc_write_trigger();
 }
 
-static bool advance_partition_name(const char** partition) {
-    if (!partition || !*partition) {
-        return false;
-    }
-
-    while (**partition != '\0' && ISSPACE(**partition)) {
-        (*partition)++;
-    }
-
-    return (**partition != '\0');
-}
-
 static bool is_partition_protected(const char* partition, bool erase) {
     // These partitions are critical, flashing them incorrectly can lead to a
     // hard brick. To prevent accidental damage, we mark them as protected and
@@ -214,8 +202,7 @@ static void cmdline_append(const char *arg) {
 #endif
 
 static void cmd_flash_wrapper(const char *arg, void *data, unsigned sz) {
-    const char *part = arg;
-    advance_partition_name(&part);
+    const char *part = skip_spaces(arg);
 
     const char *remap = remap_partition(part);
     if (remap) {
@@ -229,8 +216,7 @@ static void cmd_flash_wrapper(const char *arg, void *data, unsigned sz) {
 }
 
 static void cmd_erase_wrapper(const char *arg, void *data, unsigned sz) {
-    const char *part = arg;
-    advance_partition_name(&part);
+    const char *part = skip_spaces(arg);
 
     if (is_partition_protected(part, true)) {
         critical_op_fail("You are attempting to erase a critical partition.");

@@ -236,14 +236,22 @@ static void idme_cmd_flags(struct idme *hdr, int argc,
     fastboot_okay("");
 }
 
+static void idme_usage(const char *reason) {
+    fastboot_info("Usage: oem idme <subcommand>");
+    fastboot_info("  list, board, bootmode, bootcount [reset]");
+    fastboot_info("  read <name>, write <name> <value>");
+    fastboot_info("  version [<value>]");
+    fastboot_info("  flags [fos|dev|usr] [set|add|remove <value>]");
+    fastboot_fail(reason);
+}
+
 void cmd_idme(const char *arg, void *data, unsigned sz) {
     char argv[IDME_MAX_ARGS][IDME_ARG_LEN];
     char line[FASTBOOT_INFO_MAX + 1];
 
     int argc = idme_split(arg, argv);
     if (!argc) {
-        fastboot_fail("Usage: oem idme list|read|write|flags|board|bootmode|"
-                      "bootcount|version");
+        idme_usage("Missing subcommand");
         return;
     }
 
@@ -394,7 +402,7 @@ void cmd_idme(const char *arg, void *data, unsigned sz) {
         return;
     }
 
-    fastboot_fail("Unknown subcommand");
+    idme_usage("Unknown subcommand");
 }
 
 FASTBOOT_CMD(idme, "oem idme", cmd_idme, 1);

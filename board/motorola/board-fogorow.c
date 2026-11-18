@@ -20,9 +20,7 @@ static void mt_disp_show_boot_logo(void) {
 int is_partition_protected(const char* partition) {
     if (!partition || *partition == '\0') return 1;
 
-    while (*partition && ISSPACE(*partition)) {
-        partition++;
-    }
+    partition = skip_spaces(partition);
 
     if (*partition == '\0') return 1;
 
