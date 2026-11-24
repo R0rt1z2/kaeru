@@ -47,6 +47,16 @@ static inline int recovery_dtbo_applied(void) {
     return ((int (*)(void))(RECOVERY_DTBO_APPLIED_FUNC_ADDR|1))();
 }
 
+#ifdef MT_POWER_OFF_FUNC_ADDR
+static inline void mdelay(unsigned ms) {
+    ((void (*)(unsigned))(MDELAY_FUNC_ADDR|1))(ms);
+}
+
+static inline void mt_power_off(void) {
+    ((void (*)(void))(MT_POWER_OFF_FUNC_ADDR|1))();
+}
+#endif
+
 #ifdef HAVE_EARLY_INIT
 void device_early_init(void);
 #endif

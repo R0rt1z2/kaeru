@@ -199,6 +199,87 @@ static void cmd_oem_reboot_recovery(const char *arg, void *data, unsigned sz) {
     cmd_reboot_wrapper("-recovery", data, sz);
 }
 
+#ifdef LOG_STORE_HEADER_PTR_ADDR
+#define LOG_STORE_OFF_PL  0x8
+#define LOG_STORE_SIZE_PL 0xC
+#define LOG_STORE_OFF_LK  0x14
+#define LOG_STORE_SIZE_LK 0x18
+
+static void dump_log(uint32_t base, uint32_t max) {
+    char line[FASTBOOT_INFO_MAX + 1];
+    const char *p = (const char *)(uintptr_t)base;
+    uint32_t col = 0;
+
+    for (uint32_t i = 0; i < max && p[i]; i++) {
+        char c = p[i];
+
+        if (c == '\n' || col == FASTBOOT_INFO_MAX) {
+            line[col] = '\0';
+            fastboot_info(line);
+            col = 0;
+
+            if (c == '\n') {
+                continue;
+            }
+        }
+
+        line[col++] = (c >= 0x20 && c < 0x7F) ? c : (c == '\r' ? ' ' : '.');
+    }
+
+    if (col) {
+        line[col] = '\0';
+        fastboot_info(line);
+    }
+}
+
+static void cmd_oem_dmesg(const char *arg, void *data, unsigned sz) {
+    uint32_t hdr = READ32(LOG_STORE_HEADER_PTR_ADDR);
+    uint32_t base = READ32(LOG_STORE_DRAM_BASE_ADDR);
+
+    if (!hdr || !base) {
+        fastboot_fail("Log buffers are not set up");
+        return;
+    }
+
+    const char *what = skip_spaces(arg);
+
+    bool lk = strcmp(what, "pl") != 0;
+    bool pl = strcmp(what, "pl") == 0 || strcmp(what, "all") == 0;
+
+    if (pl) {
+        dump_log(base + READ32(hdr + LOG_STORE_OFF_PL), READ32(hdr + LOG_STORE_SIZE_PL));
+    }
+
+    if (lk) {
+        dump_log(base + READ32(hdr + LOG_STORE_OFF_LK), READ32(hdr + LOG_STORE_SIZE_LK));
+    }
+
+    fastboot_okay("");
+}
+
+FASTBOOT_CMD(dmesg, "oem dmesg", cmd_oem_dmesg, 1);
+#endif
+
+#ifdef MT_POWER_OFF_FUNC_ADDR
+static void cmd_oem_shutdown(const char *arg, void *data, unsigned sz) {
+    fastboot_info("The device is about to power off.");
+    fastboot_info("Unplug it once the screen goes black, or it will reboot.");
+    fastboot_okay("");
+
+    // Let the USB stack push the reply out before the PMIC drops the
+    // rails from under it, otherwise the host never sees the OKAY...
+    mdelay(100);
+
+    mt_power_off();
+
+    // We only get here if the PMIC refused to go down.
+    fastboot_fail("Power off failed");
+}
+
+FASTBOOT_CMD(shutdown, "oem shutdown", cmd_oem_shutdown, 1);
+FASTBOOT_CMD(poweroff, "oem poweroff", cmd_oem_shutdown, 1);
+#endif
+
 static void bootimg_cmdline_hook(const char *fmt, const char *tag,
                                  const char *cmdline) {
     printf(fmt, tag, cmdline);
