@@ -9,6 +9,8 @@
 
 #if defined(CONFIG_AMAZON_ONYX)
 #include "mt8168-onyx.h"
+#elif defined(CONFIG_AMAZON_QUARTZ)
+#include "mt8168-quartz.h"
 #else
 #error "Invalid device selection"
 #endif

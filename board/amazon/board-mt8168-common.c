@@ -341,6 +341,11 @@ void board_early_init(void) {
     // LK only disables dm-verity (both on the cmdline and in the vendor
     // fstab of the DTB) when IDME carries the right flags, and hands
     // everyone else eio mode. Make that check always pass.
+    //
+    // On the LKs that verify with libavb the same check is what lets an
+    // unlocked device off the AVB hook, so passing it is also what makes
+    // libavb tolerate verification errors instead of handing us a red
+    // state and a reboot five seconds later.
     FORCE_RETURN(VERITY_CHECK_FUNC_ADDR, 1);
 
 #ifdef VBSTATE_FORCE_ADDRS
@@ -375,6 +380,16 @@ void board_early_init(void) {
     // handler (which records the target in misc) is the one that serves.
     NOP(FB_REGISTER_REBOOT_ADDR, 2);
     NOP(FB_REGISTER_REBOOT_BOOTLOADER_ADDR, 2);
+
+#ifdef FB_REGISTER_REBOOT_RECOVERY_ADDR
+    // The newer LKs register these two as well, and they both go through
+    // RTC rather than misc. Ours covers them through the reboot prefix.
+    NOP(FB_REGISTER_REBOOT_RECOVERY_ADDR, 2);
+#endif
+
+#ifdef FB_REGISTER_REBOOT_FASTBOOT_ADDR
+    NOP(FB_REGISTER_REBOOT_FASTBOOT_ADDR, 2);
+#endif
 
     // Set up our getvar handler to make fastboot fetch work.
     NOP(FB_REGISTER_GETVAR_ADDR, 2);
