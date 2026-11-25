@@ -266,7 +266,15 @@ def main() -> None:
     print('Payload destination: 0x%X' % payload_dest)
 
     # Redirect the platform_init caller to jump into our payload.
-    offset = plic - base
+    #
+    # part.data starts after the partition header, so for partitions with
+    # an extended header (e.g. the 0x200-byte MTK image header) the file
+    # offset of the patch site is shifted by the header size.
+    offset = plic - base - (
+        getattr(part.header, 'hdr_size', 0)
+        if getattr(part.header, 'ext_magic', 0)
+        else 0
+    )
     shellcode = encode_bl(plic, payload_dest)
 
     print('File offset: 0x%X' % offset)
