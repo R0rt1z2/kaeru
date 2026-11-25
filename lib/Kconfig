@@ -238,15 +238,46 @@ menu "Environment Support"
           Required for features like bootloader lock spoofing.
 
     if ENVIRONMENT_SUPPORT
-        config GET_ENV_ADDRESS
-            hex "get_env() address"
+        config KAERU_ENV
+            bool "Provide the environment from kaeru"
+            depends on STORAGE_SUPPORT
+            default n
             help
-              Address of the get_env() function in the bootloader
+              Say Y when LK has no get_env()/set_env() worth calling, either
+              because it never had an environment or because nothing used it
+              and the linker dropped it.
 
-        config SET_ENV_ADDRESS
-            hex "set_env() address"
-            help
-              Address of the set_env() function in the bootloader
+        if KAERU_ENV
+            config KAERU_ENV_PARTITION
+                string "Partition the environment lives in"
+                default "persist"
+                help
+                  Must be a partition nothing else on the device uses, since
+                  kaeru owns every byte of the block below.
+
+            config KAERU_ENV_OFFSET
+                hex "Offset of the environment inside that partition"
+                default 0x0
+
+            config KAERU_ENV_SIZE
+                hex "Size of the environment"
+                default 0x4000
+                help
+                  Kept in RAM while kaeru runs and written out whole, so keep
+                  it small and a multiple of the storage block size.
+        endif
+
+        if !KAERU_ENV
+            config GET_ENV_ADDRESS
+                hex "get_env() address"
+                help
+                  Address of the get_env() function in the bootloader
+
+            config SET_ENV_ADDRESS
+                hex "set_env() address"
+                help
+                  Address of the set_env() function in the bootloader
+        endif
     endif
 endmenu
 
