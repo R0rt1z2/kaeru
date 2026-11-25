@@ -1,0 +1,57 @@
+//
+// SPDX-FileCopyrightText: 2026 R0rt1z2 <roger@r0rt1z2.com>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
+
+#pragma once
+
+#define BOARD_NAME                         "Fire TV Stick 4K / 4K Max / 4K Plus (2nd Gen)"
+
+#define BOOT_ARG_PTR_ADDR                  0x4CEAFFB4
+#define BOOT_ARG_USB_EXTCONN_OFF           0x180
+#define BOOT_ARG_Y_CABLE_OFF               0x181
+#define BOOT_ARG_BOOT_REASON_OFF           0x120
+
+#define UNLOCK_CHECK_FUNC_ADDR             0x4CE01484
+#define VERITY_CHECK_FUNC_ADDR             0x4CE24F44
+
+#define FASTBOOT_INIT_PRINTF_CALL_ADDR     0x4CE274D8
+
+#define FB_CMD_FLASH_FUNC_ADDR             0x4CE2AA84
+#define FB_CMD_ERASE_FUNC_ADDR             0x4CE2ABD8
+#define FB_CMD_REBOOT_FUNC_ADDR            0x4CE27AB4
+#define FB_CMD_REBOOT_BOOTLOADER_FUNC_ADDR 0x4CE27ACC
+
+#define FB_REGISTER_GETVAR_ADDR            0x4CE27522
+#define FB_REGISTER_FLASH_ADDR             0x4CE27566
+#define FB_REGISTER_ERASE_ADDR             0x4CE2757A
+#define FB_REGISTER_REBOOT_ADDR            0x4CE275A0
+#define FB_REGISTER_REBOOT_BOOTLOADER_ADDR 0x4CE275B4
+#define FB_REGISTER_REBOOT_FASTBOOT_ADDR   0x4CE275C6
+#define FB_REGISTER_DUMP_ADDR              0x4CE276B4
+#define FB_REGISTER_RELOCK_ADDRS           0x4CE27680, 0x4CE276A0
+#define LK_IDME_REGISTER_CALL_ADDR         0x4CE27694
+
+#define VIDEO_SET_CURSOR_FUNC_ADDR         0x4CE2B544
+#define VIDEO_GET_ROWS_FUNC_ADDR           0x4CE2B580
+#define VIDEO_ROW_ADDR                     0x4CEAEAF8
+
+#define CMDLINE_GET_FUNC_ADDR              0x4CE28CCC
+#define CMDLINE_APPEND_FUNC_ADDR           0x4CE28CD8
+#define CMDLINE_GET_CALL_ADDR              0x4CE2658E
+#define CMDLINE_STALE_APPEND_CALL_ADDR     0x4CE26B1E
+#define CMDLINE_END_PTR_ADDR               0x4CE71380
+
+#define LOG_STORE_STATE_ADDR               0x4CE9D114
+#define LOG_STORE_HEADER_PTR_ADDR          0x4CEAEF50
+#define LOG_STORE_DRAM_BASE_ADDR           0x4CEAEF4C
+
+#define BOOT_HDR_ADDR                      0x4CEB3FB8
+#define BOOT_HDR_READ_SIZE                 0x67C
+#define BOOT_HDR_STATE1_ADDR               0x4CEB3D50
+#define BOOT_HDR_STATE2_ADDR               0x4CEB3DB0
+#define BOOTIMG_RELOC_FLAG_ADDR            0x4CEAEF3C
+#define BOOTIMG_STAGE_BASE                 0x60000000
+#define BOOTIMG_SET_BASE_FUNC_ADDR         0x4CE33150
+#define BOOTIMG_PARSE_BOOTOPT_FUNC_ADDR    0x4CE331A0
+#define BOOT_LINUX_FUNC_ADDR               0x4CE26928

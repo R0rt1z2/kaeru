@@ -3,16 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 
-#include <board_ops.h>
-
-#define BOARD_NAME "Fire TV Stick 4K / 4K Max / 4K Plus (2nd Gen)"
-
-#define MEM_READ_DEFAULT 0x100
-#define MEM_READ_MAX     0x400
-
-#define BOOT_ARG_PTR             0x4CEAFFB4
-#define BOOT_ARG_USB_EXTCONN_OFF 0x180
-#define BOOT_ARG_Y_CABLE_OFF     0x181
+#include "include/mt8696-common.h"
 
 static const struct {
     char name[12];
@@ -53,14 +44,6 @@ static const char *modereason2str(enum mode_reason reason) {
     }
 }
 
-static inline void cmdline_append(const char *arg) {
-    ((void (*)(const char *))(0x4CE28CD8 | 1))(arg);
-}
-
-static inline char *get_cmdline(void) {
-    return ((char *(*)(void))(0x4CE28CCC | 1))();
-}
-
 // This is nasty.. but does the job fine.
 static char *cmdline_hook(void) {
     char *cl = get_cmdline();
@@ -77,6 +60,9 @@ static char *cmdline_hook(void) {
 
     cmdline_append("androidboot.veritymode=disabled");
 
+    cmdline_replace(cl, "buildvariant=", "userdebug", "eng");
+    cmdline_replace(cl, "buildvariant=", "user", "eng");
+
     char *r = cl;
     char *w = cl;
     while (*r) {
@@ -90,45 +76,11 @@ static char *cmdline_hook(void) {
         w--;
     }
     *w = '\0';
-    WRITE32(0x4CE71380, (uint32_t)(uintptr_t)w);
+#ifdef CMDLINE_END_PTR_ADDR
+    WRITE32(CMDLINE_END_PTR_ADDR, (uint32_t)(uintptr_t)w);
+#endif
 
     return cl;
-}
-
-static inline void bootimg_set_base(uint32_t base) {
-    ((void (*)(uint32_t))(0x4CE33150 | 1))(base);
-}
-
-static inline void bootimg_parse_bootopt(const char *cmdline) {
-    ((void (*)(const char *))(0x4CE331A0 | 1))(cmdline);
-}
-
-static inline void boot_linux(void) {
-    ((void (*)(void))(0x4CE26928 | 1))();
-}
-
-static inline void cmd_flash(const char *arg, void *data, unsigned sz) {
-    ((void (*)(const char *, void *, unsigned))(0x4CE2AA84 | 1))(arg, data, sz);
-}
-
-static inline void cmd_erase(const char *arg, void *data, unsigned sz) {
-    ((void (*)(const char *, void *, unsigned))(0x4CE2ABD8 | 1))(arg, data, sz);
-}
-
-static inline void cmd_reboot(const char *arg, void *data, unsigned sz) {
-    ((void (*)(const char *, void *, unsigned))(0x4CE27AB4 | 1))(arg, data, sz);
-}
-
-static inline void cmd_reboot_bootloader(const char *arg, void *data, unsigned sz) {
-    ((void (*)(const char *, void *, unsigned))(0x4CE27ACC | 1))(arg, data, sz);
-}
-
-static inline void video_set_cursor(int row, int col) {
-    ((void (*)(int, int))(0x4CE2B544 | 1))(row, col);
-}
-
-static inline int video_get_rows(void) {
-    return ((int (*)(void))(0x4CE2B580 | 1))();
 }
 
 static void blank_string(char *s, const char *name) {
@@ -203,6 +155,33 @@ bool mem_region_find(const char *name, uint32_t *base, uint32_t *size) {
     return false;
 }
 
+#ifdef KERNEL_64BIT_FLAG_ADDR
+static int kernel_bits(const char *cmdline, uint32_t kernel) {
+    int bits = cmdline_kernel_bits(cmdline);
+
+    if (bits < 0)
+        bits = READ32(kernel + 36) == 0x016F2818 ? 32 : 64;
+
+    return bits;
+}
+
+static void force_kernel_bits(const char *cmdline, uint32_t kernel) {
+    int bits = kernel_bits(cmdline, kernel);
+
+    printf("Boot image requests a %d-bit kernel, forcing it\n", bits);
+    WRITE32(KERNEL_64BIT_FLAG_ADDR, bits == 64);
+}
+
+static void boot_linux_hook(uint32_t kernel, uint32_t tags, const char *cmdline,
+                            uint32_t mach, uint32_t ramdisk, uint32_t ramdisk_sz) {
+    force_kernel_bits(cmdline, BOOTIMG_STAGE_BASE);
+
+    ((void (*)(uint32_t, uint32_t, const char *, uint32_t, uint32_t, uint32_t))
+            (BOOT_LINUX_FUNC_ADDR|1))(kernel, tags, cmdline, mach, ramdisk,
+                                      ramdisk_sz);
+}
+#endif
+
 static void cmd_boot(const char *arg, void *data, unsigned sz) {
     const boot_img_hdr *hdr = data;
 
@@ -230,34 +209,76 @@ static void cmd_boot(const char *arg, void *data, unsigned sz) {
         return;
     }
 
-    // 0x67C, not a whole page: that is exactly what LK reads into this
-    // buffer, and the word right past it is a global AVB writes.
-    memcpy((void *)0x4CEB3FB8, data, 0x67C);
-    WRITE32(0x4CEB3D50, 1);
-    WRITE32(0x4CEB3DB0, 0);
+#ifdef BOOT_HDR_PTR_ADDR
+    const uint8_t *kernel = (const uint8_t *)data + page;
+
+#ifdef KERNEL_64BIT_FLAG_ADDR
+    if (kernel_bits((const char *)hdr->cmdline, (uint32_t)(uintptr_t)kernel) == 64
+        && (hdr->kernel_addr & (KERNEL_64BIT_ALIGN - 1))) {
+        fastboot_fail("A 64-bit kernel needs an aligned load address");
+        return;
+    }
+#endif
+
+    static boot_img_hdr boot_hdr;
+    memcpy(&boot_hdr, data, BOOT_HDR_READ_SIZE);
+
+    hdr = &boot_hdr;
+    WRITE32(BOOT_HDR_PTR_ADDR, (uint32_t)(uintptr_t)&boot_hdr);
+
+    // How many bytes LK copies to the load address, so it has to cover the
+    // kernel it leaves packed.
+    WRITE32(BOOTIMG_SIZE_ADDR, kernel_pages);
+
+    // Only the storage path appends the image's own command line.
+    cmdline_append((const char *)hdr->cmdline);
+
+    printf("boot: %u byte kernel, %u byte ramdisk, staging at 0x%08X\n",
+           hdr->kernel_size, hdr->ramdisk_size, BOOTIMG_STAGE_BASE);
+
+    // Ramdisk first, since both moves overlap the download they read from.
+    memmove((void *)hdr->ramdisk_addr, kernel + kernel_pages, hdr->ramdisk_size);
+    memmove((void *)BOOTIMG_STAGE_BASE, kernel, kernel_pages);
+
+#ifdef KERNEL_64BIT_FLAG_ADDR
+    // Our boot_linux hook does not run on this path.
+    force_kernel_bits(get_cmdline(), BOOTIMG_STAGE_BASE);
+#endif
+#else
+    memcpy((void *)BOOT_HDR_ADDR, data, BOOT_HDR_READ_SIZE);
+    WRITE32(BOOT_HDR_STATE1_ADDR, 1);
+    WRITE32(BOOT_HDR_STATE2_ADDR, 0);
     bootimg_parse_bootopt((const char *)hdr->cmdline);
 
-    uint32_t base = READ32(0x4CEAEF3C) ? 0x60000000 : hdr->kernel_addr;
+    uint32_t base = READ32(BOOTIMG_RELOC_FLAG_ADDR) ? BOOTIMG_STAGE_BASE
+                                                    : hdr->kernel_addr;
 
     printf("boot: %u byte kernel, %u byte ramdisk, staging at 0x%08X\n",
            hdr->kernel_size, hdr->ramdisk_size, base);
 
-    memcpy((void *)base, (const uint8_t *)data + page,
-           kernel_pages + ramdisk_pages);
+    memmove((void *)base, (const uint8_t *)data + page,
+            kernel_pages + ramdisk_pages);
     bootimg_set_base(base);
+#endif
 
     fastboot_okay("");
 
     video_set_cursor(gd.banner_row, 0);
     video_printf(" => Booting downloaded image (%u bytes)...          \n", sz);
 
+#ifdef BOOT_LINUX_MACH_TYPE
+    boot_linux(hdr->kernel_addr, hdr->tags_addr, cmdline_hook(),
+               hdr->ramdisk_addr, hdr->ramdisk_size);
+#else
     boot_linux();
+#endif
 }
 
+#ifdef LOG_STORE_HEADER_PTR_ADDR
 static void cmd_oem_dmesg(const char *arg, void *data, unsigned sz) {
     char line[FASTBOOT_INFO_MAX + 1];
 
-    uint32_t state = READ32(0x4CE9D114);
+    uint32_t state = READ32(LOG_STORE_STATE_ADDR);
     if (state != 0x200) {
         npf_snprintf(line, sizeof(line), "Log store is not up, state 0x%X",
                      state);
@@ -265,8 +286,8 @@ static void cmd_oem_dmesg(const char *arg, void *data, unsigned sz) {
         return;
     }
 
-    uint32_t hdr = READ32(0x4CEAEF50);
-    uint32_t base = hdr ? READ32(hdr + 0x14) + READ32(0x4CEAEF4C) : 0;
+    uint32_t hdr = READ32(LOG_STORE_HEADER_PTR_ADDR);
+    uint32_t base = hdr ? READ32(hdr + 0x14) + READ32(LOG_STORE_DRAM_BASE_ADDR) : 0;
     uint32_t len = hdr ? READ32(hdr + 0x18) : 0;
 
     if (!hdr || !base || !len) {
@@ -305,6 +326,7 @@ static void cmd_oem_dmesg(const char *arg, void *data, unsigned sz) {
 }
 
 FASTBOOT_CMD(dmesg, "oem dmesg", cmd_oem_dmesg, 1);
+#endif
 
 static void cmd_unlock_critical(const char *arg, void *data, unsigned sz) {
     gd.unlocked_critical = true;
@@ -326,7 +348,7 @@ static void cmd_reboot_wrapper(const char *arg, void *data, unsigned sz) {
 }
 
 static void fastboot_init_hook(const char *) {
-    gd.banner_row = (int)READ32(0x4CEAEAF8);
+    gd.banner_row = (int)READ32(VIDEO_ROW_ADDR);
     video_printf(" => HACKED FASTBOOT mode - R0rt1z2\n");
     fastboot_publish("boot-reason", modereason2str(gd.reason));
 
@@ -340,14 +362,43 @@ static void fastboot_init_hook(const char *) {
 
     // Registered last so it shadows the one common_early_init() put in.
     fastboot_register("oem kaeru-version", cmd_kaeru_version, 1);
+
+#ifdef HAVE_FASTBOOT_INIT
+    device_fastboot_init();
+#endif
 }
 
 static bool is_y_cable(void) {
-    uint32_t barg = READ32(BOOT_ARG_PTR);
+    uint32_t barg = READ32(BOOT_ARG_PTR_ADDR);
     if (!barg)
         return false;
 
     return READ8(barg + BOOT_ARG_Y_CABLE_OFF) == 1;
+}
+
+static bool is_bootmenu_disabled(void) {
+#ifdef CONFIG_ENVIRONMENT_SUPPORT
+    const char *val = get_env(ENV_DISABLE_BOOTMENU);
+
+    return val && !strcmp(val, "1");
+#else
+    return false;
+#endif
+}
+
+static bool is_cold_boot(void) {
+    uint32_t barg = READ32(BOOT_ARG_PTR_ADDR);
+    if (!barg)
+        return false;
+
+    return READ32(barg + BOOT_ARG_BOOT_REASON_OFF) == BOOT_REASON_POWER_KEY;
+}
+
+static void seed_bootmenu_default(void) {
+#ifdef CONFIG_ENVIRONMENT_SUPPORT
+    if (!get_env(ENV_DISABLE_BOOTMENU))
+        set_env(ENV_DISABLE_BOOTMENU, "0");
+#endif
 }
 
 static void boot_mode_select(void) {
@@ -377,11 +428,22 @@ static void boot_mode_select(void) {
         return;
     }
 
-    if (is_y_cable()) {
-        printf("OTG detected, booting into recovery\n");
-        set_bootmode(BOOTMODE_RECOVERY);
-        gd.reason = MODE_REASON_Y_CABLE;
+    if (!is_y_cable())
+        return;
+
+    if (!is_cold_boot()) {
+        printf("OTG detected on a warm boot, ignoring it\n");
+        return;
     }
+
+    if (is_bootmenu_disabled()) {
+        printf("OTG detected, but the boot menu is disabled\n");
+        return;
+    }
+
+    printf("OTG detected, booting into recovery\n");
+    set_bootmode(BOOTMODE_RECOVERY);
+    gd.reason = MODE_REASON_Y_CABLE;
 }
 
 void board_early_init(void) {
@@ -394,13 +456,22 @@ void board_early_init(void) {
     // code stored in IDME. Every gate in LK, from boot to the fastboot command
     // handlers, goes through this one predicate, so forcing it to report an
     // unlocked device is enough to get unrestricted fastboot access.
-    FORCE_RETURN(0x4CE01484, 1);
+    FORCE_RETURN(UNLOCK_CHECK_FUNC_ADDR, 1);
 
+#ifdef IMAGE_VERIFY_FUNC_ADDR
+    // Skipping it left libtomcrypt uninitialised, so the check LK runs on the
+    // scp image on the way to the kernel asserts out of rsa_import. Patch the
+    // check itself, not its caller, which reads the anti-rollback version.
+    FORCE_RETURN(IMAGE_VERIFY_FUNC_ADDR, 0);
+#endif
+
+#ifdef VERITY_CHECK_FUNC_ADDR
     // LK only lets an unlocked device off the AVB hook when IDME carries
     // the right fos_flags, and hands everyone else a red state and a reboot
     // five seconds later. Skip the check so we always land on orange, which
     // is what makes libavb tolerate verification errors.
-    FORCE_RETURN(0x4CE24F44, 1);
+    FORCE_RETURN(VERITY_CHECK_FUNC_ADDR, 1);
+#endif
 
     // Get rid of the stock mode string LK draws during boot. It is
     // confusing, tells the user nothing useful, and lands right before
@@ -408,47 +479,66 @@ void board_early_init(void) {
     blank_string(SEARCH_STRING(" => FASTBOOT mode...\n"), "fastboot mode");
 
     // Disable dm-verity, we won't be needing it anymore :)
-    PATCH_CALL(0x4CE2658E, &cmdline_hook, TARGET_THUMB);
+    PATCH_CALL(CMDLINE_GET_CALL_ADDR, &cmdline_hook, TARGET_THUMB);
 
+#ifdef CMDLINE_STALE_APPEND_CALL_ADDR
     // While we are here, LK's last append before it jumps re-adds a stale
     // stack buffer. Nothing wants that on the command line.
-    NOP(0x4CE26B1E, 2);
+    NOP(CMDLINE_STALE_APPEND_CALL_ADDR, 2);
+#endif
+
+#ifdef KERNEL_64BIT_FLAG_ADDR
+    // Pick 32 or 64 bit from the kernel LK is about to start rather than
+    // from what the preloader claimed.
+    PATCH_CALL(BOOT_LINUX_CALL_ADDR, &boot_linux_hook, TARGET_THUMB);
+#endif
 
     // Redirect the call that prints "fastboot_init()\n" to our hook, so
     // we can register custom fastboot commands and other things.
-    PATCH_CALL(0x4CE274D8, &fastboot_init_hook, TARGET_THUMB);
+    PATCH_CALL(FASTBOOT_INIT_PRINTF_CALL_ADDR, &fastboot_init_hook, TARGET_THUMB);
 
     // Disable the built in flash and erase commands. Ours are registered
     // from the hook below, which runs before LK gets to register its own,
     // and the first match in the command list is the one that serves.
-    NOP(0x4CE27566, 2);
-    NOP(0x4CE2757A, 2);
+    NOP(FB_REGISTER_FLASH_ADDR, 2);
+    NOP(FB_REGISTER_ERASE_ADDR, 2);
 
-    // Same mechanic for reboot, reboot-bootloader and reboot-fastboot, so
-    // our own reboot handler is the one that gets called.
-    NOP(0x4CE275A0, 2);
-    NOP(0x4CE275B4, 2);
-    NOP(0x4CE275C6, 2);
+    // Same mechanic for reboot and reboot-bootloader, so our own reboot
+    // handler is the one that gets called.
+    NOP(FB_REGISTER_REBOOT_ADDR, 2);
+    NOP(FB_REGISTER_REBOOT_BOOTLOADER_ADDR, 2);
+#ifdef FB_REGISTER_REBOOT_FASTBOOT_ADDR
+    NOP(FB_REGISTER_REBOOT_FASTBOOT_ADDR, 2);
+#endif
 
     // Set up our getvar handler to make fastboot fetch work.
-    NOP(0x4CE27522, 2);
+    NOP(FB_REGISTER_GETVAR_ADDR, 2);
 
+#ifdef FB_REGISTER_DUMP_ADDR
     // LK somehow registers an invalid dump command, and nothing serves it
     // now, so left alone it would branch straight to zero.
-    NOP(0x4CE276B4, 2);
+    NOP(FB_REGISTER_DUMP_ADDR, 2);
+#endif
 
     // LK's own 'oem idme' takes two tokens at most and answers with a fixed
     // string, so ours replaces it rather than sitting behind it.
-    NOP(0x4CE27694, 2);
+    NOP(LK_IDME_REGISTER_CALL_ADDR, 2);
 
-    // Drop 'oem relock', which LK registers twice and it's useless anyway.
-    NOP(0x4CE27680, 2);
-    NOP(0x4CE276A0, 2);
+    // Drop 'oem relock', which is useless anyway. Some builds register it
+    // twice, hence the list.
+    const uint32_t relock_cmds[] = { FB_REGISTER_RELOCK_ADDRS };
+    for (uint32_t i = 0; i < ARRAY_SIZE(relock_cmds); i++)
+        NOP(relock_cmds[i], 2);
+
+#ifdef HAVE_EARLY_INIT
+    device_early_init();
+#endif
 }
 
 void board_late_init(void) {
     printf("Entering late init for %s\n", BOARD_NAME);
 
+    seed_bootmenu_default();
     boot_mode_select();
     printf("Boot mode reason: %s\n", modereason2str(gd.reason));
 
@@ -459,4 +549,8 @@ void board_late_init(void) {
         // boot. Fastboot is left out since our own banner covers it.
         show_bootmode(mode);
     }
+
+#ifdef HAVE_LATE_INIT
+    device_late_init();
+#endif
 }

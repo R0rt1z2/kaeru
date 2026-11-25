@@ -147,11 +147,25 @@ config AMAZON_ROOK
     help
       Say Y if you want to include support for Echo Spot 1st Gen (2017)
 
+config AMAZON_MT8696_COMMON
+    bool
+    help
+      Select this if you need to include common board code
+      for Amazon MT8696 devices.
+
 config AMAZON_KARAT
     bool "Support Fire TV Stick 4K / 4K Max / 4K Plus (2nd Gen)"
+    select AMAZON_MT8696_COMMON
     default n
     help
       Say Y if you want to include support for Fire TV Stick 4K / 4K Max / 4K Plus (2nd Gen)
+
+config AMAZON_KARA
+    bool "Support Fire TV Stick 4K Max (1st Gen)"
+    select AMAZON_MT8696_COMMON
+    default n
+    help
+      Say Y if you want to include support for Fire TV Stick 4K Max (1st Gen)
 
 config AMAZON_SUNSTONE
     bool "Support Fire Max 11 (2023)"
